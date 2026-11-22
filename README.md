@@ -78,54 +78,113 @@ By comparing sanctioned vs. disbursed funds and expected vs. actual market payou
 
 ---
 
-## 🚀 Quickstart & Installation
+## 🚀 Quickstart & One-Command Startup
 
 ### Prerequisites
-- Node.js (v18+)
-- Python (v3.11+)
-- Git
+- **Node.js**: v18+ (v20+ recommended)
+- **Python**: v3.11+
+- **Git**
 
-### 1. Clone Repository
+---
+
+### Option A: One-Command Start (Recommended for Development)
+
+Clone the repository and run setup once:
 ```bash
 git clone https://github.com/yaminii-sahu/KishanVerify.git
 cd KishanVerify
+
+# 1. Automated cross-platform setup (virtualenv, python deps, node deps)
+npm run setup
+
+# 2. Launch backend, frontend with proxy, and open browser automatically
+npm start
 ```
 
-### 2. Backend Setup
-```bash
-# Navigate to backend directory
-cd backend
+> **Windows One-Click**: You can also simply double-click `start.bat` in the root folder.  
+> **macOS / Linux**: Run `./start.sh`.  
+> **VS Code**: Simply open this folder in VS Code — `.vscode/tasks.json` starts servers automatically.
 
-# Create and activate virtual environment
+The browser will open at [http://localhost:5173](http://localhost:5173) with automatic proxying to the FastAPI backend at [http://localhost:8000](http://localhost:8000). A connection gate smoothly transitions into the app as soon as the backend `/health` endpoint responds.
+
+---
+
+### Option B: Single-Port Production Mode (No Vite, Single Port 8000)
+
+If you want to run the entire application (React SPA + FastAPI backend + PDF generator) from a single port:
+
+```bash
+npm run build:serve
+```
+This builds the frontend production bundle and mounts it directly inside FastAPI with SPA deep-link fallback. Open [http://localhost:8000](http://localhost:8000).
+
+---
+
+### Option C: Docker Containerization
+
+To run KisanVerify inside an isolated container with Tesseract OCR pre-installed:
+
+```bash
+docker compose up --build
+```
+Access the application at [http://localhost:8000](http://localhost:8000).
+
+---
+
+### Option D: Manual Component Startup
+
+<details>
+<summary>Click to view manual backend and frontend steps</summary>
+
+#### Backend
+```bash
+cd backend
 python -m venv .venv
-# On Windows:
+# Windows:
 .venv\Scripts\activate
-# On Linux/macOS:
+# macOS/Linux:
 source .venv/bin/activate
 
-# Install dependencies
 pip install -r requirements.txt
-
-# Seed synthetic demo data
-python -m app.core.seed
-
-# Run FastAPI server
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
-*API interactive documentation will be available at: [http://localhost:8000/docs](http://localhost:8000/docs)*
+Interactive API docs: [http://localhost:8000/docs](http://localhost:8000/docs)  
+Health status: [http://localhost:8000/health](http://localhost:8000/health)
 
-### 3. Frontend Setup
+#### Frontend
 ```bash
-# In a new terminal window:
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start Vite development server
 npm run dev
 ```
-*The web application will open at: [http://localhost:5173](http://localhost:5173)*
+Frontend development server: [http://localhost:5173](http://localhost:5173)
+</details>
+
+---
+
+## 🛠️ Troubleshooting & FAQs
+
+### 1. Port 8000 or 5173 Already in Use
+- **Port 8000 (Backend)**: If another process occupies port 8000, find and stop it:
+  - Windows: `netstat -ano | findstr :8000` then `taskkill /PID <PID> /F`
+  - macOS/Linux: `lsof -i :8000 -t | xargs kill -9`
+- **Port 5173 (Frontend)**: Vite will automatically suggest port 5174 if 5173 is busy. The Vite dev proxy forwards requests seamlessly to `http://127.0.0.1:8000`.
+
+### 2. Python Environment & Requirements
+- `npm run setup` automatically creates `.venv` inside `backend/` and installs all packages from `backend/requirements.txt`.
+- If your system defaults to `python3` instead of `python`, the setup script automatically falls back to `python3`.
+- You can manually test backend health at any time by running:
+  ```bash
+  npm test
+  ```
+
+### 3. Tesseract OCR Note
+- **Digital / Computer-Generated PDFs**: PyMuPDF (`fitz`) handles sanction letters and text-based PDFs natively without external dependencies.
+- **Scanned Photos / Images**: Tesseract is used for scanned documents. If `tesseract` is not installed on the host system PATH, the loan verification form gracefully falls back to structured manual entry with full validation, or you can run via Docker where Tesseract is pre-configured.
+
+### 4. Database Reset or Re-seeding
+- On startup, KisanVerify automatically initializes the database schema and seeds synthetic demo data if tables are empty.
+- To reset demo data to pristine condition, delete `kisanverify.db` in the root or `backend/` directory and restart the app.
 
 ---
 
@@ -133,11 +192,12 @@ npm run dev
 
 Run the complete backend verification suite:
 ```bash
-cd backend
-.venv\Scripts\python -m pytest tests -v
+npm test
+# or
+backend/.venv/Scripts/python -m pytest backend/tests -v
 ```
 
-All 19 test cases validate:
+All 29 test cases validate:
 - Loan verification arithmetic ($80,000 - 70,000 = 10,000$ discrepancy).
 - Zero-difference exact match confirmation.
 - Negative difference (excess credit) handling.
