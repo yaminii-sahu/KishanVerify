@@ -325,3 +325,20 @@ export async function downloadReportPdfApi(reportId: string = 'REP-LN-2025-01'):
 
   return await res.blob();
 }
+
+export async function extractLoanOcrApi(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${API_BASE}/api/v1/ocr/extract-loan`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Extraction failed' }));
+    throw new Error(err.detail || `Server returned ${res.status}`);
+  }
+
+  return await res.json();
+}

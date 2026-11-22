@@ -12,19 +12,23 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  RefreshCw
+  RefreshCw,
+  UploadCloud,
+  FileUp,
+  Loader2,
+  Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { verifyLoanApi } from '../services/api';
+import { verifyLoanApi, extractLoanOcrApi } from '../services/api';
 
 export const LoanVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
   const { farmer } = useAuth();
   const navigate = useNavigate();
 
-  // Form Inputs (Blueprint: Approved 80,000, Disbursed 70,000, Deductions 5,000)
+  // Form Inputs
   const [bankName, setBankName] = useState('State Bank of India');
   const [loanAccountRef, setLoanAccountRef] = useState('SBIN*******1234');
   const [loanType, setLoanType] = useState('Crop Loan');
@@ -34,8 +38,91 @@ export const LoanVerificationPage: React.FC = () => {
   const [deductions, setDeductions] = useState<number>(5000);
   const [loanDate, setLoanDate] = useState('12-03-2024');
 
+  // OCR state
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState<string | null>(null);
+  const [ocrSuccessMsg, setOcrSuccessMsg] = useState<string | null>(null);
+  const [autoFilledFields, setAutoFilledFields] = useState<string[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setOcrError(null);
+    setOcrSuccessMsg(null);
+
+    // Validate type
+    const validExtensions = ['.pdf', '.png', '.jpg', '.jpeg'];
+    const fileName = file.name.toLowerCase();
+    const isValidType = validExtensions.some(ext => fileName.endsWith(ext));
+    if (!isValidType) {
+      setOcrError('Only PDF, PNG, JPG, or JPEG files are supported. Please select a valid document.');
+      return;
+    }
+
+    // Validate size: max 5 MB
+    if (file.size > 5 * 1024 * 1024) {
+      setOcrError('File size exceeds the 5 MB limit. Please upload a smaller document.');
+      return;
+    }
+
+    setIsOcrLoading(true);
+    try {
+      const data = await extractLoanOcrApi(file);
+      const filled: string[] = [];
+
+      if (data.bank_name) {
+        setBankName(data.bank_name);
+        filled.push('bankName');
+      }
+      if (data.loan_account_ref) {
+        setLoanAccountRef(data.loan_account_ref);
+        filled.push('loanAccountRef');
+      }
+      if (data.loan_type) {
+        setLoanType(data.loan_type);
+        filled.push('loanType');
+      }
+      if (data.approved_amount !== null && data.approved_amount !== undefined) {
+        setApprovedAmount(data.approved_amount);
+        filled.push('approvedAmount');
+      }
+      if (data.disbursed_amount !== null && data.disbursed_amount !== undefined) {
+        setDisbursedAmount(data.disbursed_amount);
+        filled.push('disbursedAmount');
+      }
+      if (data.interest_rate !== null && data.interest_rate !== undefined) {
+        setInterestRate(data.interest_rate);
+        filled.push('interestRate');
+      }
+      if (data.deductions !== null && data.deductions !== undefined) {
+        setDeductions(data.deductions);
+        filled.push('deductions');
+      }
+      if (data.loan_date) {
+        setLoanDate(data.loan_date);
+        filled.push('loanDate');
+      }
+
+      setAutoFilledFields(filled);
+
+      if (filled.length > 0) {
+        setOcrSuccessMsg(`Extracted ${filled.length} fields from "${file.name}" with ${(data.confidence * 100).toFixed(0)}% confidence. Please review the values below.`);
+      } else {
+        setOcrError('No legible loan amounts found in document. Please enter values manually below.');
+      }
+    } catch (err: any) {
+      console.error('OCR Extraction error:', err);
+      setOcrError('Document extraction failed or could not be processed. You can enter the details manually below.');
+    } finally {
+      setIsOcrLoading(false);
+      if (e.target) e.target.value = '';
+    }
+  };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,17 +230,85 @@ export const LoanVerificationPage: React.FC = () => {
             </div>
           </div>
 
+          {/* OCR Document Upload Section */}
+          <div className="p-4 rounded-2xl bg-sage-50/60 border border-sage-200/80 space-y-2.5">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".pdf,.png,.jpg,.jpeg"
+              className="hidden"
+            />
+            
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-sage-900">
+                  <Sparkles className="w-4 h-4 text-sage-700" />
+                  <span>Instant OCR Document Extraction</span>
+                </div>
+                <p className="text-[11px] text-sage-700 mt-0.5">
+                  Upload a Loan Sanction Letter or Bank Statement (.pdf, .png, .jpg, max 5 MB).
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isOcrLoading}
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-sage-700 hover:bg-sage-800 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-soft transition-all cursor-pointer whitespace-nowrap"
+              >
+                {isOcrLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Extracting data...
+                  </>
+                ) : (
+                  <>
+                    <FileUp className="w-3.5 h-3.5" />
+                    Upload Sanction Letter (PDF/Image)
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* OCR Success Banner */}
+            {ocrSuccessMsg && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-xl text-xs flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                  {ocrSuccessMsg}
+                </span>
+                <span className="text-[10px] bg-emerald-200/70 text-emerald-900 px-2 py-0.5 rounded font-semibold ml-2 flex-shrink-0">
+                  Please review
+                </span>
+              </div>
+            )}
+
+            {/* OCR Error / Friendly Fallback Banner */}
+            {ocrError && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2 rounded-xl text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                <span>{ocrError}</span>
+              </div>
+            )}
+          </div>
+
           <form onSubmit={handleVerify} className="space-y-4">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Bank Name
+                  {autoFilledFields.includes('bankName') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <select
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('bankName') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                 >
                   <option value="State Bank of India">State Bank of India (SBI)</option>
                   <option value="Chhattisgarh Rajya Gramin Bank">Chhattisgarh Rajya Gramin Bank</option>
@@ -165,12 +320,17 @@ export const LoanVerificationPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Loan Account Reference
+                  {autoFilledFields.includes('loanAccountRef') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <input
                   type="text"
                   value={loanAccountRef}
                   onChange={(e) => setLoanAccountRef(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-mono text-gray-800 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-mono text-gray-800 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('loanAccountRef') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                   required
                 />
               </div>
@@ -180,13 +340,18 @@ export const LoanVerificationPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Approved Amount (₹)
+                  {autoFilledFields.includes('approvedAmount') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <input
                   type="number"
                   step="100"
                   value={approvedAmount}
                   onChange={(e) => setApprovedAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('approvedAmount') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                   required
                 />
               </div>
@@ -194,13 +359,18 @@ export const LoanVerificationPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Disbursed Amount (₹)
+                  {autoFilledFields.includes('disbursedAmount') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <input
                   type="number"
                   step="100"
                   value={disbursedAmount}
                   onChange={(e) => setDisbursedAmount(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('disbursedAmount') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                   required
                 />
               </div>
@@ -210,26 +380,36 @@ export const LoanVerificationPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Interest Rate (%)
+                  {autoFilledFields.includes('interestRate') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <input
                   type="number"
                   step="0.1"
                   value={interestRate}
                   onChange={(e) => setInterestRate(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('interestRate') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Deductions (₹)
+                  {autoFilledFields.includes('deductions') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <input
                   type="number"
                   step="100"
                   value={deductions}
                   onChange={(e) => setDeductions(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('deductions') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                   placeholder="e.g. 5000"
                 />
               </div>
@@ -239,23 +419,33 @@ export const LoanVerificationPage: React.FC = () => {
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Loan Date
+                  {autoFilledFields.includes('loanDate') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <input
                   type="text"
                   value={loanDate}
                   onChange={(e) => setLoanDate(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('loanDate') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Loan Type
+                  {autoFilledFields.includes('loanType') && (
+                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
+                  )}
                 </label>
                 <select
                   value={loanType}
                   onChange={(e) => setLoanType(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
+                    autoFilledFields.includes('loanType') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
+                  }`}
                 >
                   <option value="Crop Loan">Crop Loan (KCC)</option>
                   <option value="Term Loan">Agricultural Term Loan</option>
