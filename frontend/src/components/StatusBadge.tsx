@@ -4,7 +4,7 @@ import { CheckCircle2, AlertCircle, Clock, ShieldCheck, HelpCircle } from 'lucid
 import { useLanguage } from '../context/LanguageContext';
 
 interface StatusBadgeProps {
-  status: VerificationStatus | 'Eligible' | 'Possibly Eligible' | 'Not Eligible' | 'Open' | 'Resolved' | 'In Progress';
+  status: VerificationStatus | 'Eligible' | 'Possibly Eligible' | 'Not Eligible' | 'Open' | 'Resolved' | 'In Progress' | 'Escalated';
   size?: 'sm' | 'md';
 }
 
