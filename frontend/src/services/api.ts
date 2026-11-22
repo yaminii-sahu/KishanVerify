@@ -342,3 +342,42 @@ export async function extractLoanOcrApi(file: File) {
 
   return await res.json();
 }
+
+export async function fetchFarmerAttentionApi(farmerId: string = 'FV12345') {
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/farmers/me/attention?farmer_id=${farmerId}`);
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (err) {
+    console.warn('Backend attention endpoint offline, using client fallback', err);
+  }
+
+  // Fallback for offline mode: demo Ramesh Kumar has 2 flagged records (Loan & MSP)
+  return {
+    farmer_id: farmerId,
+    farmer_name: 'Ramesh Kumar',
+    count: 2,
+    has_discrepancies: true,
+    items: [
+      {
+        record_type: 'Loan',
+        record_ref: 'LN-2024-8812',
+        title: 'KCC Loan (State Bank of India)',
+        title_hi: 'केसीसी ऋण (State Bank of India)',
+        difference: 10000,
+        status: 'Needs Review',
+        link: '/farmer/loan',
+      },
+      {
+        record_type: 'MSP',
+        record_ref: 'MSP-2024-4411',
+        title: 'MSP Payment (Paddy)',
+        title_hi: 'एमएसपी भुगतान (धान)',
+        difference: 10000,
+        status: 'Needs Review',
+        link: '/farmer/msp',
+      }
+    ]
+  };
+}
