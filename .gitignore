@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Databases & local files
+*.db
+*.sqlite3
+*.sqlite
+instance/
+uploads/
+generated_reports/
+
+# Environments & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Production builds
+dist/
+build/
+out/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
