@@ -27,12 +27,14 @@ import { AdminComplaintsPage } from './pages/AdminComplaintsPage';
 import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { AdminReportsPage } from './pages/AdminReportsPage';
 import { AdminSettingsPage } from './pages/AdminSettingsPage';
+import { ApiToastContainer } from './components/ApiToastContainer';
 
 export default function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
         <BrowserRouter>
+          <ApiToastContainer />
           <Routes>
             {/* Public Entry Points */}
             <Route path="/" element={<SplashPage />} />

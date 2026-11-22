@@ -17,6 +17,7 @@ import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { StatusBadge } from '../components/StatusBadge';
+import { fileGrievanceApi } from '../services/api';
 
 export const GrievancePage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -81,37 +82,26 @@ export const GrievancePage: React.FC = () => {
     if (!description.trim()) return;
 
     setIsSubmitting(true);
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
     try {
-      const res = await fetch(`${API_BASE}/api/v1/grievances/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          farmer_id: farmer.farmerId,
-          issue_type: issueType,
-          description: description,
-          attachment_name: files[0]?.name || 'Supporting_Document.pdf',
-        }),
+      const data = await fileGrievanceApi({
+        farmer_id: farmer.farmerId,
+        issue_type: issueType,
+        description: description,
+        attachment_name: files[0]?.name || 'Supporting_Document.pdf',
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        setSubmittedGrievance(data);
-        setHistory([
-          {
-            id: data.grievance_ref,
-            type: data.issue_type,
-            status: 'Open',
-            date: data.date,
-            desc: data.description,
-            officer: 'Assigned to Lead District Officer (Durg)',
-          },
-          ...history,
-        ]);
-      } else {
-        throw new Error('API failed');
-      }
+      setSubmittedGrievance(data);
+      setHistory([
+        {
+          id: data.grievance_ref,
+          type: data.issue_type,
+          status: 'Open',
+          date: data.date,
+          desc: data.description,
+          officer: 'Assigned to Lead District Officer (Durg)',
+        },
+        ...history,
+      ]);
     } catch (err) {
       // Fallback
       const fallbackRef = `GRV-2025-${Math.floor(1000 + Math.random() * 9000)}`;

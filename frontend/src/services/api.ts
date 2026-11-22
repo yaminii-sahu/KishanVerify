@@ -1,4 +1,6 @@
-export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { apiClient, BASE_API_URL } from '../lib/api';
+
+export const API_BASE = BASE_API_URL;
 
 export async function checkEligibilityApi(params: {
   state: string;
@@ -9,14 +11,7 @@ export async function checkEligibilityApi(params: {
   loan_status: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/schemes/check-eligibility`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params),
-    });
-    if (res.ok) {
-      return await res.json();
-    }
+    return await apiClient.post<any>('/schemes/check-eligibility', params);
   } catch (err) {
     console.warn('Backend offline, using client-side fallback rule engine', err);
   }
@@ -115,14 +110,7 @@ export async function verifyLoanApi(payload: {
   farmer_id?: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/verify/loan`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      return await res.json();
-    }
+    return await apiClient.post<any>('/verify/loan', payload);
   } catch (err) {
     console.warn('Backend offline, calculating loan client-side', err);
   }
@@ -158,22 +146,18 @@ export async function verifyLoanApi(payload: {
     ],
     arithmetic_breakdown: [
       { label: 'Approved Loan Amount', label_hi: 'स्वीकृत ऋण राशि', amount: payload.approved_amount },
-      { label: 'Disbursed Amount Recorded', label_hi: 'वितरित राशि दर्ज', amount: payload.disbursed_amount },
-      { label: 'Gross Difference', label_hi: 'कुल अंतर', amount: diff },
-      ...(payload.deductions > 0 ? [
-        { label: 'Recorded Deductions (Fees/Insurance)', label_hi: 'दर्ज कटौतियां', amount: payload.deductions },
-        { label: 'Net Unexplained Difference', label_hi: 'शुद्ध अस्पष्ट अंतर', amount: diff - payload.deductions }
-      ] : [])
+      { label: 'Disbursed Loan Amount', label_hi: 'वितरित ऋण राशि', amount: payload.disbursed_amount },
+      { label: 'Difference Detected', label_hi: 'अंतर पाया गया', amount: diff },
     ],
     next_steps: [
-      'Check your loan statement for processing fee deductions.',
-      'Download your official KisanVerify Discrepancy Report.',
-      'Raise a grievance directly to your branch manager.',
+      'Request an itemized sanction letter from your branch.',
+      'Check if any insurance premiums were deducted.',
+      'File an institutional inquiry if difference is unexplained.',
     ],
     next_steps_hi: [
-      'कटौती विवरण जानने के लिए बैंक ऋण विवरण की जांच करें।',
-      'अपनी आधिकारिक किसानवेरीफाई विसंगति रिपोर्ट डाउनलोड करें।',
-      'पोर्टल के माध्यम से शाखा प्रबंधक को शिकायत दर्ज करें।',
+      'अपनी बैंक शाखा से मदवार स्वीकृति पत्र का अनुरोध करें।',
+      'जांचें कि क्या कोई बीमा प्रीमियम काटा गया है।',
+      'यदि अंतर स्पष्ट न हो तो संस्थागत जांच दर्ज करें।',
     ]
   };
 }
@@ -184,17 +168,11 @@ export async function verifyMspApi(payload: {
   msp_rate: number;
   actual_payment: number;
   procurement_center?: string;
+  payment_date?: string;
   farmer_id?: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/verify/msp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      return await res.json();
-    }
+    return await apiClient.post<any>('/verify/msp', payload);
   } catch (err) {
     console.warn('Backend offline, calculating MSP client-side', err);
   }
@@ -259,14 +237,7 @@ export async function verifyInsuranceApi(payload: {
   farmer_id?: string;
 }) {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/verify/insurance`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      return await res.json();
-    }
+    return await apiClient.post<any>('/verify/insurance', payload);
   } catch (err) {
     console.warn('Backend offline, calculating insurance client-side', err);
   }
@@ -312,43 +283,18 @@ export async function verifyInsuranceApi(payload: {
 
 export async function downloadReportPdfApi(reportId: string = 'REP-LN-2025-01'): Promise<Blob> {
   const targetId = reportId || 'REP-LN-2025-01';
-  const res = await fetch(`${API_BASE}/api/v1/reports/download/${targetId}`, {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/pdf',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Report download failed with status ${res.status}: ${res.statusText}`);
-  }
-
-  return await res.blob();
+  return await apiClient.download(`/reports/download/${targetId}`, `${targetId}_Audit_Report.pdf`);
 }
 
 export async function extractLoanOcrApi(file: File) {
   const formData = new FormData();
   formData.append('file', file);
-
-  const res = await fetch(`${API_BASE}/api/v1/ocr/extract-loan`, {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: 'Extraction failed' }));
-    throw new Error(err.detail || `Server returned ${res.status}`);
-  }
-
-  return await res.json();
+  return await apiClient.upload<any>('/ocr/extract-loan', formData);
 }
 
 export async function fetchFarmerAttentionApi(farmerId: string = 'FV12345') {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/farmers/me/attention?farmer_id=${farmerId}`);
-    if (res.ok) {
-      return await res.json();
-    }
+    return await apiClient.get<any>(`/farmers/me/attention?farmer_id=${farmerId}`);
   } catch (err) {
     console.warn('Backend attention endpoint offline, using client fallback', err);
   }
@@ -380,4 +326,26 @@ export async function fetchFarmerAttentionApi(farmerId: string = 'FV12345') {
       }
     ]
   };
+}
+
+export async function sendAiChatApi(message: string, language: string = 'hi', farmerId: string = 'FV12345') {
+  return await apiClient.post<any>('/ai/chat', {
+    message,
+    language,
+    farmer_id: farmerId,
+  });
+}
+
+export async function fileGrievanceApi(payload: {
+  farmer_id: string;
+  issue_type: string;
+  description: string;
+  attachment_name?: string;
+}) {
+  return await apiClient.post<any>('/grievances/', payload);
+}
+
+export function getExportCsvUrl(district?: string): string {
+  const query = district ? `?district=${encodeURIComponent(district)}` : '';
+  return `${BASE_API_URL}/admin/export-csv${query}`;
 }

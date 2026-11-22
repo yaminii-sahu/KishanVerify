@@ -31,6 +31,7 @@ import {
 } from 'recharts';
 import { StatusBadge } from '../components/StatusBadge';
 import { AdminCase, AdminStats } from '../types';
+import { apiClient } from '../lib/api';
 
 export const AdminDashboardPage: React.FC = () => {
   const { selectedDistrict } = useOutletContext<{ selectedDistrict: string }>();
@@ -159,9 +160,15 @@ export const AdminDashboardPage: React.FC = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-    window.open(`${API_BASE}/api/v1/admin/export-csv?district=${selectedDistrict}`, '_blank');
+  const handleExportCSV = async () => {
+    try {
+      await apiClient.download(
+        `/admin/export-csv?district=${encodeURIComponent(selectedDistrict)}`,
+        `KisanVerify_Cases_${selectedDistrict || 'All'}.csv`
+      );
+    } catch (err) {
+      console.error('Export CSV error:', err);
+    }
   };
 
   return (

@@ -18,6 +18,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { StatusBadge } from '../components/StatusBadge';
 import { ReportItem } from '../types';
+import { apiClient } from '../lib/api';
 
 export const ReportsPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -77,23 +78,10 @@ export const ReportsPage: React.FC = () => {
 
   const handleDownload = async (report: ReportItem) => {
     setDownloadingId(report.id);
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
     try {
-      const response = await fetch(`${API_BASE}${report.downloadUrl}`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${report.id}_${report.reportType.replace(/\s+/g, '_')}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      } else {
-        throw new Error('API download failed, fallback to print view');
-      }
+      const filename = `${report.id}_${report.reportType.replace(/\s+/g, '_')}.pdf`;
+      const downloadPath = report.downloadUrl || `/reports/download/${report.id}`;
+      await apiClient.download(downloadPath, filename);
     } catch (err) {
       console.warn('Direct PDF download failed, opening browser print view', err);
       // Fallback: Trigger instant window print / save-as-pdf

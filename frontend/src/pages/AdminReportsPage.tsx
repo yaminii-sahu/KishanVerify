@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Download, FileText, Filter, Calendar, Search, CheckCircle2, AlertTriangle, Building2, Eye, Loader2, AlertCircle } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';
-import { downloadReportPdfApi, API_BASE } from '../services/api';
+import { downloadReportPdfApi } from '../services/api';
+import { apiClient } from '../lib/api';
 
 export const AdminReportsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -121,7 +122,13 @@ export const AdminReportsPage: React.FC = () => {
         </div>
 
         <button
-          onClick={() => window.open(`${API_BASE}/api/v1/admin/export-cases?format=csv`, '_blank')}
+          onClick={async () => {
+            try {
+              await apiClient.download('/admin/export-csv', 'KisanVerify_Reconciliation_Cases.csv');
+            } catch (err) {
+              console.error('Export error:', err);
+            }
+          }}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-700 hover:bg-primary-800 text-white font-medium text-sm rounded-lg shadow-sm transition-all"
         >
           <Download className="w-4 h-4" />

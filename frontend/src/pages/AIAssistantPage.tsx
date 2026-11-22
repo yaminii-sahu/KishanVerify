@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { sendAiChatApi } from '../services/api';
 
 interface Message {
   id: string;
@@ -179,32 +180,16 @@ export const AIAssistantPage: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
     try {
-      const res = await fetch(`${API_BASE}/api/v1/ai/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: query,
-          language: language,
-          farmer_id: farmer.farmerId,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const botMsg: Message = {
-          id: `a-${Date.now()}`,
-          sender: 'assistant',
-          text: data.reply,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          chips: data.suggested_chips || ['Claim status', 'Required documents'],
-        };
-        setMessages((prev) => [...prev, botMsg]);
-      } else {
-        throw new Error('API offline');
-      }
+      const data = await sendAiChatApi(query, language, farmer.farmerId);
+      const botMsg: Message = {
+        id: `a-${Date.now()}`,
+        sender: 'assistant',
+        text: data.reply,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        chips: data.suggested_chips || ['Claim status', 'Required documents'],
+      };
+      setMessages((prev) => [...prev, botMsg]);
     } catch (err) {
       // Smart Fallback
       setTimeout(() => {
