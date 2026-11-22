@@ -6,6 +6,8 @@ from app.api.schemes import router as schemes_router
 from app.api.reports import router as reports_router
 from app.api.grievances import router as grievances_router
 from app.api.ai import router as ai_router
+from app.api.admin import router as admin_router
+from app.api.ocr import router as ocr_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -30,6 +32,8 @@ app.include_router(schemes_router, prefix=settings.API_V1_STR)
 app.include_router(reports_router, prefix=settings.API_V1_STR)
 app.include_router(grievances_router, prefix=settings.API_V1_STR)
 app.include_router(ai_router, prefix=settings.API_V1_STR)
+app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(ocr_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():
