@@ -41,6 +41,7 @@ generated_reports/
 dist/
 build/
 out/
+*.tsbuildinfo
 
 # IDE & OS
 .vscode/
