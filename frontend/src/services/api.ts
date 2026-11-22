@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+export const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 export async function checkEligibilityApi(params: {
   state: string;
@@ -308,4 +308,20 @@ export async function verifyInsuranceApi(payload: {
       'बैंक खाते में आधार सीडिंग सक्रिय रखें।',
     ]
   };
+}
+
+export async function downloadReportPdfApi(reportId: string = 'REP-LN-2025-01'): Promise<Blob> {
+  const targetId = reportId || 'REP-LN-2025-01';
+  const res = await fetch(`${API_BASE}/api/v1/reports/download/${targetId}`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/pdf',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Report download failed with status ${res.status}: ${res.statusText}`);
+  }
+
+  return await res.blob();
 }

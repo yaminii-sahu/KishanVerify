@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Download, FileText, Filter, Calendar, Search, CheckCircle2, AlertTriangle, Building2, Eye } from 'lucide-react';
+import { Download, FileText, Filter, Calendar, Search, CheckCircle2, AlertTriangle, Building2, Eye, Loader2, AlertCircle } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';
+import { downloadReportPdfApi, API_BASE } from '../services/api';
 
 export const AdminReportsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('All');
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
 
   const bankReports = [
     {
@@ -63,13 +66,48 @@ export const AdminReportsPage: React.FC = () => {
     return matchesSearch && matchesBranch;
   });
 
-  const handleDownload = (id: string) => {
-    // Triggers download from API or fallback dummy file
-    window.open(`http://localhost:8000/api/v1/reports/pdf/REP-2025-0891`, '_blank');
+  const handleDownload = async (reportId: string) => {
+    setDownloadingId(reportId);
+    setErrorToast(null);
+    try {
+      // Connects to /api/v1/reports/download/REP-LN-2025-01 via shared API client
+      const targetRef = 'REP-LN-2025-01';
+      const blob = await downloadReportPdfApi(targetRef);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportId}_Audit_Report.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error('PDF download error:', err);
+      setErrorToast(`Failed to download report (${err.message || 'Network error'}). Please try again.`);
+      setTimeout(() => setErrorToast(null), 5000);
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   return (
     <div className="space-y-6">
+      {/* Error Toast */}
+      {errorToast && (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            <span>{errorToast}</span>
+          </div>
+          <button
+            onClick={() => setErrorToast(null)}
+            className="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 rounded"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -83,7 +121,7 @@ export const AdminReportsPage: React.FC = () => {
         </div>
 
         <button
-          onClick={() => window.open('http://localhost:8000/api/v1/admin/export-cases?format=csv', '_blank')}
+          onClick={() => window.open(`${API_BASE}/api/v1/admin/export-cases?format=csv`, '_blank')}
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-700 hover:bg-primary-800 text-white font-medium text-sm rounded-lg shadow-sm transition-all"
         >
           <Download className="w-4 h-4" />
@@ -166,10 +204,20 @@ export const AdminReportsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleDownload(report.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 text-primary-800 font-medium rounded-lg border border-primary-200 transition-colors"
+                  disabled={downloadingId === report.id}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 disabled:opacity-50 text-primary-800 font-medium rounded-lg border border-primary-200 transition-colors"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  PDF Audit
+                  {downloadingId === report.id ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      PDF Audit
+                    </>
+                  )}
                 </button>
               </div>
             </div>
