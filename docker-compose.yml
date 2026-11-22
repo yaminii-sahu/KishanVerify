@@ -1,0 +1,25 @@
+services:
+  kisanverify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kisanverify-app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - PROJECT_NAME=KisanVerify
+      - SQLITE_DB_PATH=./kisanverify.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - LLM_PROVIDER=gemini
+    volumes:
+      - kisanverify_data:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  kisanverify_data:

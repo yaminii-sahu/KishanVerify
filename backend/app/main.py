@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from pathlib import Path
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from app.core.config import settings
@@ -52,16 +55,6 @@ app.include_router(admin_router, prefix=settings.API_V1_STR)
 app.include_router(ocr_router, prefix=settings.API_V1_STR)
 app.include_router(farmers_router, prefix=settings.API_V1_STR)
 
-@app.get("/")
-def root():
-    return {
-        "app": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "tagline": "Every rupee. Every benefit. Verified.",
-        "status": "online",
-        "docs": "/docs"
-    }
-
 @app.get("/health")
 def health_check():
     db_status = "connected"
@@ -80,3 +73,34 @@ def health_check():
         "llm_provider": settings.LLM_PROVIDER,
         "llm_key_configured": bool(settings.GEMINI_API_KEY),
     }
+
+# Static frontend mounting and SPA fallback
+frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+
+if frontend_dist.is_dir() and (frontend_dist / "index.html").is_file():
+    assets_dir = frontend_dist / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(frontend_dist / "index.html")
+
+    @app.get("/{full_path:path}")
+    async def spa_fallback(full_path: str):
+        if full_path.startswith("api/") or full_path == "api":
+            raise HTTPException(status_code=404, detail="API route not found")
+        file_path = frontend_dist / full_path
+        if file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(frontend_dist / "index.html")
+else:
+    @app.get("/")
+    def root():
+        return {
+            "app": settings.PROJECT_NAME,
+            "version": settings.VERSION,
+            "tagline": "Every rupee. Every benefit. Verified.",
+            "status": "online",
+            "docs": "/docs"
+        }
