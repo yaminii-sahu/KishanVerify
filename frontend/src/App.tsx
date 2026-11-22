@@ -28,14 +28,16 @@ import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
 import { AdminReportsPage } from './pages/AdminReportsPage';
 import { AdminSettingsPage } from './pages/AdminSettingsPage';
 import { ApiToastContainer } from './components/ApiToastContainer';
+import { ServerReadinessGate } from './components/ServerReadinessGate';
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <ApiToastContainer />
-          <Routes>
+    <ServerReadinessGate>
+      <LanguageProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <ApiToastContainer />
+            <Routes>
             {/* Public Entry Points */}
             <Route path="/" element={<SplashPage />} />
             <Route path="/splash" element={<SplashPage />} />
@@ -70,5 +72,6 @@ export default function App() {
         </BrowserRouter>
       </AuthProvider>
     </LanguageProvider>
+  </ServerReadinessGate>
   );
 }

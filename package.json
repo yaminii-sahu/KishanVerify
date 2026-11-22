@@ -1,0 +1,20 @@
+{
+  "name": "kisanverify",
+  "version": "1.0.0",
+  "description": "KisanVerify: Agricultural Financial Transparency Platform ('Every rupee. Every benefit. Verified.')",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "dev:backend": "node scripts/run-backend.js",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently -n \"backend,frontend\" -c \"green.bold,blue.bold\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start": "concurrently -k -n \"servers,browser\" -c \"cyan.bold,magenta.bold\" \"npm run dev\" \"wait-on -t 30000 http-get://127.0.0.1:8000/health && open-cli http://localhost:5173\"",
+    "build": "npm run build --prefix frontend",
+    "build:serve": "node scripts/serve-production.js",
+    "test": "backend/.venv/Scripts/python -m pytest backend/tests"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "open-cli": "^8.0.0",
+    "wait-on": "^7.2.0"
+  }
+}
