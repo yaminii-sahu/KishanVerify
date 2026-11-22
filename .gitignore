@@ -44,7 +44,9 @@ out/
 *.tsbuildinfo
 
 # IDE & OS
-.vscode/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
