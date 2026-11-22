@@ -1,18 +1,72 @@
-import React from 'react'
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LanguageProvider } from './context/LanguageContext';
+import { AuthProvider } from './context/AuthContext';
+
+// Layouts
+import { FarmerLayout } from './layouts/FarmerLayout';
+import { AdminLayout } from './layouts/AdminLayout';
+
+// Pages
+import { SplashPage } from './pages/SplashPage';
+import { OnboardingPage } from './pages/OnboardingPage';
+import { LoginPage } from './pages/LoginPage';
+import { FarmerHomePage } from './pages/FarmerHomePage';
+import { SchemesPage } from './pages/SchemesPage';
+import { LoanVerificationPage } from './pages/LoanVerificationPage';
+import { MSPVerificationPage } from './pages/MSPVerificationPage';
+import { InsuranceVerificationPage } from './pages/InsuranceVerificationPage';
+import { AIAssistantPage } from './pages/AIAssistantPage';
+import { GrievancePage } from './pages/GrievancePage';
+import { ReportsPage } from './pages/ReportsPage';
+import { ProfilePage } from './pages/ProfilePage';
+
+// Admin Pages
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { AdminComplaintsPage } from './pages/AdminComplaintsPage';
+import { AdminAnalyticsPage } from './pages/AdminAnalyticsPage';
+import { AdminReportsPage } from './pages/AdminReportsPage';
+import { AdminSettingsPage } from './pages/AdminSettingsPage';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-warm-bg flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-card border border-warm-border text-center">
-        <div className="w-16 h-16 bg-sage-100 text-sage-600 rounded-2xl flex items-center justify-center mx-auto mb-4 font-bold text-2xl">
-          KV
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">KisanVerify</h1>
-        <p className="text-sm text-gray-600 mb-6">Every rupee. Every benefit. Verified.</p>
-        <span className="inline-block px-3 py-1 bg-sage-50 text-sage-700 text-xs font-semibold rounded-full border border-sage-200">
-          Scaffolding Ready
-        </span>
-      </div>
-    </div>
-  )
+    <LanguageProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Entry Points */}
+            <Route path="/" element={<SplashPage />} />
+            <Route path="/splash" element={<SplashPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* Farmer Portal (Mobile Bottom Tab Bar + Desktop Sidebar Layout) */}
+            <Route path="/farmer" element={<FarmerLayout />}>
+              <Route index element={<FarmerHomePage />} />
+              <Route path="schemes" element={<SchemesPage />} />
+              <Route path="loan-verify" element={<LoanVerificationPage />} />
+              <Route path="msp-verify" element={<MSPVerificationPage />} />
+              <Route path="insurance-verify" element={<InsuranceVerificationPage />} />
+              <Route path="assistant" element={<AIAssistantPage />} />
+              <Route path="grievance" element={<GrievancePage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
+
+            {/* Bank / Admin Portal */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboardPage />} />
+              <Route path="reports" element={<AdminReportsPage />} />
+              <Route path="complaints" element={<AdminComplaintsPage />} />
+              <Route path="analytics" element={<AdminAnalyticsPage />} />
+              <Route path="settings" element={<AdminSettingsPage />} />
+            </Route>
+
+            {/* Catch-all redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </LanguageProvider>
+  );
 }
