@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="frontend/src/assets/brand/logo-tile.png" alt="KisanVerify Official Logo" width="160" style="border-radius: 36px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);" />
+</p>
+
 # KisanVerify (किसानवेरीफाई)
 
 > **"Every rupee. Every benefit. Verified."**  
@@ -49,6 +53,7 @@ All screens share an exact tokenized palette sampled directly from the design mo
 | **Status: Eligible** | `#EBF2DE` / `#335C24` | Approved, verified, eligible records |
 | **Status: Review** | `#FDF0E2` / `#8C531E` | Under review, possibly eligible, pending |
 | **Status: Discrepancy** | `#FCEAE4` / `#B83227` | Needs review, discrepancy detected |
+| **Saffron Accent** | `#FE900A` (`#F7941D`) | Sampled from logo arc for micro-accents and active highlights |
 
 ### PWA & Native-Like Experience
 - **Web App Manifest**: Full `manifest.webmanifest` with standalone display mode.
