@@ -125,6 +125,9 @@ class Scheme(Base):
     documents_required = Column(JSON, default=list)
     deadline = Column(String(50), nullable=False)
     state = Column(String(100), default="All India")
+    myscheme_url = Column(String(255), nullable=True)
+    ministry = Column(String(200), default="Ministry of Agriculture and Farmers Welfare")
+    source = Column(String(100), default="myScheme.gov.in")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class Grievance(Base):

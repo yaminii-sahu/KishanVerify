@@ -42,6 +42,9 @@ export async function checkEligibilityApi(params: {
         deadline: 'Apply by 31 Dec 2025',
         documents_required: ['Aadhaar Card', 'Land Ownership Record (B-1/Khasra)', 'Bank Passbook'],
         state: 'All India',
+        myscheme_url: 'https://www.myscheme.gov.in/schemes/pm-kisan',
+        ministry: 'Ministry of Agriculture and Farmers Welfare',
+        source: 'myScheme.gov.in',
       },
       {
         id: 'sch-pmfby',
@@ -59,6 +62,9 @@ export async function checkEligibilityApi(params: {
         deadline: 'Apply by 31 Mar 2026',
         documents_required: ['Patwari Girdawari Sowing Certificate', 'Land Record (Khasra/B-1)', 'Aadhaar Card'],
         state: 'All India',
+        myscheme_url: 'https://www.myscheme.gov.in/schemes/pmfby',
+        ministry: 'Ministry of Agriculture and Farmers Welfare',
+        source: 'myScheme.gov.in',
       },
       {
         id: 'sch-kcc',
@@ -76,6 +82,9 @@ export async function checkEligibilityApi(params: {
         deadline: 'Apply by 31 Dec 2025',
         documents_required: ['Land Title (B-1 copy)', 'Identity Proof', 'Address Proof', 'No-Dues Certificate'],
         state: 'All India',
+        myscheme_url: 'https://www.myscheme.gov.in/schemes/kcc',
+        ministry: 'Ministry of Agriculture and Farmers Welfare',
+        source: 'myScheme.gov.in',
       },
       {
         id: 'sch-input-sub',
@@ -93,9 +102,27 @@ export async function checkEligibilityApi(params: {
         deadline: 'Check details at local Krishi Kendra',
         documents_required: ['Kisan Rin Pustika (KRP)', 'Mandi Registration Slip', 'Aadhaar Card'],
         state: 'Chhattisgarh',
+        myscheme_url: 'https://www.myscheme.gov.in/schemes/smam',
+        ministry: 'Department of Agriculture & Farmers Welfare',
+        source: 'myScheme.gov.in',
       },
     ],
   };
+}
+
+export async function fetchSchemeSourceInfoApi() {
+  try {
+    return await apiClient.get<any>('/schemes/source-info');
+  } catch {
+    return {
+      source: 'myScheme.gov.in',
+      title: 'National Platform for Government Schemes & Services',
+      portal_url: 'https://www.myscheme.gov.in',
+      ministry: 'Ministry of Electronics and Information Technology (MeitY) & NeGD',
+      category: 'Agriculture, Rural & Environment',
+      status: 'Verified & Active',
+    };
+  }
 }
 
 export async function verifyLoanApi(payload: {

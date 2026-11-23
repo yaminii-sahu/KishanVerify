@@ -27,6 +27,9 @@ class SchemeMatch(BaseModel):
     documents_required: List[str]
     deadline: str
     state: str
+    myscheme_url: Optional[str] = None
+    ministry: Optional[str] = "Ministry of Agriculture and Farmers Welfare"
+    source: Optional[str] = "myScheme.gov.in"
 
 class EligibilityCheckRequest(BaseModel):
     state: str = "Chhattisgarh"
@@ -98,6 +101,9 @@ def evaluate_eligibility(
             ],
             deadline="Apply by 31 Dec 2025",
             state="All India",
+            myscheme_url="https://www.myscheme.gov.in/schemes/pm-kisan",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
         )
     )
 
@@ -135,6 +141,9 @@ def evaluate_eligibility(
             ],
             deadline="Apply by 31 Mar 2026",
             state="All India",
+            myscheme_url="https://www.myscheme.gov.in/schemes/pmfby",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
         )
     )
 
@@ -171,6 +180,9 @@ def evaluate_eligibility(
             ],
             deadline="Apply by 31 Dec 2025",
             state="All India",
+            myscheme_url="https://www.myscheme.gov.in/schemes/kcc",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
         )
     )
 
@@ -208,6 +220,9 @@ def evaluate_eligibility(
             ],
             deadline="Check details at local Krishi Kendra",
             state="Chhattisgarh",
+            myscheme_url="https://www.myscheme.gov.in/schemes/smam",
+            ministry="Department of Agriculture & Farmers Welfare",
+            source="myScheme.gov.in",
         )
     )
 

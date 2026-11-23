@@ -240,6 +240,9 @@ def seed_database():
                 documents_required=["Aadhaar Card", "Land Ownership Record (B-1/Khasra)", "Bank Passbook"],
                 deadline="Apply by 31 Dec 2025",
                 state="All India",
+                myscheme_url="https://www.myscheme.gov.in/schemes/pm-kisan",
+                ministry="Ministry of Agriculture and Farmers Welfare",
+                source="myScheme.gov.in",
             ),
             Scheme(
                 scheme_code="PMFBY",
@@ -257,6 +260,9 @@ def seed_database():
                 documents_required=["Land Girdawari Certificate", "Sowing Certificate", "Aadhaar Card", "Bank Account Details"],
                 deadline="Apply by 31 Mar 2026",
                 state="All India",
+                myscheme_url="https://www.myscheme.gov.in/schemes/pmfby",
+                ministry="Ministry of Agriculture and Farmers Welfare",
+                source="myScheme.gov.in",
             ),
             Scheme(
                 scheme_code="KCC",
@@ -275,6 +281,9 @@ def seed_database():
                 documents_required=["Land Title (B-1/Khasra Copy)", "Identity Proof", "Address Proof", "No-Dues Certificate"],
                 deadline="Apply by 31 Dec 2025",
                 state="All India",
+                myscheme_url="https://www.myscheme.gov.in/schemes/kcc",
+                ministry="Ministry of Agriculture and Farmers Welfare",
+                source="myScheme.gov.in",
             ),
             Scheme(
                 scheme_code="INPUT-SUB",
@@ -292,6 +301,9 @@ def seed_database():
                 documents_required=["Kisan Rin Pustika (KRP)", "Mandi Registration Slip", "Aadhaar"],
                 deadline="Check details at local Krishi Kendra",
                 state="Chhattisgarh",
+                myscheme_url="https://www.myscheme.gov.in/schemes/smam",
+                ministry="Department of Agriculture & Farmers Welfare",
+                source="myScheme.gov.in",
             ),
         ]
         db.add_all(schemes)
