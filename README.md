@@ -9,6 +9,55 @@ By comparing sanctioned vs. disbursed funds and expected vs. actual market payou
 
 ---
 
+## 📱 Responsive Multi-Device Architecture (Mobile, Tablet & Desktop)
+
+KisanVerify is engineered with a **single unified codebase** that adapts dynamically across phones, tablets, laptops, and desktops, implementing two precise visual designs:
+
+- **Desktop & Tablet Reference (Image A)**: Comprehensive web dashboard with a 240px fixed forest-green navigation sidebar, top greeting header, 4-column executive metric cards, side-by-side verification forms, and interactive reconciliation tables.
+- **Mobile Phone Reference (Image B)**: 10 dedicated mobile screens featuring a dark forest header band, 5-tab fixed bottom navigation bar, 2×2 touch action tiles, stacked discrepancy audit cards, and bottom-sheet review dialogs.
+
+```
++----------------------------------------------------------------------------------------------------+
+|                                    BREAKPOINT ARCHITECTURE                                         |
++------------------------------+-------------------------------------+-------------------------------+
+|  Phones (< 768px)            |  Tablets (768px - 1023px)           |  Desktops (>= 1024px)         |
+|  Image B Reference           |  Adaptive Bridge                    |  Image A Reference            |
++------------------------------+-------------------------------------+-------------------------------+
+| - Dark forest top band       | - Collapsible sidebar / top bar     | - Fixed 240px forest sidebar  |
+| - Fixed 5-tab bottom bar     | - 2-column grid forms               | - Top bar with farmer profile |
+| - 2x2 grid action tiles      | - 2x2 stat cards                    | - 4-column metric cards       |
+| - Stacked review cards       | - Responsive data tables            | - 2-column verify (7/5 split) |
+| - Bottom-sheet modals        | - Centered modal dialogs            | - Full reconciliation tables  |
+| - 44px+ touch targets        | - Dual-column layout                | - Comprehensive analytics     |
+| - Zero horizontal scroll     | - Zero horizontal scroll            | - Zero horizontal scroll      |
++------------------------------+-------------------------------------+-------------------------------+
+```
+
+### Shared Design Tokens
+
+All screens share an exact tokenized palette sampled directly from the design mockups:
+
+| Token | Hex Value | Purpose |
+| :--- | :--- | :--- |
+| **Forest** | `#4A6538` | Headers, desktop sidebar, splash screens, leading accents |
+| **Olive** | `#5B7A47` | Primary buttons, active tabs, interactive links |
+| **Tint** | `#E4EBD6` | Icon boxes, pill backgrounds, illustration accents |
+| **Cream** | `#F7F5EC` | Application background |
+| **Card Surface** | `#FDFCF8` | Cards and panels with 1px `#E8E5DA` border & soft shadow |
+| **Charcoal** | `#1F2A1B` | Headings, primary text |
+| **Muted** | `#6B7565` | Subtitles, labels, secondary text |
+| **Status: Eligible** | `#EBF2DE` / `#335C24` | Approved, verified, eligible records |
+| **Status: Review** | `#FDF0E2` / `#8C531E` | Under review, possibly eligible, pending |
+| **Status: Discrepancy** | `#FCEAE4` / `#B83227` | Needs review, discrepancy detected |
+
+### PWA & Native-Like Experience
+- **Web App Manifest**: Full `manifest.webmanifest` with standalone display mode.
+- **Custom SVG App Icon**: High-contrast seedling leaf logo.
+- **Safe Area Insets**: `env(safe-area-inset-bottom)` support on mobile bottom navigation.
+- **Typography**: Inter / Plus Jakarta Sans combined with Noto Sans Devanagari for clean bilingual Hindi rendering.
+
+---
+
 ## 🏛️ System Architecture
 
 ```
@@ -40,7 +89,7 @@ By comparing sanctioned vs. disbursed funds and expected vs. actual market payou
 1. **Deterministic Calculations First**: All mathematical reconciliations (differences, deductions, interest rates, eligibility criteria) are calculated strictly in verified, unit-tested Python functions. **The AI never computes or hallucinates financial balances.**
 2. **Neutral & Non-Accusatory Tone**: All discrepancy notices explicitly state *"Needs Review"* or *"Possible Discrepancy"*. Explanations guide farmers towards transparent bank verification rather than alleging misconduct or fraud.
 3. **Inclusive & Accessible**:
-   - Palette: Earthy sage/olive green (`#2E6930`, `#F4F8F3`, `#3A7D44`) matching rural design standards.
+   - Palette: Earthy sage/olive green (`#4A6538`, `#5B7A47`, `#F7F5EC`, `#E4EBD6`) matching rural design standards.
    - Large touch-friendly controls (minimum 48px height) for mobile field use.
    - Native Hindi (`hi-IN`) and English voice input (STT) and voice speech-out (TTS) via Web Speech API.
    - Official downloadable PDF reports with QR verification stamps and audit trails.
