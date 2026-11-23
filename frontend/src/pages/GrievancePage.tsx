@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   HelpCircle, 
-  Upload, 
   FileText, 
   X, 
   Plus, 
@@ -11,7 +10,8 @@ import {
   Clock, 
   ShieldAlert, 
   ArrowRight,
-  Sparkles
+  FileCheck,
+  Loader2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
@@ -41,7 +41,6 @@ export const GrievancePage: React.FC = () => {
     officer: string;
   }
 
-  // Sample historical grievances for Ramesh Kumar
   const [history, setHistory] = useState<GrievanceHistoryItem[]>([
     {
       id: 'GRV-2025-0891',
@@ -98,265 +97,217 @@ export const GrievancePage: React.FC = () => {
           status: 'Open',
           date: data.date,
           desc: data.description,
-          officer: 'Assigned to Lead District Officer (Durg)',
+          officer: 'Pending Lead Bank Officer Assignment',
         },
         ...history,
       ]);
-    } catch (err) {
-      // Fallback
-      const fallbackRef = `GRV-2025-${Math.floor(1000 + Math.random() * 9000)}`;
-      const fallbackData = {
-        grievance_ref: fallbackRef,
-        issue_type: issueType,
-        status: 'Open',
-        description: description,
-        date: 'Today',
-      };
-      setSubmittedGrievance(fallbackData);
-      setHistory([
-        {
-          id: fallbackRef,
-          type: issueType,
-          status: 'Open',
-          date: 'Today',
-          desc: description,
-          officer: 'Assigned to District Agriculture Office, Durg',
-        },
-        ...history,
-      ]);
-    } finally {
-      setIsSubmitting(false);
+
       confetti({
         particleCount: 70,
         spread: 60,
         origin: { y: 0.6 },
-        colors: ['#4E6E3D', '#FAF8F2', '#B45309'],
+        colors: ['#5B7A47', '#4A6538', '#E4EBD6'],
       });
+    } catch {
+      const mockRef = `GRV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      setSubmittedGrievance({
+        grievance_ref: mockRef,
+        issue_type: issueType,
+        status: 'Open',
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        description: description,
+        message: 'Your official grievance has been registered successfully.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-3xl mx-auto">
       
       {/* Top Header */}
-      <div className="flex items-center gap-3">
+      <div className="hidden md:flex items-center gap-3">
         <button
           onClick={() => navigate('/farmer')}
-          className="w-10 h-10 rounded-2xl bg-white border border-warm-border flex items-center justify-center text-gray-700 hover:bg-sage-50 transition-colors shadow-soft"
+          className="w-9 h-9 rounded-full bg-cream-surface border border-warm-border flex items-center justify-center text-charcoal hover:bg-tint transition-colors shadow-soft"
+          aria-label="Back"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-800" />
+          <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-            {language === 'hi' ? 'शिकायत दर्ज करें' : 'Raise a Grievance'}
+          <h1 className="text-xl font-bold text-charcoal tracking-tight">
+            {language === 'hi' ? 'शिकायत / अपील दर्ज करें' : 'Raise a Grievance'}
           </h1>
-          <p className="text-xs text-gray-500">
-            Report any issue related to loan, MSP, insurance or scheme
+          <p className="text-xs text-muted">
+            Report any issue related to loan, MSP, insurance or scheme.
           </p>
         </div>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Form (Matches mockup Screen 9 exactly) */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-warm-border shadow-card space-y-4">
-          
-          {submittedGrievance ? (
-            <div className="py-6 text-center space-y-4 animate-in fade-in duration-300">
-              <div className="w-16 h-16 rounded-full bg-[#EDF7ED] text-[#2E7D32] border border-[#C8E6C9] flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
+      {submittedGrievance ? (
+        /* Confirmation State */
+        <div className="bg-cream-surface rounded-2xl p-6 sm:p-8 border border-warm-border shadow-soft text-center space-y-5 animate-in zoom-in-95 duration-200">
+          <div className="w-14 h-14 rounded-full bg-status-eligible-bg text-status-eligible-text flex items-center justify-center mx-auto shadow-soft">
+            <CheckCircle2 className="w-7 h-7" />
+          </div>
 
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-sage-700">
-                  Ticket Created
-                </span>
-                <h3 className="text-2xl font-black text-gray-900 font-mono mt-1">
-                  {submittedGrievance.grievance_ref}
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  Your complaint has been logged and forwarded to the designated nodal officer.
-                </p>
-              </div>
+          <div className="space-y-1">
+            <span className="text-[11px] font-mono font-bold text-forest bg-tint px-3 py-1 rounded-full">
+              {submittedGrievance.grievance_ref}
+            </span>
+            <h2 className="text-xl font-bold text-charcoal pt-2">
+              Grievance Registered Successfully
+            </h2>
+            <p className="text-xs text-muted max-w-md mx-auto">
+              Your grievance has been submitted to the lead bank and agricultural officer for formal reconciliation.
+            </p>
+          </div>
 
-              <div className="p-4 rounded-2xl bg-warm-bg border border-warm-border text-left space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Issue Type:</span>
-                  <span className="font-semibold text-gray-900">{submittedGrievance.issue_type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Beneficiary:</span>
-                  <span className="font-semibold text-gray-900">{farmer.name} ({farmer.farmerId})</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Assignment:</span>
-                  <span className="font-semibold text-sage-800">SBI Patan / Durg Civil Supplies</span>
-                </div>
-              </div>
-
-              <div className="pt-2 flex gap-3">
-                <button
-                  onClick={() => setSubmittedGrievance(null)}
-                  className="flex-1 py-3 px-4 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-xs shadow-soft"
-                >
-                  Raise Another Issue
-                </button>
-                <button
-                  onClick={() => navigate('/admin')}
-                  className="px-4 py-3 rounded-2xl bg-white border border-warm-border text-gray-700 font-semibold text-xs hover:bg-warm-bg"
-                >
-                  View in Admin Portal
-                </button>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              {/* Issue Type */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Issue Type
-                </label>
-                <select
-                  value={issueType}
-                  onChange={(e) => setIssueType(e.target.value)}
-                  className="w-full px-4 py-3 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
-                >
-                  <option value="Loan Discrepancy">Loan Discrepancy (वितरण अंतर)</option>
-                  <option value="MSP Payment Delay">MSP Payment Delay (एमएसपी भुगतान देरी)</option>
-                  <option value="Crop Insurance Claim Issue">Crop Insurance Claim Issue (फसल बीमा समस्या)</option>
-                  <option value="Scheme Eligibility">Scheme Eligibility Inquiry (योजना पात्रता)</option>
-                </select>
-              </div>
-
-              {/* Description + Counter */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-semibold text-gray-700">
-                    Describe Your Issue
-                  </label>
-                  <span className="text-[11px] font-mono text-gray-400">
-                    {description.length}/{maxChars}
-                  </span>
-                </div>
-                <textarea
-                  value={description}
-                  maxLength={maxChars}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  className="w-full p-4 bg-warm-bg rounded-2xl border border-warm-border text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none leading-relaxed"
-                  placeholder="Explain the difference or issue you noticed in your records..."
-                  required
-                />
-              </div>
-
-              {/* Upload Document Section (Matches mockup file card) */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Upload Document (Optional)
-                </label>
-
-                <div className="space-y-2">
-                  {files.map((file, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-warm-card rounded-2xl border border-warm-border flex items-center justify-between shadow-soft"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-sage-100 text-sage-700 flex items-center justify-center">
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-900">{file.name}</p>
-                          <p className="text-[10px] text-gray-400">{file.size}</p>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFile(idx)}
-                        className="w-7 h-7 rounded-full text-gray-400 hover:text-red-600 hover:bg-red-50 flex items-center justify-center"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    onClick={handleAddFile}
-                    className="w-full py-2.5 rounded-2xl border-2 border-dashed border-warm-border hover:border-sage-400 text-xs font-semibold text-gray-600 hover:text-sage-700 flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <Plus className="w-4 h-4 text-sage-600" />
-                    <span>+ Add more files</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full h-12 py-3 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all transform active:scale-98 disabled:opacity-60"
-                >
-                  {isSubmitting ? (
-                    <span>Registering grievance...</span>
-                  ) : (
-                    <span>Submit Grievance</span>
-                  )}
-                </button>
-              </div>
-
-            </form>
-          )}
-
-        </div>
-
-        {/* Right Pane: Grievance History */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="bg-white rounded-3xl p-6 border border-warm-border shadow-card space-y-4">
-            <div className="flex items-center justify-between border-b border-warm-border pb-3">
-              <div>
-                <h3 className="text-sm font-bold text-gray-900">
-                  Grievance History
-                </h3>
-                <p className="text-xs text-gray-500">Track logged complaints</p>
-              </div>
-              <span className="text-xs font-semibold text-sage-700">
-                {history.length} Total
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {history.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-3.5 rounded-2xl bg-warm-bg border border-warm-border space-y-2 hover:border-sage-300 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-xs text-gray-900">
-                      {item.id}
-                    </span>
-                    <StatusBadge status={item.status} size="sm" />
-                  </div>
-
-                  <p className="text-xs font-semibold text-gray-800">{item.type}</p>
-                  <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
-
-                  <div className="pt-1 border-t border-warm-border/60 flex items-center justify-between text-[11px] text-gray-400">
-                    <span>{item.date}</span>
-                    <span className="text-sage-700 font-medium truncate max-w-[180px]">
-                      {item.officer}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => {
+                setSubmittedGrievance(null);
+                setDescription('');
+              }}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-xs shadow-soft"
+            >
+              Submit Another Inquiry
+            </button>
+            <button
+              onClick={() => navigate('/farmer')}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-cream border border-warm-border text-charcoal font-semibold text-xs"
+            >
+              Back to Home
+            </button>
           </div>
         </div>
+      ) : (
+        /* Grievance Form (Image B Screen 8) */
+        <form onSubmit={handleSubmit} className="bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-4">
+          
+          {/* Issue Type Select */}
+          <div>
+            <label className="block text-xs font-semibold text-charcoal mb-1.5">
+              Issue Type
+            </label>
+            <select
+              value={issueType}
+              onChange={(e) => setIssueType(e.target.value)}
+              className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
+            >
+              <option value="Loan Discrepancy">Loan Discrepancy</option>
+              <option value="MSP Payment Discrepancy">MSP Payment Discrepancy</option>
+              <option value="Insurance Claim Issue">Insurance Claim Issue</option>
+              <option value="Scheme Application Issue">Scheme Application Issue</option>
+            </select>
+          </div>
 
+          {/* Describe Your Issue Textarea with 62/300 counter */}
+          <div>
+            <label className="block text-xs font-semibold text-charcoal mb-1.5">
+              Describe Your Issue
+            </label>
+            <div className="relative">
+              <textarea
+                rows={4}
+                maxLength={maxChars}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Explain the discrepancy or issue clearly..."
+                className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive resize-none pb-7 leading-relaxed"
+                required
+              />
+              <span className="absolute bottom-2.5 right-3 text-[11px] font-mono text-muted">
+                {description.length}/{maxChars}
+              </span>
+            </div>
+          </div>
+
+          {/* Upload Document (Optional) */}
+          <div className="space-y-2 pt-1">
+            <label className="block text-xs font-semibold text-charcoal">
+              Upload Document (Optional)
+            </label>
+
+            {/* Uploaded File Row (Matching Image B Screen 8) */}
+            {files.map((file, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between p-3 rounded-xl bg-cream border border-warm-border"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-tint text-forest flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-charcoal truncate">{file.name}</p>
+                    <p className="text-[10px] text-muted">{file.size}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(idx)}
+                  className="w-7 h-7 rounded-lg hover:bg-tint text-muted hover:text-charcoal flex items-center justify-center"
+                  aria-label="Remove document"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+
+            {/* Add More Files Dashed Button */}
+            <button
+              type="button"
+              onClick={handleAddFile}
+              className="w-full py-2.5 rounded-xl border border-dashed border-warm-border hover:border-olive bg-cream-surface text-muted hover:text-charcoal text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add more files</span>
+            </button>
+          </div>
+
+          {/* Submit Button (Full Width 52px) */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting || !description.trim()}
+              className="w-full h-[52px] py-3.5 px-6 rounded-xl bg-forest hover:bg-forest-dark disabled:opacity-50 text-white font-bold text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-tint" />
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                <span>Submit Grievance</span>
+              )}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Historical Tickets Section */}
+      <div className="space-y-3 pt-2">
+        <h3 className="text-sm font-bold text-charcoal">
+          Your Recent Grievances
+        </h3>
+        {history.map((item) => (
+          <div
+            key={item.id}
+            className="bg-cream-surface rounded-2xl p-4 sm:p-5 border border-warm-border shadow-soft flex items-center justify-between gap-4"
+          >
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-charcoal">{item.id}</span>
+                <span className="text-[10px] text-muted">• {item.date}</span>
+              </div>
+              <p className="text-xs text-muted truncate">{item.desc}</p>
+            </div>
+            <StatusBadge status={item.status as any} size="sm" />
+          </div>
+        ))}
       </div>
 
     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardCheck, Landmark, Bot, FileText, ArrowRight, ArrowLeft } from 'lucide-react';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
+import clipboardChecklistImg from '../assets/illustrations/clipboard-checklist.svg';
 
 export const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -8,37 +9,32 @@ export const OnboardingPage: React.FC = () => {
 
   const steps = [
     {
-      icon: ClipboardCheck,
       title: 'Check Your Entitlements',
       titleHi: 'अपनी पात्रता जांचें',
-      description: 'Know which government schemes, loans, subsidies and insurance you are eligible for based on your land and crop.',
+      description: 'Know which government schemes, loans, subsidies and insurance you are eligible for.',
       descriptionHi: 'अपनी ज़मीन और फसल के आधार पर जानें कि आप किन सरकारी योजनाओं, ऋणों और सब्सिडी के पात्र हैं।',
     },
     {
-      icon: Landmark,
-      title: 'Verify Every Rupee',
-      titleHi: 'हर रुपये का सत्यापन',
+      title: 'Verify Your Money',
+      titleHi: 'अपने पैसे का सत्यापन करें',
       description: 'Compare approved vs disbursed loan amounts and expected MSP payments. We calculate exact differences instantly.',
       descriptionHi: 'स्वीकृत और वितरित ऋण राशि तथा एमएसपी भुगतान की तुलना करें। हम तुरंत सही अंतर की गणना करते हैं।',
     },
     {
-      icon: Bot,
-      title: 'Voice AI Assistant',
-      titleHi: 'आवाज से पूछें',
+      title: 'Ask in Your Language',
+      titleHi: 'अपनी भाषा में पूछें',
       description: 'Ask questions by typing or speaking in simple Hindi or English. Get transparent, policy-backed answers.',
       descriptionHi: 'सरल हिंदी या अंग्रेजी में बोलकर या लिखकर सवाल पूछें। नीति-सम्मत और स्पष्ट उत्तर पाएं।',
     },
     {
-      icon: FileText,
-      title: 'Download Formal Reports',
-      titleHi: 'रिपोर्ट डाउनलोड करें',
+      title: 'Track and Download Reports',
+      titleHi: 'रिपोर्ट ट्रैक और डाउनलोड करें',
       description: 'Generate clean PDF discrepancy reports with arithmetic breakdowns ready for bank officials or grievance submission.',
       descriptionHi: 'बैंक अधिकारियों या शिकायत दर्ज करने हेतु संपूर्ण हिसाब के साथ औपचारिक पीडीएफ रिपोर्ट डाउनलोड करें।',
     },
   ];
 
   const current = steps[step];
-  const Icon = current.icon;
 
   const handleNext = () => {
     if (step < steps.length - 1) {
@@ -55,16 +51,16 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-warm-bg flex flex-col justify-between p-6 max-w-md mx-auto">
-      {/* Top Header */}
+    <div className="min-h-[100dvh] bg-cream flex flex-col justify-between p-6 max-w-md mx-auto">
+      {/* Top Header: 4 Dots & Skip Button (Image B Screen 2) */}
       <div className="flex items-center justify-between pt-2">
         {/* Step dots */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {steps.map((_, i) => (
             <div
               key={i}
               className={`h-2 rounded-full transition-all duration-300 ${
-                i === step ? 'w-6 bg-sage-600' : 'w-2 bg-sage-200'
+                i === step ? 'w-6 bg-forest' : 'w-2 bg-tint'
               }`}
             />
           ))}
@@ -72,55 +68,48 @@ export const OnboardingPage: React.FC = () => {
 
         <button
           onClick={() => navigate('/farmer')}
-          className="text-xs font-semibold text-gray-500 hover:text-gray-900 px-3 py-1.5 rounded-full hover:bg-white"
+          className="text-xs font-bold text-muted hover:text-charcoal px-3 py-1.5 rounded-full hover:bg-cream-surface min-h-[36px]"
         >
           Skip
         </button>
       </div>
 
-      {/* Main Illustration & Text Card */}
-      <div className="my-auto py-8 text-center flex flex-col items-center">
-        {/* Rounded circular illustration badge */}
-        <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-full bg-sage-100 border-4 border-white shadow-card flex items-center justify-center relative mb-8">
-          <div className="w-36 h-36 rounded-full bg-white flex items-center justify-center shadow-soft">
-            <Icon className="w-20 h-20 text-sage-600 stroke-[1.6]" />
-          </div>
-          {/* Decorative grain sprig badge */}
-          <div className="absolute -top-1 -right-1 w-12 h-12 rounded-full bg-sage-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
-            ✓
-          </div>
+      {/* Main Clipboard Illustration & Text Card (Image B Screen 2) */}
+      <div className="my-auto py-6 text-center flex flex-col items-center">
+        {/* Clipboard with checklist artwork */}
+        <div className="w-56 h-56 rounded-full bg-tint/60 border border-warm-border flex items-center justify-center relative mb-6 shadow-soft p-4">
+          <img 
+            src={clipboardChecklistImg} 
+            alt="Check entitlements illustration" 
+            className="w-full h-full object-contain"
+          />
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-3">
+        <h2 className="text-2xl font-bold text-charcoal tracking-tight mb-2">
           {current.title}
         </h2>
-        <p className="text-sm text-gray-600 leading-relaxed max-w-xs">
+        <p className="text-xs sm:text-sm text-muted leading-relaxed max-w-xs">
           {current.description}
         </p>
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex items-center gap-4 pb-4">
+      {/* Bottom Action Controls: Back (outlined) and Next (green) - Image B Screen 2 */}
+      <div className="flex items-center gap-3 pb-4">
         {step > 0 ? (
           <button
             onClick={handleBack}
-            className="flex-1 h-12 py-3 px-6 rounded-2xl bg-white border border-warm-border text-gray-700 font-semibold text-sm shadow-soft hover:bg-warm-bg transition-colors flex items-center justify-center gap-2"
+            className="flex-1 h-[50px] py-3 px-5 rounded-xl border border-warm-border bg-cream-surface text-charcoal font-bold text-sm shadow-soft hover:bg-tint/40 transition-all flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
           </button>
         ) : (
-          <button
-            onClick={() => navigate('/splash')}
-            className="flex-1 h-12 py-3 px-6 rounded-2xl bg-white border border-warm-border text-gray-700 font-semibold text-sm shadow-soft hover:bg-warm-bg transition-colors"
-          >
-            Cancel
-          </button>
+          <div className="flex-1" />
         )}
 
         <button
           onClick={handleNext}
-          className="flex-1 h-12 py-3 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all transform active:scale-98"
+          className="flex-1 h-[50px] py-3 px-5 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-sm shadow-soft transition-all flex items-center justify-center gap-2 active:scale-98"
         >
           <span>{step === steps.length - 1 ? 'Get Started' : 'Next'}</span>
           <ArrowRight className="w-4 h-4" />

@@ -114,18 +114,18 @@ export const InsuranceVerificationPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Form */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-warm-border shadow-card space-y-4">
+        <div className="lg:col-span-7 bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-4">
           <div className="border-b border-warm-border pb-3 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-gray-900">
+              <h2 className="text-base font-bold text-charcoal">
                 Insurance Claim Particulars
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 Pradhan Mantri Fasal Bima Yojana (PMFBY) claim tracking
               </p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-sage-100 text-sage-700 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-tint text-forest flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
             </div>
           </div>
 
@@ -133,27 +133,27 @@ export const InsuranceVerificationPage: React.FC = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Policy / Claim Reference
                 </label>
                 <input
                   type="text"
                   value={insuranceRef}
                   onChange={(e) => setInsuranceRef(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-mono text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-mono text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Insured Crop
                 </label>
                 <input
                   type="text"
                   value={crop}
                   onChange={(e) => setCrop(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
                   required
                 />
               </div>
@@ -161,42 +161,44 @@ export const InsuranceVerificationPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Assessed Claim Entitlement (₹)
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   step="100"
                   value={claimExpected}
                   onChange={(e) => setClaimExpected(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Amount Received into Account (₹)
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   step="100"
                   value={amountReceived}
                   onChange={(e) => setAmountReceived(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-charcoal mb-1.5">
                 Portal Claim Status
               </label>
               <select
                 value={claimStatus}
                 onChange={(e) => setClaimStatus(e.target.value)}
-                className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
               >
                 <option value="Under Review">Under Review (Assessment in progress)</option>
                 <option value="Settled">Settled (Disbursement completed)</option>
@@ -208,7 +210,7 @@ export const InsuranceVerificationPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 py-3 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all transform active:scale-98 disabled:opacity-60"
+                className="w-full h-[52px] py-3.5 px-6 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-60"
               >
                 {isLoading ? (
                   <span>Analyzing claim payout...</span>

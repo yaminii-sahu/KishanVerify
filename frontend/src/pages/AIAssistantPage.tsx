@@ -16,6 +16,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { sendAiChatApi } from '../services/api';
+import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 
 interface Message {
   id: string;
@@ -38,7 +39,7 @@ export const AIAssistantPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Initial chat matching the design mockup in Screen 7
+  // Initial chat matching the design mockup in Screen 7 & Image A Screen 4
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'm-1',
@@ -50,12 +51,11 @@ export const AIAssistantPage: React.FC = () => {
       id: 'm-2',
       sender: 'assistant',
       text: 
-        `Aapka crop insurance claim abhi 'Under Review' status mein hai. Kripya ye details check karein:\n\n` +
+        `Aapka crop insurance claim abhi "Under Review" status mein hai. Kripya ye details check karein:\n\n` +
         `• Farmer ID: ${farmer.farmerId}\n` +
         `• Crop: ${farmer.crop}\n` +
-        `• Application No: CI20251234\n` +
-        `• Assessed Claim: ₹30,000 | Received: ₹20,000 | Difference: ₹10,000\n\n` +
-        `Agar aapko 15 din ke andar payment nahi milta, to aap apni najdeeki bank branch ya insurance company se sampark kar sakte hain. Aap grievance bhi file kar sakte hain.`,
+        `• Application No: CI20251234\n\n` +
+        `Agar aapko 15 din tak payment nahi milta, to aap apni najdeeki bank branch ya insurance company se sampark kar sakte hain. Aap grievance bhi file kar sakte hain.`,
       time: '09:41 AM',
       chips: ['Claim status', 'Required documents', 'Contact details'],
     },
@@ -65,9 +65,6 @@ export const AIAssistantPage: React.FC = () => {
     'Claim status',
     'Required documents',
     'Contact details',
-    'Explain loan difference',
-    'KCC interest rate',
-    'MSP paddy rate',
   ];
 
   // Auto-scroll to bottom of chat
@@ -94,12 +91,10 @@ export const AIAssistantPage: React.FC = () => {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
         setIsListening(false);
-        // Automatically send voice query for touch-friendly accessibility
         handleSendMessage(transcript);
       };
 
-      recognition.onerror = (event: any) => {
-        console.warn('Speech recognition error:', event.error);
+      recognition.onerror = () => {
         setIsListening(false);
       };
 
@@ -113,7 +108,7 @@ export const AIAssistantPage: React.FC = () => {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert('Speech recognition is not supported in this browser. Please type your query.');
+      alert('Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.');
       return;
     }
 
@@ -121,23 +116,18 @@ export const AIAssistantPage: React.FC = () => {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      setIsListening(true);
       try {
-        recognitionRef.current.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
         recognitionRef.current.start();
+        setIsListening(true);
       } catch (err) {
-        console.warn(err);
-        setIsListening(false);
+        console.error(err);
       }
     }
   };
 
-  // Web Speech API: Text-to-Speech (Audio Voice Output)
+  // Web Speech API: Text-to-Speech synthesis
   const speakText = (text: string, msgId: string) => {
-    if (!('speechSynthesis' in window)) {
-      alert('Text-to-speech is not supported in this browser.');
-      return;
-    }
+    if (!('speechSynthesis' in window)) return;
 
     if (isSpeakingId === msgId) {
       window.speechSynthesis.cancel();
@@ -146,33 +136,31 @@ export const AIAssistantPage: React.FC = () => {
     }
 
     window.speechSynthesis.cancel();
-    setIsSpeakingId(msgId);
 
-    const cleanText = text.replace(/[•*#]/g, '');
+    const cleanText = text
+      .replace(/[•\*\#]/g, '')
+      .replace(/₹/g, 'rupaye ')
+      .replace(/\|/g, ', ');
+
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
     utterance.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+    utterance.rate = 0.95;
 
-    utterance.onend = () => {
-      setIsSpeakingId(null);
-    };
+    utterance.onend = () => setIsSpeakingId(null);
+    utterance.onerror = () => setIsSpeakingId(null);
 
-    utterance.onerror = () => {
-      setIsSpeakingId(null);
-    };
-
+    setIsSpeakingId(msgId);
     window.speechSynthesis.speak(utterance);
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const query = (textToSend || input).trim();
-    if (!query) return;
+  const handleSendMessage = async (queryText?: string) => {
+    const textToSend = (queryText || input).trim();
+    if (!textToSend) return;
 
     const userMsg: Message = {
       id: `u-${Date.now()}`,
       sender: 'user',
-      text: query,
+      text: textToSend,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
@@ -181,22 +169,24 @@ export const AIAssistantPage: React.FC = () => {
     setIsTyping(true);
 
     try {
-      const data = await sendAiChatApi(query, language, farmer.farmerId);
+      const response = await sendAiChatApi(textToSend, language, farmer.farmerId);
+
       const botMsg: Message = {
         id: `a-${Date.now()}`,
         sender: 'assistant',
-        text: data.reply,
+        text: response.reply,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        chips: data.suggested_chips || ['Claim status', 'Required documents'],
+        chips: ['Claim status', 'Required documents', 'Contact details'],
       };
+
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err) {
-      // Smart Fallback
+    } catch {
+      // Deterministic bilingual fallback
       setTimeout(() => {
         let reply = '';
-        const qLower = query.toLowerCase();
+        const qLower = textToSend.toLowerCase();
 
-        if (qLower.includes('loan') || qLower.includes('kcc') || qLower.includes('karz')) {
+        if (qLower.includes('loan') || qLower.includes('karz') || qLower.includes('rin')) {
           reply = 
             `Aapke KCC Loan (SBI Patan) mein ₹10,000 ka difference hai:\n` +
             `• Approved: ₹80,000\n` +
@@ -225,33 +215,31 @@ export const AIAssistantPage: React.FC = () => {
           chips: ['Claim status', 'Required documents', 'Contact details'],
         };
         setMessages((prev) => [...prev, botMsg]);
-      }, 400);
+      }, 300);
     } finally {
       setIsTyping(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-135px)] md:h-[calc(100vh-120px)] max-w-4xl mx-auto">
+    <div className="flex flex-col h-[calc(100dvh-135px)] md:h-[calc(100dvh-130px)] max-w-4xl mx-auto">
       
       {/* Top Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-warm-border shrink-0">
+      <div className="hidden md:flex items-center justify-between pb-3 border-b border-warm-border shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/farmer')}
-            className="w-10 h-10 rounded-2xl bg-white border border-warm-border flex items-center justify-center text-gray-700 hover:bg-sage-50 transition-colors shadow-soft"
+            className="w-9 h-9 rounded-full bg-cream-surface border border-warm-border flex items-center justify-center text-charcoal hover:bg-tint transition-colors shadow-soft"
+            aria-label="Back"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-800" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-              <span>{language === 'hi' ? 'एआई नीति सहायक' : 'AI Assistant'}</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-sage-100 text-sage-800 border border-sage-200">
-                Bilingual Voice
-              </span>
+            <h1 className="text-xl font-bold text-charcoal tracking-tight flex items-center gap-2">
+              <span>{language === 'hi' ? 'एआई सहायक' : 'AI Assistant'}</span>
             </h1>
-            <p className="text-xs text-gray-500">
-              Ask anything about schemes, loans, MSP or crop insurance
+            <p className="text-xs text-muted">
+              Ask anything about your schemes, loans, MSP or crop insurance.
             </p>
           </div>
         </div>
@@ -262,35 +250,18 @@ export const AIAssistantPage: React.FC = () => {
               {
                 id: 'm-init',
                 sender: 'assistant',
-                text: 'Namaste! Main aapka KisanVerify AI sahayak hoon. Aap loan, MSP ya crop insurance ke baare mein kuch bhi pooch sakte hain.',
+                text: 'Namaste! Main aapka KisanVerify AI sahayak hoon. Aap loan, MSP ya crop insurance ke baare mein pooch sakte hain.',
                 time: 'Just now',
                 chips: ['Claim status', 'Required documents', 'Contact details'],
               },
             ]);
           }}
-          className="text-xs text-gray-400 hover:text-gray-700 flex items-center gap-1"
+          className="text-xs text-muted hover:text-charcoal flex items-center gap-1 min-h-[36px]"
           title="Clear chat"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Reset</span>
+          <span>Reset</span>
         </button>
-      </div>
-
-      {/* Quick Suggestion Chips (Horizontal scrollable - Matches Screen 7 mockup) */}
-      <div className="py-2.5 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
-        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider shrink-0 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-sage-600" />
-          Quick:
-        </span>
-        {quickChips.map((chip, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleSendMessage(chip)}
-            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-warm-border text-gray-700 hover:border-sage-400 hover:bg-sage-50 hover:text-sage-900 transition-all shrink-0 shadow-soft"
-          >
-            {chip}
-          </button>
-        ))}
       </div>
 
       {/* Messages Stream */}
@@ -302,66 +273,42 @@ export const AIAssistantPage: React.FC = () => {
               key={msg.id}
               className={`flex items-end gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
             >
-              {/* Bot Avatar */}
+              {/* Bot Avatar on Left */}
               {!isUser && (
-                <div className="w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center shrink-0 shadow-soft">
-                  <Bot className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-full bg-tint text-forest flex items-center justify-center shrink-0 shadow-soft border border-warm-border">
+                  <Bot className="w-4 h-4" strokeWidth={2} />
                 </div>
               )}
 
               {/* Message Bubble */}
               <div
-                className={`max-w-[85%] sm:max-w-md rounded-3xl p-4 sm:p-5 shadow-soft space-y-2 ${
+                className={`max-w-[85%] sm:max-w-md rounded-2xl p-4 sm:p-5 shadow-soft space-y-2 ${
                   isUser
-                    ? 'bg-sage-700 text-white rounded-br-none'
-                    : 'bg-white text-gray-900 border border-warm-border rounded-bl-none'
+                    ? 'bg-forest text-white rounded-br-sm'
+                    : 'bg-cream-surface text-charcoal border border-warm-border rounded-bl-sm'
                 }`}
               >
-                <div className="whitespace-pre-line text-sm leading-relaxed font-normal">
+                <div className="whitespace-pre-line text-xs sm:text-sm leading-relaxed">
                   {msg.text}
                 </div>
 
-                {/* Chips attached to assistant message (matches mockup) */}
-                {msg.chips && msg.chips.length > 0 && (
-                  <div className="pt-2 border-t border-warm-border/60">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">
-                      Want to know more?
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {msg.chips.map((chip, i) => (
-                        <button
-                          key={i}
-                          onClick={() => handleSendMessage(chip)}
-                          className="px-3 py-1 rounded-xl text-xs font-medium bg-warm-bg border border-warm-border text-gray-700 hover:bg-sage-100 hover:text-sage-900 transition-colors"
-                        >
-                          {chip}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Footer: Timestamp and Speak aloud button */}
-                <div className="flex items-center justify-between pt-1 text-[10px] opacity-70">
+                {/* Footer: Timestamp & Audio Speak Out */}
+                <div className={`flex items-center justify-between pt-1 text-[10px] ${isUser ? 'text-white/70' : 'text-muted'}`}>
                   <span>{msg.time}</span>
                   {!isUser && (
                     <button
                       onClick={() => speakText(msg.text, msg.id)}
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full transition-colors ${
-                        isSpeakingId === msg.id
-                          ? 'bg-sage-100 text-sage-800 font-bold'
-                          : 'hover:bg-gray-100 text-gray-500'
-                      }`}
-                      title="Speak in Hindi/English"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full hover:bg-tint/60 transition-colors"
+                      aria-label="Listen to message aloud"
                     >
                       {isSpeakingId === msg.id ? (
                         <>
-                          <VolumeX className="w-3 h-3 text-sage-700" />
-                          <span>Stop</span>
+                          <VolumeX className="w-3.5 h-3.5 text-forest" />
+                          <span className="text-forest font-semibold">Stop</span>
                         </>
                       ) : (
                         <>
-                          <Volume2 className="w-3 h-3 text-gray-600" />
+                          <Volume2 className="w-3.5 h-3.5 text-muted" />
                           <span>Listen</span>
                         </>
                       )}
@@ -370,79 +317,84 @@ export const AIAssistantPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* User Avatar */}
+              {/* User Avatar on Right */}
               {isUser && (
-                <div className="w-8 h-8 rounded-full bg-sage-200 text-sage-800 flex items-center justify-center shrink-0 font-bold text-xs shadow-soft">
-                  RK
-                </div>
+                <img 
+                  src={farmerAvatarImg} 
+                  alt="Farmer" 
+                  className="w-8 h-8 rounded-full object-cover shrink-0 border border-warm-border"
+                />
               )}
             </div>
           );
         })}
 
         {isTyping && (
-          <div className="flex items-center gap-2 text-xs text-gray-400 animate-pulse pl-10">
-            <Bot className="w-4 h-4 text-sage-600" />
-            <span>KisanVerify Assistant is reviewing policy records...</span>
+          <div className="flex items-center gap-2 text-muted text-xs p-2">
+            <Bot className="w-4 h-4 text-forest animate-pulse" />
+            <span>KisanVerify Assistant is thinking...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar (Matches mockup Screen 7) */}
+      {/* Quick Suggestion Chips (Image A & Image B) */}
+      <div className="py-2 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
+        <span className="text-[11px] font-bold text-muted uppercase tracking-wider shrink-0">
+          Want to know more?
+        </span>
+        {quickChips.map((chip, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleSendMessage(chip)}
+            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-cream-surface border border-warm-border text-charcoal hover:bg-tint/50 transition-all shrink-0 shadow-soft min-h-[36px]"
+          >
+            {chip}
+          </button>
+        ))}
+      </div>
+
+      {/* Input Bar with Circular Green Mic (Image A & Image B) */}
       <div className="pt-2 shrink-0">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSendMessage();
           }}
-          className="relative flex items-center bg-white rounded-3xl border border-warm-border shadow-card p-1.5 focus-within:ring-2 focus-within:ring-sage-500"
+          className="flex items-center gap-2 bg-cream-surface rounded-full border border-warm-border px-3 py-1.5 shadow-soft focus-within:ring-2 focus-within:ring-olive transition-all min-h-[52px]"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              isListening
-                ? 'Listening to your voice... Speak now in Hindi or English'
-                : 'Type or speak a question...'
-            }
-            className={`w-full pl-5 pr-24 py-3 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none ${
-              isListening ? 'animate-pulse text-sage-800 font-semibold' : ''
-            }`}
+            placeholder={isListening ? 'Listening to speech...' : 'Type or speak a question...'}
+            className="flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm font-medium text-charcoal placeholder-muted focus:outline-none"
           />
 
-          <div className="absolute right-2 flex items-center gap-1.5">
-            {/* Mic Button for Web Speech Recognition */}
-            <button
-              type="button"
-              onClick={toggleListening}
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${
-                isListening
-                  ? 'bg-kisan-red text-white animate-bounce shadow-md'
-                  : 'bg-warm-bg text-gray-700 hover:bg-sage-100 hover:text-sage-800'
-              }`}
-              title={isListening ? 'Stop listening' : 'Speak your question'}
-            >
-              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-sage-700" />}
-            </button>
-
-            {/* Send Button */}
+          {input.trim() ? (
             <button
               type="submit"
-              disabled={!input.trim()}
-              className="w-10 h-10 rounded-2xl bg-sage-600 text-white flex items-center justify-center hover:bg-sage-700 transition-colors disabled:opacity-40 shadow-soft"
-              title="Send question"
+              className="w-10 h-10 rounded-full bg-forest hover:bg-forest-dark text-white flex items-center justify-center shadow-soft transition-all shrink-0 active:scale-95"
+              aria-label="Send message"
             >
               <Send className="w-4 h-4" />
             </button>
-          </div>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`w-10 h-10 rounded-full flex items-center justify-center shadow-soft transition-all shrink-0 active:scale-95 ${
+                isListening
+                  ? 'bg-status-discrepancy-text text-white animate-pulse'
+                  : 'bg-forest hover:bg-forest-dark text-white'
+              }`}
+              aria-label="Speak into microphone"
+            >
+              {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-tint" />}
+            </button>
+          )}
         </form>
-
-        <p className="text-[10px] text-gray-400 text-center mt-2">
-          KisanVerify AI Policy Simplifier • Deterministic math verified before explanation
-        </p>
       </div>
 
     </div>

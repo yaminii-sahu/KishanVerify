@@ -117,31 +117,31 @@ export const MSPVerificationPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Form */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-warm-border shadow-card space-y-4">
+        <div className="lg:col-span-7 bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-4">
           <div className="border-b border-warm-border pb-3 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-gray-900">
+              <h2 className="text-base font-bold text-charcoal">
                 Crop Procurement Information
               </h2>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 Formula: Expected = Quantity (qtl) × MSP Rate (₹/qtl)
               </p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-sage-100 text-sage-700 flex items-center justify-center">
-              <Coins className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-tint text-forest flex items-center justify-center">
+              <Coins className="w-5 h-5" />
             </div>
           </div>
 
           <form onSubmit={handleVerify} className="space-y-4">
             
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-charcoal mb-1.5">
                 Crop Variety
               </label>
               <select
                 value={crop}
                 onChange={(e) => setCrop(e.target.value)}
-                className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
               >
                 <option value="Paddy (Common)">Paddy Common (₹2,300/qtl)</option>
                 <option value="Paddy (Grade A)">Paddy Grade A (₹2,320/qtl)</option>
@@ -153,57 +153,60 @@ export const MSPVerificationPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Procured Quantity (Quintals)
                 </label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   step="0.5"
                   value={quantity}
                   onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   MSP Rate per Quintal (₹)
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   step="1"
                   value={mspRate}
                   onChange={(e) => setMspRate(parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-charcoal mb-1.5">
                 Actual Payment Received in Bank (₹)
               </label>
               <input
                 type="number"
+                inputMode="numeric"
                 step="100"
                 value={actualPayment}
                 onChange={(e) => setActualPayment(parseFloat(e.target.value) || 0)}
-                className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-charcoal mb-1.5">
                 Mandi / Procurement Center
               </label>
               <input
                 type="text"
                 value={procurementCenter}
                 onChange={(e) => setProcurementCenter(e.target.value)}
-                className="w-full px-4 py-2.5 bg-warm-bg rounded-2xl border border-warm-border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
+                className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
               />
             </div>
 
@@ -211,7 +214,7 @@ export const MSPVerificationPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 py-3 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all transform active:scale-98 disabled:opacity-60"
+                className="w-full h-[52px] py-3.5 px-6 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-60"
               >
                 {isLoading ? (
                   <span>Computing MSP entitlement...</span>

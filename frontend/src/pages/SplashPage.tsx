@@ -1,40 +1,44 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
-import { FarmerIllustration } from '../components/FarmerIllustration';
 import { useAuth } from '../context/AuthContext';
-import { User, ShieldCheck, ArrowRight, Sparkles } from 'lucide-react';
+import { User, ShieldCheck, ArrowRight } from 'lucide-react';
+import farmerFieldsImg from '../assets/illustrations/farmer-fields.svg';
 
 export const SplashPage: React.FC = () => {
   const navigate = useNavigate();
   const { switchRole } = useAuth();
 
   return (
-    <div className="min-h-screen bg-warm-bg flex flex-col justify-between items-center px-4 py-8 max-w-md mx-auto text-center selection:bg-sage-200">
-      {/* Top Logo */}
-      <div className="pt-6">
+    <div className="min-h-[100dvh] bg-cream flex flex-col justify-between items-center px-4 py-8 max-w-md mx-auto text-center">
+      {/* Top Logo & Tagline */}
+      <div className="pt-4 flex flex-col items-center">
         <Logo variant="dark" size="lg" showTagline={true} />
       </div>
 
-      {/* Hero Illustration */}
-      <div className="my-6 w-full max-w-sm rounded-3xl overflow-hidden shadow-card border border-warm-border bg-white p-2">
-        <div className="w-full h-64 sm:h-72 rounded-2xl overflow-hidden">
-          <FarmerIllustration className="w-full h-full object-cover" />
+      {/* Hero Farmer in Fields Artwork (Image B Screen 1) */}
+      <div className="my-4 w-full max-w-sm rounded-2xl overflow-hidden shadow-soft border border-warm-border bg-cream-surface p-2">
+        <div className="w-full h-64 sm:h-72 rounded-xl overflow-hidden">
+          <img 
+            src={farmerFieldsImg} 
+            alt="Farmer in fields holding phone" 
+            className="w-full h-full object-cover"
+          />
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="w-full space-y-3.5 pb-4">
+      <div className="w-full space-y-3 pb-4">
         {/* Farmer Login */}
         <button
           onClick={() => {
             switchRole('farmer');
             navigate('/farmer');
           }}
-          className="w-full h-13 py-3.5 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-base shadow-card flex items-center justify-center gap-2.5 transition-all transform active:scale-[0.98]"
+          className="w-full h-[52px] py-3.5 px-6 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-base shadow-soft flex items-center justify-center gap-2.5 transition-all active:scale-[0.98]"
         >
-          <User className="w-5 h-5" />
-          <span>Farmer Login</span>
+          <User className="w-5 h-5 text-tint" />
+          <span>Demo: Farmer Login</span>
         </button>
 
         {/* Bank / Admin Login */}
@@ -43,30 +47,20 @@ export const SplashPage: React.FC = () => {
             switchRole('admin');
             navigate('/admin');
           }}
-          className="w-full h-13 py-3.5 px-6 rounded-2xl bg-white hover:bg-sage-50 text-gray-800 font-semibold text-base border border-warm-border shadow-soft flex items-center justify-center gap-2.5 transition-all active:scale-[0.98]"
+          className="w-full h-[52px] py-3.5 px-6 rounded-xl bg-cream-surface hover:bg-tint text-charcoal font-bold text-base border border-warm-border shadow-soft flex items-center justify-center gap-2.5 transition-all active:scale-[0.98]"
         >
-          <ShieldCheck className="w-5 h-5 text-sage-600" />
+          <ShieldCheck className="w-5 h-5 text-forest" />
           <span>Bank / Admin Login</span>
         </button>
 
-        {/* 1-Click Interactive Tour / Onboarding */}
-        <div className="pt-2 flex items-center justify-center gap-4 text-xs text-gray-500">
+        {/* 4-Step Interactive Tour Link */}
+        <div className="pt-2 flex items-center justify-center gap-3 text-xs text-muted">
           <button
             onClick={() => navigate('/onboarding')}
-            className="hover:text-sage-700 font-medium inline-flex items-center gap-1"
+            className="hover:text-forest font-semibold inline-flex items-center gap-1"
           >
             <span>How it works (4-step tour)</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-          <span>•</span>
-          <button
-            onClick={() => {
-              switchRole('farmer');
-              navigate('/farmer');
-            }}
-            className="hover:text-sage-700 font-medium text-sage-700 underline"
-          >
-            Continue as Guest ➔
           </button>
         </div>
       </div>
