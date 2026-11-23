@@ -19,6 +19,7 @@ import { InsuranceVerificationPage } from './pages/InsuranceVerificationPage';
 import { AIAssistantPage } from './pages/AIAssistantPage';
 import { GrievancePage } from './pages/GrievancePage';
 import { ReportsPage } from './pages/ReportsPage';
+import { ReportDetailPage } from './pages/ReportDetailPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DocumentsPage } from './pages/DocumentsPage';
 import { MandiPricesPage } from './pages/MandiPricesPage';
@@ -75,6 +76,7 @@ export default function App() {
               <Route path="grievance" element={<GrievancePage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="reports/:reportId" element={<ReportDetailPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
 
