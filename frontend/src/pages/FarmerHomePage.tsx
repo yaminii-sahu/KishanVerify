@@ -18,7 +18,6 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchFarmerAttentionApi } from '../services/api';
-import heroFarmerBannerImg from '../assets/illustrations/hero-farmer-banner.svg';
 
 export const FarmerHomePage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -107,35 +106,23 @@ export const FarmerHomePage: React.FC = () => {
       </div>
 
       {/* ============================================================== */}
-      {/* HERO BANNER (Unified compact banner per Image 1) */}
+      {/* HERO BANNER (Unified compact banner) */}
       {/* ============================================================== */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#E3EBD1] border border-[#CAD8B6] px-4 py-3 sm:px-6 sm:py-4 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4 min-h-[135px]">
+      <div className="relative overflow-hidden rounded-2xl bg-[#E3EBD1] border border-[#CAD8B6] px-5 py-4 sm:px-6 sm:py-5 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4">
         
-        {/* Left & Center: Integrated Farmer Illustration & Text */}
-        <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
-          {/* Integrated Farmer Artwork - naturally blended into bottom-left, no white box */}
-          <div className="w-24 sm:w-32 md:w-36 h-24 sm:h-28 md:h-32 shrink-0 relative overflow-hidden self-end -mb-3 sm:-mb-4 -ml-2 sm:-ml-3 select-none pointer-events-none">
-            <img 
-              src={heroFarmerBannerImg} 
-              alt="Farmer in agricultural fields" 
-              className="w-full h-full object-contain object-left-bottom"
-            />
-          </div>
-
-          {/* Center Section: Headline & Description */}
-          <div className="py-1">
-            <h2 className="text-lg sm:text-xl font-extrabold text-charcoal tracking-tight leading-tight">
-              {language === 'hi' ? 'अपनी योजनाएं जानें। अपना पैसा सत्यापित करें।' : 'Know your benefits. Verify your money.'}
-            </h2>
-            <p className="text-xs sm:text-sm text-[#4E6243] font-medium leading-snug mt-1 max-w-lg">
-              {language === 'hi' 
-                ? 'अपने ऋण, सब्सिडी, एमएसपी और फसल बीमा का पारदर्शी विवरण एक ही स्थान पर जांचें।' 
-                : 'Check your loans, subsidies, MSP and insurance in one place.'}
-            </p>
-          </div>
+        {/* Left: Headline & Description */}
+        <div className="py-1 flex-1 min-w-0">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-extrabold text-charcoal tracking-tight leading-tight">
+            {language === 'hi' ? 'अपनी योजनाएं जानें। अपना पैसा सत्यापित करें।' : 'Know your benefits. Verify your money.'}
+          </h2>
+          <p className="text-xs sm:text-sm text-[#4E6243] font-medium leading-snug mt-1 max-w-xl">
+            {language === 'hi' 
+              ? 'अपने ऋण, सब्सिडी, एमएसपी और फसल बीमा का पारदर्शी विवरण एक ही स्थान पर जांचें।' 
+              : 'Check your loans, subsidies, MSP and insurance in one place.'}
+          </p>
         </div>
 
-        {/* Right Section: Compact Voice Assistant Panel (Horizontal per Image 1) */}
+        {/* Right Section: Compact Voice Assistant Panel */}
         <div className="hidden md:flex items-center gap-3.5 px-4 py-2.5 rounded-2xl bg-[#D6E2C6]/80 border border-[#C5D4B3] shrink-0 shadow-sm">
           {/* Decorative outline mic icon on left */}
           <Mic className="w-5 h-5 text-forest/90 shrink-0" strokeWidth={2} />
