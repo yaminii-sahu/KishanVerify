@@ -38,5 +38,14 @@
   <body class="bg-cream text-charcoal antialiased selection:bg-tint selection:text-forest">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- On-device mobile DevTools console (enabled by adding ?debug=true in the phone URL) -->
+    <script>
+      if (window.location.search.includes('debug=true')) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/eruda';
+        script.onload = () => window.eruda && window.eruda.init();
+        document.head.appendChild(script);
+      }
+    </script>
   </body>
 </html>
