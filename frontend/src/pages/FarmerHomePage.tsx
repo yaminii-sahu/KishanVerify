@@ -18,7 +18,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchFarmerAttentionApi } from '../services/api';
-import farmerFieldsImg from '../assets/illustrations/farmer-fields.svg';
+import heroFarmerBannerImg from '../assets/illustrations/hero-farmer-banner.svg';
 
 export const FarmerHomePage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -107,58 +107,67 @@ export const FarmerHomePage: React.FC = () => {
       </div>
 
       {/* ============================================================== */}
-      {/* HERO BANNER (Side-by-side on desktop Image A, compact on phone Image B) */}
+      {/* HERO BANNER (Unified compact banner per Image 1) */}
       {/* ============================================================== */}
-      <div className="relative overflow-hidden rounded-2xl bg-tint/60 border border-warm-border p-5 sm:p-7 shadow-soft flex flex-col md:flex-row items-center justify-between gap-6">
+      <div className="relative overflow-hidden rounded-2xl bg-[#E3EBD1] border border-[#CAD8B6] px-4 py-3 sm:px-6 sm:py-4 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4 min-h-[135px]">
         
-        {/* Left Side: Artwork + Message */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 flex-1 text-center sm:text-left">
-          <div className="w-28 h-28 sm:w-36 sm:h-36 shrink-0 rounded-2xl overflow-hidden shadow-soft border border-white/80 bg-white">
+        {/* Left & Center: Integrated Farmer Illustration & Text */}
+        <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
+          {/* Integrated Farmer Artwork - naturally blended into bottom-left, no white box */}
+          <div className="w-24 sm:w-32 md:w-36 h-24 sm:h-28 md:h-32 shrink-0 relative overflow-hidden self-end -mb-3 sm:-mb-4 -ml-2 sm:-ml-3 select-none pointer-events-none">
             <img 
-              src={farmerFieldsImg} 
-              alt="Farmer in fields" 
-              className="w-full h-full object-cover object-center"
+              src={heroFarmerBannerImg} 
+              alt="Farmer in agricultural fields" 
+              className="w-full h-full object-contain object-left-bottom"
             />
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-charcoal tracking-tight leading-snug">
+          {/* Center Section: Headline & Description */}
+          <div className="py-1">
+            <h2 className="text-lg sm:text-xl font-extrabold text-charcoal tracking-tight leading-tight">
               {language === 'hi' ? 'अपनी योजनाएं जानें। अपना पैसा सत्यापित करें।' : 'Know your benefits. Verify your money.'}
             </h2>
-            <p className="text-xs sm:text-sm text-muted leading-relaxed max-w-md">
+            <p className="text-xs sm:text-sm text-[#4E6243] font-medium leading-snug mt-1 max-w-lg">
               {language === 'hi' 
                 ? 'अपने ऋण, सब्सिडी, एमएसपी और फसल बीमा का पारदर्शी विवरण एक ही स्थान पर जांचें।' 
                 : 'Check your loans, subsidies, MSP and insurance in one place.'}
             </p>
-
-            {/* Mobile "Ask in your language" pill (Image B) */}
-            <div className="pt-2 md:hidden">
-              <button
-                onClick={() => navigate('/farmer/assistant')}
-                className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-full bg-forest text-white text-xs font-bold shadow-soft hover:bg-forest-dark transition-all active:scale-98 min-h-[44px]"
-              >
-                <Mic className="w-4 h-4 text-tint" />
-                <span>{language === 'hi' ? 'अपनी भाषा में पूछें' : 'Ask in your language'}</span>
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Right Side on Desktop: Dedicated Mic Panel (Image A) */}
-        <div className="hidden md:flex flex-col items-center justify-center p-5 rounded-2xl bg-cream-surface/90 border border-warm-border text-center shadow-soft min-w-[200px]">
-          <span className="text-xs font-bold text-charcoal">
-            {language === 'hi' ? 'अपनी भाषा में पूछें' : 'Ask in your language'}
-          </span>
-          <span className="text-[11px] text-muted mt-0.5">
-            {language === 'hi' ? 'माइक दबाकर बोलें' : 'Tap the mic and speak'}
-          </span>
+        {/* Right Section: Compact Voice Assistant Panel (Horizontal per Image 1) */}
+        <div className="hidden md:flex items-center gap-3.5 px-4 py-2.5 rounded-2xl bg-[#D6E2C6]/80 border border-[#C5D4B3] shrink-0 shadow-sm">
+          {/* Decorative outline mic icon on left */}
+          <Mic className="w-5 h-5 text-forest/90 shrink-0" strokeWidth={2} />
 
+          {/* Text block */}
+          <div className="text-left whitespace-nowrap">
+            <p className="text-xs font-bold text-charcoal leading-tight">
+              {language === 'hi' ? 'अपनी भाषा में पूछें' : 'Ask in your language'}
+            </p>
+            <p className="text-[11px] text-[#556948] mt-0.5">
+              {language === 'hi' ? 'माइक दबाकर बोलें' : 'Tap the mic and speak'}
+            </p>
+          </div>
+
+          {/* Compact round voice button */}
           <button
             onClick={() => navigate('/farmer/assistant')}
-            className="w-14 h-14 mt-3 rounded-full bg-forest hover:bg-forest-dark text-white flex items-center justify-center shadow-soft hover:scale-105 active:scale-95 transition-all"
+            className="w-9 h-9 rounded-full bg-forest hover:bg-forest-dark text-white flex items-center justify-center shadow-soft hover:scale-105 active:scale-95 transition-all ml-1 shrink-0"
             aria-label="Activate voice assistant"
           >
-            <Mic className="w-6 h-6 text-tint animate-pulse" />
+            <Mic className="w-4 h-4 text-white" />
+          </button>
+        </div>
+
+        {/* Mobile Voice Button (< md) */}
+        <div className="w-full md:hidden pt-0.5">
+          <button
+            onClick={() => navigate('/farmer/assistant')}
+            className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-forest text-white text-xs font-bold shadow-soft hover:bg-forest-dark transition-all active:scale-98 min-h-[42px]"
+          >
+            <Mic className="w-4 h-4 text-white" />
+            <span>{language === 'hi' ? 'अपनी भाषा में पूछें — माइक दबाकर बोलें' : 'Ask in your language — Tap the mic and speak'}</span>
           </button>
         </div>
       </div>
