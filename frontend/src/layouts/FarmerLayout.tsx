@@ -12,7 +12,6 @@ import {
   User, 
   Bell, 
   Globe, 
-  ArrowRightLeft,
   ArrowLeft,
   Menu,
   X
@@ -25,7 +24,7 @@ import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 
 export const FarmerLayout: React.FC = () => {
   const { language, toggleLanguage, t } = useLanguage();
-  const { farmer, switchRole } = useAuth();
+  const { farmer } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [notificationOpen, setNotificationOpen] = useState(false);
@@ -162,20 +161,6 @@ export const FarmerLayout: React.FC = () => {
             >
               <Globe className="w-3.5 h-3.5 text-olive" />
               <span>{language === 'en' ? 'हिंदी' : 'English'}</span>
-            </button>
-
-            {/* Bank Admin View Switcher */}
-            <button
-              onClick={() => {
-                switchRole('admin');
-                navigate('/admin');
-              }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-tint text-forest border border-warm-border hover:bg-olive hover:text-white transition-colors shadow-soft min-h-[38px]"
-              title="Switch to Bank Admin Console"
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Bank Admin View</span>
-              <span className="lg:hidden">Admin</span>
             </button>
 
             {/* Notification Bell */}
