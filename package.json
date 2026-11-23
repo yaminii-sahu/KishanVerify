@@ -10,6 +10,7 @@
     "start": "concurrently -k -n \"servers,browser\" -c \"cyan.bold,magenta.bold\" \"npm run dev\" \"wait-on -t 30000 http-get://127.0.0.1:8000/health && open-cli http://localhost:5173\"",
     "build": "npm run build --prefix frontend",
     "build:serve": "node scripts/serve-production.js",
+    "generate:icons": "node scripts/run-generate-icons.js",
     "test": "node scripts/run-tests.js"
   },
   "devDependencies": {
