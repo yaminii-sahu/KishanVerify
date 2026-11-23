@@ -11,10 +11,11 @@ import {
   Bell, 
   Search,
   Filter,
-  CheckCircle2
+  CheckCircle2,
+  ArrowRightLeft
 } from 'lucide-react';
 import { Logo } from '../components/Logo';
-import { TractorSilhouette } from '../components/TractorSilhouette';
+import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -33,24 +34,24 @@ export const AdminLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-warm-bg flex flex-col md:flex-row antialiased text-gray-900">
+    <div className="min-h-[100dvh] bg-cream flex flex-col md:flex-row antialiased text-charcoal">
       {/* Sidebar */}
-      <aside className="w-full md:w-72 bg-sidebar text-white flex flex-col justify-between shrink-0 shadow-2xl relative z-20">
+      <aside className="w-full md:w-72 bg-forest text-white flex flex-col justify-between shrink-0 shadow-2xl relative z-20">
         <div>
           {/* Logo */}
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
             <Logo variant="white" showTagline={true} size="md" />
           </div>
 
-          <div className="px-6 py-3 bg-white/5 border-b border-white/10 text-xs flex items-center justify-between text-sage-200">
+          <div className="px-6 py-3 bg-white/5 border-b border-white/10 text-xs flex items-center justify-between text-tint">
             <span>Bank Officer Console</span>
-            <span className="px-2 py-0.5 rounded-full bg-sage-500/30 text-sage-300 font-mono text-[10px]">
+            <span className="px-2 py-0.5 rounded-full bg-white/15 text-white font-mono text-[10px]">
               SBI • Durg
             </span>
           </div>
 
           {/* Navigation */}
-          <nav className="p-4 space-y-1.5">
+          <nav className="p-4 space-y-1.5" aria-label="Admin Navigation">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -61,12 +62,12 @@ export const AdminLayout: React.FC = () => {
                   className={({ isActive }) =>
                     `flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
                       isActive
-                        ? 'bg-sage-600 text-white font-semibold shadow-md'
-                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                        ? 'bg-cream-surface text-forest font-bold shadow-soft'
+                        : 'text-white/85 hover:bg-white/10 hover:text-white'
                     }`
                   }
                 >
-                  <Icon className="w-5 h-5 text-sage-300" />
+                  <Icon className="w-5 h-5 shrink-0" strokeWidth={2} />
                   <span>{item.label}</span>
                 </NavLink>
               );
@@ -75,15 +76,15 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         {/* Bottom Actions */}
-        <div className="p-4 border-t border-white/10 space-y-2">
+        <div className="p-4 border-t border-white/10 space-y-2 mt-auto">
           <button
             onClick={() => {
               switchRole('farmer');
               navigate('/farmer');
             }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-sage-700/60 hover:bg-sage-600 text-white text-xs font-semibold border border-sage-500/30 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-semibold border border-white/20 transition-colors"
           >
-            <ArrowLeftRight className="w-4 h-4" />
+            <ArrowRightLeft className="w-4 h-4" />
             <span>Switch to Farmer Portal</span>
           </button>
 
@@ -91,13 +92,17 @@ export const AdminLayout: React.FC = () => {
             onClick={() => {
               navigate('/login');
             }}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-white/70 hover:bg-white/10 hover:text-white text-xs font-medium transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-white/70 hover:bg-white/10 hover:text-white text-xs font-medium transition-colors"
           >
             <LogOut className="w-4 h-4 text-red-300" />
             <span>Sign Out</span>
           </button>
 
-          <TractorSilhouette className="w-full h-12 opacity-40 mt-2" />
+          <img 
+            src={tractorFieldImg} 
+            alt="Field with tractor" 
+            className="w-full h-12 object-cover object-bottom opacity-70 mt-2 pointer-events-none" 
+          />
         </div>
       </aside>
 

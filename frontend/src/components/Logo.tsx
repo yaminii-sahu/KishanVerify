@@ -31,9 +31,11 @@ export const Logo: React.FC<LogoProps> = ({
       {/* Emblem: Circular leaf icon */}
       <div
         className={`${iconSizes[size]} rounded-2xl flex items-center justify-center shrink-0 ${
-          isLight || isWhite
-            ? 'bg-sage-100 text-sage-800 border border-sage-200'
-            : 'bg-sage-600 text-white shadow-soft'
+          isWhite
+            ? 'bg-white/15 text-white border border-white/20'
+            : isLight
+            ? 'bg-tint text-forest border border-warm-border'
+            : 'bg-forest text-white shadow-soft'
         }`}
       >
         <svg
@@ -53,15 +55,15 @@ export const Logo: React.FC<LogoProps> = ({
       <div className="flex flex-col">
         <span
           className={`font-bold tracking-tight leading-none ${titleSizes[size]} ${
-            isWhite ? 'text-white' : isLight ? 'text-gray-900' : 'text-gray-900'
+            isWhite ? 'text-white' : 'text-charcoal'
           }`}
         >
-          Kisan<span className={isWhite ? 'text-sage-300' : 'text-sage-600'}>Verify</span>
+          Kisan<span className={isWhite ? 'text-tint' : 'text-forest'}>Verify</span>
         </span>
         {showTagline && (
           <span
             className={`text-[10px] sm:text-xs font-medium tracking-tight mt-1 ${
-              isWhite ? 'text-white/70' : 'text-gray-500'
+              isWhite ? 'text-white/70' : 'text-muted'
             }`}
           >
             Every rupee. Every benefit. Verified.

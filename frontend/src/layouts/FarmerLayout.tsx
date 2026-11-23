@@ -13,12 +13,15 @@ import {
   Bell, 
   Globe, 
   ArrowRightLeft,
-  Sparkles
+  ArrowLeft,
+  Menu,
+  X
 } from 'lucide-react';
 import { Logo } from '../components/Logo';
-import { TractorSilhouette } from '../components/TractorSilhouette';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
+import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 
 export const FarmerLayout: React.FC = () => {
   const { language, toggleLanguage, t } = useLanguage();
@@ -26,7 +29,9 @@ export const FarmerLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Desktop & Tablet Sidebar items (Image A)
   const navItems = [
     { path: '/farmer', labelKey: 'nav.home', icon: Home },
     { path: '/farmer/schemes', labelKey: 'nav.schemes', icon: Layers },
@@ -39,46 +44,68 @@ export const FarmerLayout: React.FC = () => {
     { path: '/farmer/profile', labelKey: 'nav.profile', icon: User },
   ];
 
+  // Mobile Bottom Tab Bar: Exactly 5 items matching Image B
   const mobileBottomTabs = [
-    { path: '/farmer', labelKey: 'nav.home', icon: Home },
-    { path: '/farmer/schemes', labelKey: 'nav.schemes', icon: Layers },
-    { path: '/farmer/assistant', labelKey: 'nav.assistant', icon: Bot, isSpecial: true },
-    { path: '/farmer/reports', labelKey: 'nav.reports', icon: FileText },
-    { path: '/farmer/profile', labelKey: 'nav.profile', icon: User },
+    { path: '/farmer', label: 'Home', labelKey: 'nav.home', icon: Home, exact: true },
+    { path: '/farmer/schemes', label: 'Schemes', labelKey: 'nav.schemes', icon: Layers },
+    { path: '/farmer/assistant', label: 'Assistant', labelKey: 'nav.assistant', icon: Bot },
+    { path: '/farmer/reports', label: 'Reports', labelKey: 'nav.reports', icon: FileText },
+    { path: '/farmer/profile', label: 'Profile', labelKey: 'nav.profile', icon: User },
   ];
 
+  const isHome = location.pathname === '/farmer' || location.pathname === '/farmer/';
+
+  // Helper to get screen title on mobile sub-pages
+  const getSubpageMeta = () => {
+    const path = location.pathname;
+    if (path.includes('schemes')) return { title: 'My Schemes', subtitle: 'Government schemes you may be eligible for.' };
+    if (path.includes('loan-verify')) return { title: 'Loan Verification', subtitle: 'Check if your loan details match the expected amount.' };
+    if (path.includes('msp-verify')) return { title: 'MSP Mandi Verification', subtitle: 'Verify crop weight benchmark formula vs bank payout.' };
+    if (path.includes('insurance-verify')) return { title: 'Crop Insurance', subtitle: 'Check your claim status and settlement.' };
+    if (path.includes('assistant')) return { title: 'AI Assistant', subtitle: 'Ask anything about schemes, loans, MSP or crop insurance.' };
+    if (path.includes('grievance')) return { title: 'Raise a Grievance', subtitle: 'Report any issue related to loan, MSP, insurance or scheme.' };
+    if (path.includes('reports')) return { title: 'My Reports', subtitle: 'View and download your financial and verification reports.' };
+    if (path.includes('profile')) return { title: 'Profile', subtitle: 'Farmer profile and personal information.' };
+    return { title: 'KisanVerify', subtitle: 'Agricultural Financial Transparency Platform' };
+  };
+
+  const meta = getSubpageMeta();
+
   return (
-    <div className="min-h-screen bg-warm-bg flex flex-col md:flex-row antialiased text-gray-900 selection:bg-sage-200">
+    <div className="min-h-[100dvh] bg-cream flex flex-col md:flex-row antialiased text-charcoal selection:bg-tint selection:text-forest">
       
       {/* ============================================================== */}
-      {/* DESKTOP SIDEBAR (Dark green styled from mockups)               */}
+      {/* DESKTOP & TABLET SIDEBAR (Dark Forest Green matching Image A)   */}
       {/* ============================================================== */}
-      <aside className="hidden md:flex w-72 bg-sidebar text-white flex-col justify-between shrink-0 shadow-xl relative z-20">
+      <aside className="hidden md:flex w-64 lg:w-72 bg-forest text-white flex-col justify-between shrink-0 shadow-xl relative z-20 select-none">
         <div className="flex flex-col">
           {/* Logo Header */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-5 lg:p-6 border-b border-white/10">
             <Logo variant="white" showTagline={true} size="md" />
           </div>
 
-          {/* Nav items */}
-          <nav className="p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-220px)]">
+          {/* Nav items list */}
+          <nav className="p-3.5 lg:p-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-230px)]" aria-label="Sidebar Navigation">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path;
+              const isActive = item.path === '/farmer' 
+                ? (location.pathname === '/farmer' || location.pathname === '/farmer/')
+                : location.pathname.startsWith(item.path);
+
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
                   className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-150 ${
                     isActive
-                      ? 'bg-sage-600 text-white font-semibold shadow-md'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                      ? 'bg-cream-surface text-forest font-bold shadow-soft'
+                      : 'text-white/85 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-sage-300'}`} />
+                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-forest' : 'text-white/80'}`} strokeWidth={isActive ? 2.2 : 1.75} />
                   <span className="truncate">{t(item.labelKey)}</span>
-                  {item.highlight && (
-                    <span className="ml-auto text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-sage-500 text-white">
+                  {item.highlight && !isActive && (
+                    <span className="ml-auto text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-olive text-white">
                       AI
                     </span>
                   )}
@@ -88,114 +115,116 @@ export const FarmerLayout: React.FC = () => {
           </nav>
         </div>
 
-        {/* Sidebar Footer with Tractor Silhouette */}
-        <div className="mt-auto relative overflow-hidden pt-4">
-          <div className="px-6 py-3 border-t border-white/10 text-[11px] text-white/60 flex items-center justify-between">
-            <span>KisanVerify v1.0</span>
-            <span className="px-2 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">
-              Demo
+        {/* Sidebar Footer with Rolling Field & Tractor Illustration */}
+        <div className="mt-auto relative overflow-hidden pt-3 border-t border-white/10">
+          <div className="px-5 py-2 text-[11px] text-white/70 flex items-center justify-between">
+            <span className="font-medium">KisanVerify</span>
+            <span className="px-2 py-0.5 rounded-full bg-white/15 text-white/90 text-[10px] font-mono">
+              v1.0
             </span>
           </div>
-          <TractorSilhouette className="w-full h-16 opacity-75" />
+          <img 
+            src={tractorFieldImg} 
+            alt="Agricultural field with tractor" 
+            className="w-full h-16 object-cover object-bottom opacity-85 pointer-events-none" 
+          />
         </div>
       </aside>
 
       {/* ============================================================== */}
-      {/* MAIN CONTENT AREA                                              */}
+      {/* MAIN VIEWPORT (Content + Headers + Mobile Nav)                 */}
       {/* ============================================================== */}
       <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-8">
         
-        {/* Top Header Bar */}
-        <header className="sticky top-0 z-30 bg-warm-bg/90 backdrop-blur-md border-b border-warm-border px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        {/* ============================================================ */}
+        {/* DESKTOP TOP HEADER (Namaste Greeting & Controls - Image A)   */}
+        {/* ============================================================ */}
+        <header className="hidden md:flex sticky top-0 z-30 bg-cream/90 backdrop-blur-md border-b border-warm-border px-6 lg:px-8 py-3.5 items-center justify-between">
           
-          {/* Mobile brand header */}
-          <div className="flex items-center gap-3 md:hidden">
-            <Logo variant="dark" showTagline={false} size="sm" />
-          </div>
-
           {/* Desktop Greeting */}
-          <div className="hidden md:flex flex-col">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold text-charcoal tracking-tight flex items-center gap-2">
               <span>{language === 'hi' ? 'नमस्ते, ' + farmer.nameHi : 'Namaste, ' + farmer.name}</span>
               <span className="text-xl">👋</span>
             </h1>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted font-medium mt-0.5">
               {t('home.summary_sub')}
             </p>
           </div>
 
-          {/* Action pills & User Profile */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            
-            {/* Language Switcher Button */}
+          {/* Action Pills & Profile */}
+          <div className="flex items-center gap-3">
+            {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-white border border-warm-border text-gray-700 hover:bg-sage-50 hover:border-sage-300 transition-colors shadow-soft"
-              title="Change Language"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-cream-surface border border-warm-border text-charcoal hover:bg-tint/50 transition-colors shadow-soft min-h-[38px]"
+              aria-label="Switch Language"
             >
-              <Globe className="w-3.5 h-3.5 text-sage-600" />
+              <Globe className="w-3.5 h-3.5 text-olive" />
               <span>{language === 'en' ? 'हिंदी' : 'English'}</span>
             </button>
 
-            {/* Quick Role Switcher for Hackathon Judges */}
+            {/* Bank Admin View Switcher */}
             <button
               onClick={() => {
                 switchRole('admin');
                 navigate('/admin');
               }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full bg-sage-100 text-sage-800 border border-sage-200 hover:bg-sage-200 transition-colors"
-              title="Switch to Bank / Admin Dashboard View"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full bg-tint text-forest border border-warm-border hover:bg-olive hover:text-white transition-colors shadow-soft min-h-[38px]"
+              title="Switch to Bank Admin Console"
             >
-              <ArrowRightLeft className="w-3.5 h-3.5 text-sage-600" />
-              <span className="hidden sm:inline">Bank Admin View</span>
-              <span className="sm:hidden">Admin</span>
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span className="hidden lg:inline">Bank Admin View</span>
+              <span className="lg:hidden">Admin</span>
             </button>
 
             {/* Notification Bell */}
             <div className="relative">
               <button
                 onClick={() => setNotificationOpen(!notificationOpen)}
-                className="w-9 h-9 rounded-full bg-white border border-warm-border flex items-center justify-center text-gray-700 hover:bg-sage-50 transition-colors shadow-soft relative"
-                aria-label="Notifications"
+                className="w-9 h-9 rounded-full bg-cream-surface border border-warm-border flex items-center justify-center text-charcoal hover:bg-tint/40 transition-colors shadow-soft relative"
+                aria-label="View notifications"
               >
-                <Bell className="w-4 h-4 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-kisan-red"></span>
+                <Bell className="w-4 h-4 text-muted" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-status-discrepancy-text"></span>
               </button>
 
               {/* Notification Popover */}
               {notificationOpen && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-warm-border p-4 z-50 text-xs">
-                  <div className="flex items-center justify-between font-bold text-gray-900 border-b pb-2 mb-2">
+                <div className="absolute right-0 mt-2 w-80 bg-cream-surface rounded-2xl shadow-dropdown border border-warm-border p-4 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between font-bold text-charcoal border-b border-warm-border pb-2.5 mb-2.5">
                     <span>Notifications</span>
-                    <span className="text-[10px] text-sage-600">2 New</span>
+                    <span className="text-[10px] font-semibold text-olive bg-tint px-2 py-0.5 rounded-full">2 New</span>
                   </div>
                   <div className="space-y-2.5">
-                    <div className="p-2.5 rounded-xl bg-kisan-lightred/60 border border-kisan-red/20">
-                      <p className="font-semibold text-kisan-red">Loan Discrepancy Flagged</p>
-                      <p className="text-gray-600 text-[11px] mt-0.5">Approved ₹80,000 vs Disbursed ₹70,000 difference needs review.</p>
+                    <div className="p-3 rounded-xl bg-status-discrepancy-bg border border-status-discrepancy-text/20">
+                      <p className="font-bold text-status-discrepancy-text">Loan Discrepancy Flagged</p>
+                      <p className="text-muted text-[11px] mt-0.5 leading-relaxed">Approved ₹80,000 vs Disbursed ₹70,000 difference needs review.</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-kisan-lightamber/60 border border-kisan-amber/20">
-                      <p className="font-semibold text-kisan-amber">MSP Payment Status</p>
-                      <p className="text-gray-600 text-[11px] mt-0.5">Paddy procurement ₹10,000 difference recorded for Patan mandi.</p>
+                    <div className="p-3 rounded-xl bg-status-review-bg border border-status-review-text/20">
+                      <p className="font-bold text-status-review-text">MSP Payment Status</p>
+                      <p className="text-muted text-[11px] mt-0.5 leading-relaxed">Paddy procurement ₹10,000 difference recorded for Patan mandi.</p>
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Farmer Avatar & ID badge */}
+            {/* Farmer Profile Chip (Image A) */}
             <NavLink
               to="/farmer/profile"
-              className="flex items-center gap-2 pl-1 pr-3 py-1 bg-white rounded-full border border-warm-border shadow-soft hover:border-sage-400 transition-colors"
+              className="flex items-center gap-2.5 pl-1.5 pr-3.5 py-1 bg-cream-surface rounded-full border border-warm-border shadow-soft hover:border-olive transition-colors"
             >
-              <div className="w-7 h-7 rounded-full bg-sage-200 text-sage-800 flex items-center justify-center font-bold text-xs">
-                RK
-              </div>
-              <div className="hidden lg:flex flex-col text-left">
-                <span className="text-xs font-semibold text-gray-900 leading-none">
+              <img 
+                src={farmerAvatarImg} 
+                alt={farmer.name} 
+                className="w-8 h-8 rounded-full object-cover border border-warm-border"
+              />
+              <div className="flex flex-col text-left">
+                <span className="text-xs font-bold text-charcoal leading-tight">
                   {farmer.name}
                 </span>
-                <span className="text-[10px] font-mono text-gray-500 leading-none mt-0.5">
+                <span className="text-[10px] font-mono text-muted leading-tight mt-0.5">
                   ID: {farmer.farmerId}
                 </span>
               </div>
@@ -203,49 +232,100 @@ export const FarmerLayout: React.FC = () => {
           </div>
         </header>
 
-        {/* Page Content Viewport */}
-        <main className="flex-1 px-4 sm:px-8 py-6 max-w-6xl w-full mx-auto">
+        {/* ============================================================ */}
+        {/* MOBILE TOP HEADER (< 768px - Matching Image B)               */}
+        {/* ============================================================ */}
+        <div className="md:hidden sticky top-0 z-30">
+          {isHome ? (
+            /* Home Header Band: Dark Olive Green (Image B Screen 3) */
+            <div className="bg-forest text-white px-4 py-3 safe-top flex items-center justify-between shadow-soft">
+              <Logo variant="white" showTagline={false} size="sm" />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleLanguage}
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
+                  aria-label="Toggle language"
+                >
+                  {language === 'en' ? 'हिंदी' : 'EN'}
+                </button>
+                <button
+                  onClick={() => setNotificationOpen(!notificationOpen)}
+                  className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white relative hover:bg-white/20 transition-colors"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400"></span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Inner Sub-screens Header: Back Arrow + Title (Image B) */
+            <div className="bg-cream/95 backdrop-blur-md border-b border-warm-border px-4 py-3 safe-top flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate('/farmer')}
+                  className="w-9 h-9 rounded-full bg-cream-surface border border-warm-border flex items-center justify-center text-charcoal shadow-soft hover:bg-tint transition-colors active:scale-95"
+                  aria-label="Go back to Home"
+                >
+                  <ArrowLeft className="w-4 h-4 text-charcoal" />
+                </button>
+                <div>
+                  <h1 className="text-base font-bold text-charcoal tracking-tight leading-tight">
+                    {meta.title}
+                  </h1>
+                  <p className="text-[11px] text-muted truncate max-w-[220px]">
+                    {meta.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={toggleLanguage}
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-cream-surface border border-warm-border text-charcoal"
+                >
+                  {language === 'en' ? 'हि' : 'EN'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ============================================================ */}
+        {/* MAIN OUTLET (Responsive Content Max-Width)                   */}
+        {/* ============================================================ */}
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
       </div>
 
       {/* ============================================================== */}
-      {/* MOBILE BOTTOM TAB BAR (Matching screenshot exactly)            */}
+      {/* MOBILE BOTTOM TAB BAR (< 768px, Exactly 5 Tabs - Image B)      */}
       {/* ============================================================== */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-warm-border px-3 py-1.5 flex items-center justify-around shadow-2xl">
+      <nav 
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-cream-surface/98 backdrop-blur-md border-t border-warm-border px-2 py-1.5 safe-bottom flex items-center justify-around shadow-[0_-4px_20px_rgba(35,45,25,0.06)]"
+        aria-label="Mobile Navigation"
+      >
         {mobileBottomTabs.map((tab) => {
           const Icon = tab.icon;
-          const isActive = location.pathname === tab.path;
-
-          if (tab.isSpecial) {
-            return (
-              <NavLink
-                key={tab.path}
-                to={tab.path}
-                className="flex flex-col items-center -mt-5"
-              >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform ${
-                  isActive ? 'bg-sage-700 text-white scale-105' : 'bg-sage-600 text-white'
-                }`}>
-                  <Bot className="w-6 h-6" />
-                </div>
-                <span className={`text-[10px] font-semibold mt-1 ${isActive ? 'text-sage-700' : 'text-gray-600'}`}>
-                  {t(tab.labelKey)}
-                </span>
-              </NavLink>
-            );
-          }
+          const isActive = tab.exact 
+            ? (location.pathname === tab.path || location.pathname === tab.path + '/')
+            : location.pathname.startsWith(tab.path);
 
           return (
             <NavLink
               key={tab.path}
               to={tab.path}
-              className={`flex flex-col items-center py-1 px-2.5 rounded-xl transition-colors ${
-                isActive ? 'text-sage-700 font-bold' : 'text-gray-500 hover:text-gray-900'
+              className={`flex-1 flex flex-col items-center py-1 min-h-[44px] justify-center rounded-xl transition-all ${
+                isActive ? 'text-olive font-bold' : 'text-muted hover:text-charcoal'
               }`}
             >
-              <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
-              <span className="text-[10px] mt-1">{t(tab.labelKey)}</span>
+              <Icon 
+                className={`w-5 h-5 transition-transform ${isActive ? 'stroke-[2.2] scale-105' : 'stroke-[1.75]'}`} 
+              />
+              <span className={`text-[10px] mt-1 tracking-tight ${isActive ? 'font-bold text-olive' : 'font-medium'}`}>
+                {tab.label}
+              </span>
             </NavLink>
           );
         })}
