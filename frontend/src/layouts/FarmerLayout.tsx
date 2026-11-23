@@ -26,6 +26,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
 import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
+import { Footer } from '../components/Footer';
 
 export const FarmerLayout: React.FC = () => {
   const { language, toggleLanguage, t } = useLanguage();
@@ -148,7 +149,7 @@ export const FarmerLayout: React.FC = () => {
       {/* ============================================================== */}
       {/* MAIN VIEWPORT (Content + Headers + Mobile Nav)                 */}
       {/* ============================================================== */}
-      <div className="flex-1 flex flex-col min-w-0 pb-20 md:pb-8">
+      <div className="flex-1 flex flex-col min-w-0">
         
         {/* ============================================================ */}
         {/* DESKTOP TOP HEADER (Namaste Greeting & Controls - Image A)   */}
@@ -294,9 +295,14 @@ export const FarmerLayout: React.FC = () => {
         {/* ============================================================ */}
         {/* MAIN OUTLET (Responsive Content Max-Width)                   */}
         {/* ============================================================ */}
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl w-full mx-auto">
+        <main id="main-content" className="flex-1 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-7xl w-full mx-auto">
           <Outlet />
         </main>
+
+        {/* Footer (Suppressed on full-screen AI chat where input is pinned) */}
+        {!location.pathname.includes('/farmer/assistant') && (
+          <Footer hasBottomTabBar={true} />
+        )}
       </div>
 
       {/* ============================================================== */}

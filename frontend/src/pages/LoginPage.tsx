@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
+import { Footer } from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
 import { User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 
@@ -24,12 +25,13 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-cream-surface rounded-3xl p-6 sm:p-8 shadow-card border border-warm-border">
-        {/* Brand */}
-        <div className="flex justify-center mb-6">
-          <Logo variant="dark" size="md" showTagline={true} />
-        </div>
+    <div className="min-h-[100dvh] bg-cream flex flex-col justify-between antialiased">
+      <main id="main-content" className="flex-1 flex items-center justify-center p-4 sm:p-6">
+        <div className="w-full max-w-md bg-cream-surface rounded-3xl p-6 sm:p-8 shadow-card border border-warm-border">
+          {/* Brand */}
+          <div className="flex justify-center mb-6">
+            <Logo variant="dark" size="md" showTagline={true} />
+          </div>
 
         {/* Tab switch */}
         <div className="flex p-1 bg-cream rounded-2xl mb-6 border border-warm-border">
@@ -141,9 +143,12 @@ export const LoginPage: React.FC = () => {
         </form>
 
         <div className="mt-6 text-center text-[11px] text-charcoal-muted">
-          Protected by Ministry of Agriculture & Farmers Welfare • GoI
+          KisanVerify Financial Transparency Platform • Independent Prototype
         </div>
       </div>
-    </div>
+    </main>
+
+    <Footer hasBottomTabBar={false} />
+  </div>
   );
 };

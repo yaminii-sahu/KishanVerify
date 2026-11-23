@@ -222,7 +222,7 @@ export const AIAssistantPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-135px)] md:h-[calc(100dvh-130px)] max-w-4xl mx-auto">
+    <div className="flex flex-col h-[calc(100dvh-135px)] md:h-[calc(100dvh-130px)] max-w-4xl mx-auto pb-20 md:pb-0">
       
       {/* Top Header */}
       <div className="hidden md:flex items-center justify-between pb-3 border-b border-warm-border shrink-0">

@@ -15,6 +15,7 @@ import {
   ArrowRightLeft
 } from 'lucide-react';
 import { Logo } from '../components/Logo';
+import { Footer } from '../components/Footer';
 import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -165,9 +166,11 @@ export const AdminLayout: React.FC = () => {
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
+        <main id="main-content" className="flex-1 p-6 max-w-7xl w-full mx-auto">
           <Outlet context={{ selectedDistrict }} />
         </main>
+
+        <Footer hasBottomTabBar={false} />
       </div>
     </div>
   );
