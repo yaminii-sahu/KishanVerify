@@ -18,6 +18,7 @@ from app.api.admin import router as admin_router
 from app.api.ocr import router as ocr_router
 from app.api.farmers import router as farmers_router
 from app.api.documents import router as documents_router
+from app.api.mandi import router as mandi_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -58,6 +59,7 @@ app.include_router(admin_router, prefix=settings.API_V1_STR)
 app.include_router(ocr_router, prefix=settings.API_V1_STR)
 app.include_router(farmers_router, prefix=settings.API_V1_STR)
 app.include_router(documents_router, prefix=settings.API_V1_STR)
+app.include_router(mandi_router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 def health_check():

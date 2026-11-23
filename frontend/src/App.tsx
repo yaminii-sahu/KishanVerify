@@ -21,6 +21,7 @@ import { GrievancePage } from './pages/GrievancePage';
 import { ReportsPage } from './pages/ReportsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { DocumentsPage } from './pages/DocumentsPage';
+import { MandiPricesPage } from './pages/MandiPricesPage';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="schemes" element={<SchemesPage />} />
               <Route path="loan-verify" element={<LoanVerificationPage />} />
               <Route path="msp-verify" element={<MSPVerificationPage />} />
+              <Route path="mandi" element={<MandiPricesPage />} />
               <Route path="insurance-verify" element={<InsuranceVerificationPage />} />
               <Route path="assistant" element={<AIAssistantPage />} />
               <Route path="grievance" element={<GrievancePage />} />
