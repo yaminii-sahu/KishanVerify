@@ -201,7 +201,7 @@ export const FarmerLayout: React.FC = () => {
               className="flex items-center gap-2.5 pl-1.5 pr-3.5 py-1 bg-cream-surface rounded-full border border-warm-border shadow-soft hover:border-olive transition-colors"
             >
               <img 
-                src={farmerAvatarImg} 
+                src={farmer.avatarUrl || farmerAvatarImg} 
                 alt={farmer.name} 
                 className="w-8 h-8 rounded-full object-cover border border-warm-border"
               />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -14,7 +14,9 @@ import {
   Phone, 
   Landmark, 
   Wheat,
-  Edit2,
+  Camera,
+  Upload,
+  Trash2,
   X
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -23,12 +25,58 @@ import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 
 export const ProfilePage: React.FC = () => {
   const { t, language, toggleLanguage } = useLanguage();
-  const { farmer, switchRole } = useAuth();
+  const { farmer, switchRole, updateFarmerAvatar } = useAuth();
   const navigate = useNavigate();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 400;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.85);
+          updateFarmerAvatar(compressed);
+          setToastMessage(language === 'hi' ? 'प्रोफ़ाइल फ़ोटो अपडेट हो गई!' : 'Profile photo updated!');
+          setShowPhotoModal(false);
+          setTimeout(() => setToastMessage(null), 3000);
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
@@ -52,20 +100,21 @@ export const ProfilePage: React.FC = () => {
           </svg>
         </div>
 
-        {/* Circular Avatar with Edit Badge (Image B Screen 10) */}
+        {/* Circular Avatar with Camera Badge */}
         <div className="relative -mt-12 flex justify-center">
-          <div className="relative">
+          <div className="relative group">
             <img 
-              src={farmerAvatarImg} 
+              src={farmer.avatarUrl || farmerAvatarImg} 
               alt={farmer.name} 
-              className="w-24 h-24 rounded-full object-cover border-4 border-cream-surface shadow-soft"
+              className="w-24 h-24 rounded-full object-cover border-4 border-cream-surface shadow-soft bg-tint/30"
             />
             <button 
-              className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-forest border-2 border-cream-surface text-white flex items-center justify-center shadow-soft"
-              aria-label="Edit Profile"
-              title="Edit Profile"
+              onClick={() => setShowPhotoModal(true)}
+              className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-forest hover:bg-forest-dark border-2 border-cream-surface text-white flex items-center justify-center shadow-soft transition-transform active:scale-95"
+              aria-label="Upload or take photo"
+              title="Upload or take photo"
             >
-              <Edit2 className="w-3.5 h-3.5" />
+              <Camera className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -240,6 +289,121 @@ export const ProfilePage: React.FC = () => {
               className="w-full py-3 rounded-xl bg-forest text-white font-bold text-xs"
             >
               Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden File Inputs for Camera and Gallery */}
+      <input 
+        ref={cameraInputRef}
+        type="file" 
+        accept="image/*" 
+        capture="user"
+        className="hidden" 
+        onChange={handleFileChange} 
+      />
+      <input 
+        ref={galleryInputRef}
+        type="file" 
+        accept="image/*" 
+        className="hidden" 
+        onChange={handleFileChange} 
+      />
+
+      {/* Toast Feedback */}
+      {toastMessage && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-forest text-white px-4 py-2.5 rounded-full shadow-dropdown text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top duration-200">
+          <CheckCircle2 className="w-4 h-4 text-tint" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Photo Upload / Camera Modal */}
+      {showPhotoModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-charcoal/40 backdrop-blur-xs">
+          <div className="w-full max-w-sm bg-cream-surface rounded-t-3xl sm:rounded-2xl p-5 border border-warm-border shadow-dropdown space-y-4 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-warm-border pb-3">
+              <h3 className="text-base font-bold text-charcoal">
+                {language === 'hi' ? 'प्रोफ़ाइल फ़ोटो बदलें' : 'Profile Photo'}
+              </h3>
+              <button 
+                onClick={() => setShowPhotoModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-tint flex items-center justify-center text-muted"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Option 1: Take Photo with Camera */}
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="w-full p-3.5 rounded-xl bg-cream hover:bg-tint/60 border border-warm-border flex items-center gap-3 text-left transition-colors active:scale-98"
+              >
+                <div className="w-10 h-10 rounded-full bg-forest text-white flex items-center justify-center shrink-0 shadow-soft">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-charcoal">
+                    {language === 'hi' ? 'कैमरा से फ़ोटो लें' : 'Take Photo with Camera'}
+                  </p>
+                  <p className="text-[11px] text-muted">
+                    {language === 'hi' ? 'सीधे कैमरे से नई फ़ोटो खींचें' : 'Use your device camera directly'}
+                  </p>
+                </div>
+              </button>
+
+              {/* Option 2: Upload from Gallery / Files */}
+              <button
+                onClick={() => galleryInputRef.current?.click()}
+                className="w-full p-3.5 rounded-xl bg-cream hover:bg-tint/60 border border-warm-border flex items-center gap-3 text-left transition-colors active:scale-98"
+              >
+                <div className="w-10 h-10 rounded-full bg-olive text-white flex items-center justify-center shrink-0 shadow-soft">
+                  <Upload className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-charcoal">
+                    {language === 'hi' ? 'गैलरी से फ़ोटो चुनें' : 'Upload from Gallery / Files'}
+                  </p>
+                  <p className="text-[11px] text-muted">
+                    {language === 'hi' ? 'अपनी डिवाइस से इमेज चुनें' : 'Choose an existing photo from storage'}
+                  </p>
+                </div>
+              </button>
+
+              {/* Option 3: Remove custom photo (if exists) */}
+              {farmer.avatarUrl && (
+                <button
+                  onClick={() => {
+                    updateFarmerAvatar(null);
+                    setToastMessage(language === 'hi' ? 'फ़ोटो हटा दी गई' : 'Photo removed');
+                    setShowPhotoModal(false);
+                    setTimeout(() => setToastMessage(null), 3000);
+                  }}
+                  className="w-full p-3.5 rounded-xl bg-status-discrepancy-bg/50 hover:bg-status-discrepancy-bg border border-status-discrepancy-text/20 flex items-center gap-3 text-left transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-status-discrepancy-text text-white flex items-center justify-center shrink-0">
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-status-discrepancy-text">
+                      {language === 'hi' ? 'फ़ोटो हटाएं' : 'Remove Photo'}
+                    </p>
+                    <p className="text-[11px] text-muted">
+                      {language === 'hi' ? 'डिफ़ॉल्ट अवतार पर वापस जाएं' : 'Revert to default avatar illustration'}
+                    </p>
+                  </div>
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowPhotoModal(false)}
+              className="w-full py-2.5 rounded-xl bg-cream-surface border border-warm-border text-charcoal font-semibold text-xs hover:bg-tint transition-colors"
+            >
+              {language === 'hi' ? 'रद्द करें' : 'Cancel'}
             </button>
           </div>
         </div>

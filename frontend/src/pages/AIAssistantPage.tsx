@@ -320,7 +320,7 @@ export const AIAssistantPage: React.FC = () => {
               {/* User Avatar on Right */}
               {isUser && (
                 <img 
-                  src={farmerAvatarImg} 
+                  src={farmer.avatarUrl || farmerAvatarImg} 
                   alt="Farmer" 
                   className="w-8 h-8 rounded-full object-cover shrink-0 border border-warm-border"
                 />

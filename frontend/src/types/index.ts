@@ -25,6 +25,7 @@ export interface FarmerProfile {
   bankName: string;
   accountNumberMasked: string;
   kccActive: boolean;
+  avatarUrl?: string;
 }
 
 export type VerificationStatus = 
