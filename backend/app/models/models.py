@@ -186,3 +186,40 @@ class Report(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     farmer = relationship("Farmer", back_populates="reports")
+
+class Office(Base):
+    __tablename__ = "offices"
+
+    id = Column(Integer, primary_key=True, index=True)
+    office_code = Column(String(50), unique=True, index=True, nullable=False)
+    name = Column(String(200), nullable=False)
+    name_hi = Column(String(200), nullable=True)
+    office_type = Column(String(50), nullable=False, index=True) # "KVK", "APMC", "DDA", "Soil Lab", "CSC", "Bank"
+    category_label = Column(String(100), nullable=True)
+    address = Column(Text, nullable=False)
+    district = Column(String(100), nullable=False, index=True)
+    state = Column(String(100), nullable=False, index=True)
+    pin_code = Column(String(20), nullable=True)
+    phone = Column(String(50), nullable=True)
+    email = Column(String(100), nullable=True)
+    lat = Column(Float, nullable=False)
+    lon = Column(Float, nullable=False)
+    opening_hours = Column(String(100), default="Mon-Sat: 10:00 AM - 5:00 PM")
+    services_offered = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class ContactMessage(Base):
+    __tablename__ = "contact_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ticket_id = Column(String(50), unique=True, index=True, nullable=False)
+    farmer_id = Column(String(50), nullable=True, index=True)
+    name = Column(String(100), nullable=False)
+    phone = Column(String(20), nullable=False)
+    email = Column(String(100), nullable=True)
+    category = Column(String(50), nullable=False)
+    message = Column(Text, nullable=False)
+    attached_doc_uuid = Column(String(50), nullable=True)
+    status = Column(String(50), default="Open")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+

@@ -15,7 +15,11 @@ import {
   ChevronDown,
   ChevronUp,
   CloudSun,
-  AlertTriangle
+  AlertTriangle,
+  TrendingUp,
+  MapPin,
+  FolderLock,
+  Building2
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -207,6 +211,86 @@ export const FarmerHomePage: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* ============================================================== */}
+      {/* QUICK SERVICES & FARM UTILITIES (Documents, Mandi, Weather, Offices) */}
+      {/* ============================================================== */}
+      <div>
+        <div className="flex items-center justify-between mb-2.5 px-0.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-muted">
+            {language === 'hi' ? 'दैनिक कृषि सेवाएं' : 'Daily Agri Services'}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+          <div
+            onClick={() => navigate('/farmer/mandi')}
+            className="p-3 sm:p-3.5 rounded-xl bg-white border border-warm-border hover:border-olive hover:shadow-soft transition-all cursor-pointer group flex items-center gap-2.5"
+          >
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-800 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-charcoal group-hover:text-forest truncate">
+                {language === 'hi' ? 'मंडी भाव' : 'Mandi Prices'}
+              </div>
+              <div className="text-[10px] text-muted truncate">
+                {language === 'hi' ? 'दैनिक दर व एमएसपी' : 'Daily rates & MSP'}
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={() => navigate('/farmer/weather')}
+            className="p-3 sm:p-3.5 rounded-xl bg-white border border-warm-border hover:border-olive hover:shadow-soft transition-all cursor-pointer group flex items-center gap-2.5"
+          >
+            <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-800 flex items-center justify-center shrink-0">
+              <CloudSun className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-charcoal group-hover:text-forest truncate">
+                {language === 'hi' ? 'मौसम व सलाह' : 'Weather Alerts'}
+              </div>
+              <div className="text-[10px] text-muted truncate">
+                {language === 'hi' ? '7-दिवसीय पूर्वानुमान' : '7-Day Forecast'}
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={() => navigate('/farmer/offices')}
+            className="p-3 sm:p-3.5 rounded-xl bg-white border border-warm-border hover:border-olive hover:shadow-soft transition-all cursor-pointer group flex items-center gap-2.5"
+          >
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center shrink-0">
+              <MapPin className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-charcoal group-hover:text-forest truncate">
+                {language === 'hi' ? 'निकटतम केंद्र' : 'Nearby Offices'}
+              </div>
+              <div className="text-[10px] text-muted truncate">
+                {language === 'hi' ? 'KVK, मंडी, लैब' : 'KVK, Mandi, Labs'}
+              </div>
+            </div>
+          </div>
+
+          <div
+            onClick={() => navigate('/farmer/documents')}
+            className="p-3 sm:p-3.5 rounded-xl bg-white border border-warm-border hover:border-olive hover:shadow-soft transition-all cursor-pointer group flex items-center gap-2.5"
+          >
+            <div className="w-8 h-8 rounded-lg bg-stone-100 text-stone-800 flex items-center justify-center shrink-0">
+              <FolderLock className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-charcoal group-hover:text-forest truncate">
+                {language === 'hi' ? 'दस्तावेज़ वॉल्ट' : 'My Documents'}
+              </div>
+              <div className="text-[10px] text-muted truncate">
+                {language === 'hi' ? 'सुरक्षित फ़ाइलें' : 'Private vault'}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

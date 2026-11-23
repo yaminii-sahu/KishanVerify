@@ -19,6 +19,8 @@ from app.models.models import (
     Grievance,
     Report,
     Document,
+    Office,
+    ContactMessage,
 )
 from app.services.storage import get_storage_backend
 
@@ -269,6 +271,146 @@ def ensure_sqlite_columns():
     except Exception as e:
         print(f"Schemes table check notice: {e}")
 
+def get_all_seed_offices():
+    return [
+        Office(
+            office_code="OFF-CG-DUR-01",
+            name="Common Service Centre (CSC) Digital Seva Kendra",
+            name_hi="कॉमन सर्विस सेंटर (सीएससी) डिजिटल सेवा केंद्र",
+            office_type="CSC",
+            category_label="Common Service Centre",
+            address="Gram Panchayat Bhawan, Main Chowk, Patan, Durg, Chhattisgarh",
+            district="Durg",
+            state="Chhattisgarh",
+            pin_code="491111",
+            phone="011-49754975",
+            email="csc.patan@digitalindia.gov.in",
+            lat=21.0371,
+            lon=81.5348,
+            opening_hours="Mon-Sun: 9:00 AM - 7:00 PM",
+            services_offered=["PM-KISAN e-KYC", "Khasra B-1 Printing", "PMFBY Enrollment", "Aadhaar Seeding", "Banking Correspondent"],
+        ),
+        Office(
+            office_code="OFF-CG-DUR-02",
+            name="State Bank of India (SBI) - Patan Branch (KCC Nodal)",
+            name_hi="भारतीय स्टेट बैंक (एसबीआई) - पाटन शाखा (केसीसी नोडल)",
+            office_type="Bank",
+            category_label="KCC / Agriculture Bank Branch",
+            address="Main Road, Opposite Tehsil Office, Patan, Durg, Chhattisgarh",
+            district="Durg",
+            state="Chhattisgarh",
+            pin_code="491111",
+            phone="1800-11-2211",
+            email="sbi.01423@sbi.co.in",
+            lat=21.0362,
+            lon=81.5375,
+            opening_hours="Mon-Fri: 10:00 AM - 4:00 PM, Alt Sat",
+            services_offered=["Kisan Credit Card (KCC)", "Agri Term Loan", "Tractor Finance", "Subsidized Interest Subvention"],
+        ),
+        Office(
+            office_code="OFF-CG-DUR-03",
+            name="District Soil Testing Laboratory",
+            name_hi="जिला मृदा परीक्षण प्रयोगशाला",
+            office_type="Soil Lab",
+            category_label="Soil Testing Laboratory",
+            address="Block Agriculture Office Campus, Near Tehsil, Patan, Durg, Chhattisgarh",
+            district="Durg",
+            state="Chhattisgarh",
+            pin_code="491111",
+            phone="07826-273515",
+            email="soillab.patan@cg.gov.in",
+            lat=21.0385,
+            lon=81.5390,
+            opening_hours="Mon-Sat: 10:30 AM - 5:00 PM",
+            services_offered=["Free Soil Health Card Analysis", "NPK & pH Testing", "Micronutrient Profiling", "Fertilizer Dosage Recommendation"],
+        ),
+        Office(
+            office_code="OFF-CG-DUR-04",
+            name="Patan Krishi Upaj Mandi Samiti (APMC)",
+            name_hi="पाटन कृषि उपज मंडी समिति (एपीएमसी)",
+            office_type="APMC",
+            category_label="Mandi Samiti / APMC",
+            address="Mandi Road, Near Bus Stand, Patan, Durg, Chhattisgarh",
+            district="Durg",
+            state="Chhattisgarh",
+            pin_code="491111",
+            phone="07826-273210",
+            email="mandi.patan@cg.gov.in",
+            lat=21.0350,
+            lon=81.5360,
+            opening_hours="Mon-Sat: 8:00 AM - 6:00 PM",
+            services_offered=["MSP Paddy Procurement", "Electronic Weighbridge", "e-NAM Digital Auction", "Direct Payment Verification"],
+        ),
+        Office(
+            office_code="OFF-CG-DUR-05",
+            name="Krishi Vigyan Kendra (KVK), Anjora",
+            name_hi="कृषि विज्ञान केंद्र (केवीके), अंजोरा",
+            office_type="KVK",
+            category_label="Krishi Vigyan Kendra",
+            address="IGKV Research Campus, Anjora, Durg, Chhattisgarh",
+            district="Durg",
+            state="Chhattisgarh",
+            pin_code="491001",
+            phone="0788-2623344",
+            email="kvk.durg@igkv.ac.in",
+            lat=21.1610,
+            lon=81.2580,
+            opening_hours="Mon-Sat: 10:00 AM - 5:00 PM",
+            services_offered=["Crop Advisory & Pest Diagnosis", "Certified Foundation Seeds", "Organic Farming Demonstration", "Weather-smart Agriculture Training"],
+        ),
+        Office(
+            office_code="OFF-CG-DUR-06",
+            name="Deputy Director of Agriculture (DDA) Office",
+            name_hi="उप संचालक कृषि कार्यालय, दुर्ग",
+            office_type="DDA",
+            category_label="District Agriculture Office",
+            address="Collectorate Compound, G.E. Road, Durg, Chhattisgarh",
+            district="Durg",
+            state="Chhattisgarh",
+            pin_code="491001",
+            phone="0788-2322521",
+            email="dda-agri.durg@cg.nic.in",
+            lat=21.1904,
+            lon=81.2849,
+            opening_hours="Mon-Fri: 10:00 AM - 5:30 PM",
+            services_offered=["State Scheme Subsidies (Rajiv Gandhi / Krishak Unnati)", "Fertilizer Retail Licensing", "PM-KISAN Grievance Cell", "Crop Loss Assessment"],
+        ),
+        Office(
+            office_code="OFF-CG-RPR-01",
+            name="Raipur Krishi Vigyan Kendra & Research Centre",
+            name_hi="रायपुर कृषि विज्ञान केंद्र एवं अनुसंधान केंद्र",
+            office_type="KVK",
+            category_label="Krishi Vigyan Kendra",
+            address="Indira Gandhi Krishi Vishwavidyalaya Campus, Krishak Nagar, Raipur, Chhattisgarh",
+            district="Raipur",
+            state="Chhattisgarh",
+            pin_code="492012",
+            phone="0771-2442537",
+            email="kvk.raipur@igkv.ac.in",
+            lat=21.2335,
+            lon=81.7065,
+            opening_hours="Mon-Sat: 10:00 AM - 5:00 PM",
+            services_offered=["Advanced Soil & Water Testing", "Tissue Culture Seedlings", "Agricultural Drone Demonstration", "Farm Mechanization Workshops"],
+        ),
+        Office(
+            office_code="OFF-CG-DUR-07",
+            name="Durg Krishi Upaj Mandi Samiti (APMC)",
+            name_hi="दुर्ग कृषि उपज मंडी समिति (एपीएमसी)",
+            office_type="APMC",
+            category_label="Mandi Samiti / APMC",
+            address="Mandi Parisar, Dhamdha Road, Durg, Chhattisgarh",
+            district="Durg",
+            state="Chhattisgarh",
+            pin_code="491001",
+            phone="0788-2210892",
+            email="mandidurg@cg.gov.in",
+            lat=21.2050,
+            lon=81.2720,
+            opening_hours="Mon-Sat: 8:00 AM - 6:00 PM",
+            services_offered=["Multi-Crop Mandi Auction", "Storage Godowns", "Moisture Quality Testing", "Kisan Vishram Griha"],
+        ),
+    ]
+
 def seed_database():
     print("Creating all database tables...")
     Base.metadata.create_all(bind=engine)
@@ -283,6 +425,10 @@ def seed_database():
             if not db.query(Scheme).filter_by(scheme_code="SOIL-CARD").first():
                 print("Enriching schemes with Central/State entries...")
                 seed_schemes_list(db)
+            if db.query(Office).count() == 0:
+                print("Seeding offices...")
+                db.add_all(get_all_seed_offices())
+                db.commit()
             print("Database already seeded with demo data.")
             return
 
@@ -627,6 +773,9 @@ def seed_database():
             ),
         ]
         db.add_all(documents)
+
+        # 10. Nearby Agriculture Offices
+        db.add_all(get_all_seed_offices())
 
         db.commit()
         print("Demo database seeded successfully with all synthetic records!")
