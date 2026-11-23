@@ -509,8 +509,23 @@ export const AdminDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-tint border border-forest/10 text-xs text-forest leading-relaxed">
-              <strong>Audit Note:</strong> {selectedCase.notes || 'Record requires inspection of processing fees and documentation charges.'}
+            <div className="p-3 rounded-2xl bg-tint border border-forest/10 text-xs text-forest leading-relaxed space-y-1">
+              <div>
+                <strong>Audit Note:</strong> {selectedCase.notes || 'Record requires inspection of processing fees and documentation charges.'}
+              </div>
+              <div className="text-[11px] text-forest/90 pt-1 border-t border-forest/15 flex items-center justify-between">
+                <span>
+                  <strong>Cited Benchmark:</strong> {selectedCase.recordType === 'Loan' ? 'RBI KCC Waiver Circular & MISS' : 'CACP Kharif/Rabi Price Policy'}
+                </span>
+                <a
+                  href={selectedCase.recordType === 'Loan' ? 'https://www.rbi.org.in' : 'https://cacp.dacnet.nic.in'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold underline text-forest hover:text-forest-dark cursor-pointer inline-flex items-center gap-0.5"
+                >
+                  Source Portal ↗
+                </a>
+              </div>
             </div>
 
             <div className="space-y-2 pt-2">

@@ -15,6 +15,7 @@ import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { verifyMspApi } from '../services/api';
+import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 
 export const MSPVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -29,7 +30,99 @@ export const MSPVerificationPage: React.FC = () => {
   const [procurementCenter, setProcurementCenter] = useState('Patan Krishi Upaj Mandi');
 
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResult] = useState<any | null>({
+    status: 'Needs Review',
+    crop: 'Paddy (Common)',
+    quantity_quintals: 50,
+    msp_rate: 2300,
+    expected_payment: 115000,
+    actual_payment: 105000,
+    difference: 10000,
+    is_flagged: true,
+    status_label: 'Payment Discrepancy Detected',
+    status_label_hi: 'भुगतान अंतर पाया गया',
+    explanation: 'Based on 50 quintals at ₹2,300.00/qtl, the expected payment is ₹115,000.00. The payment received is ₹105,000.00, leaving a difference of ₹10,000.00.',
+    explanation_hi: '50 क्विंटल फसल की ₹2,300.00/क्विंटल की दर से अपेक्षित राशि ₹115,000.00 है। प्राप्त राशि ₹105,000.00 है, जिससे ₹10,000.00 का अंतर बनता है।',
+    flagged_rule_code: 'RULE-MSP-PAYMENT',
+    flagged_rule_threshold: 'Actual Payment < Expected (Quantity × Statutory MSP Rate)',
+    flagged_rule_reason_en: 'Received payment (₹105,000.00) is lower than statutory entitlement (₹115,000.00) by ₹10,000.00.',
+    flagged_rule_reason_hi: 'प्राप्त भुगतान (₹105,000.00) वैधानिक पात्रता (₹115,000.00) से ₹10,000.00 कम है।',
+    sources: [
+      {
+        rule_code: 'CACP-MSP-KHARIF-PADDY-2024',
+        scheme_name: 'Minimum Support Price (MSP)',
+        scheme_name_hi: 'न्यूनतम समर्थन मूल्य (एमएसपी)',
+        rule_type: 'msp',
+        title: 'Price Policy for Kharif Crops: Paddy (Common)',
+        title_hi: 'खरीफ मूल्य नीति: धान (सामान्य)',
+        formula_or_value: '₹2,300 / quintal',
+        source_name: 'Commission for Agricultural Costs and Prices (CACP) / DA&FW, GoI',
+        source_document: 'Price Policy for Kharif Crops: The Marketing Season 2024-25',
+        source_url: 'https://cacp.dacnet.nic.in',
+        authority: 'CACP / DA&FW, GoI',
+        document: 'Price Policy for Kharif Crops: The Marketing Season 2024-25',
+        url: 'https://cacp.dacnet.nic.in',
+        effective_from: '2024-10-01',
+        effective_to: '2025-09-30',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+        data_origin: 'official',
+        field_associated: 'msp_rate',
+        details: 'Statutory MSP for Paddy (Common) (Kharif 2024-25): ₹2,300.00 per quintal.',
+        details_hi: 'धान (सामान्य) के लिए वैधानिक एमएसपी (खरीफ 2024-25): ₹2,300.00 प्रति क्विंटल।',
+      },
+      {
+        rule_code: 'MANDI-JFORM-RECEIPT',
+        scheme_name: 'Mandi Procurement Receipt / J-Form',
+        scheme_name_hi: 'मंडी खरीद रसीद / जे-फॉर्म',
+        rule_type: 'msp',
+        title: 'Weighbridge Slip & Mandi J-Form',
+        title_hi: 'तौल पर्ची एवं मंडी जे-फॉर्म',
+        source_name: 'Patan Krishi Upaj Mandi',
+        source_document: 'Weighbridge Slip & Mandi J-Form',
+        source_url: 'https://enam.gov.in',
+        authority: 'Patan Krishi Upaj Mandi',
+        document: 'Weighbridge Slip & Mandi J-Form',
+        url: 'https://enam.gov.in',
+        effective_from: '2024-10-01',
+        effective_to: null,
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+        data_origin: 'bank_document',
+        field_associated: 'quantity_quintals',
+        details: 'Procured quantity: 50 quintals recorded at Patan Krishi Upaj Mandi.',
+        details_hi: 'उपार्जित मात्रा: 50 क्विंटल पाटन कृषि उपज मंडी में दर्ज।',
+      },
+      {
+        rule_code: 'PFMS-DBT-SETTLEMENT',
+        scheme_name: 'Public Financial Management System (PFMS) DBT',
+        scheme_name_hi: 'सार्वजनिक वित्तीय प्रबंधन प्रणाली (PFMS) डीबीटी',
+        rule_type: 'msp',
+        title: 'DBT Procurement Settlement Protocol',
+        title_hi: 'डीबीटी उपार्जन भुगतान निपटान दिशानिर्देश',
+        source_name: 'Ministry of Finance / DA&FW, GoI',
+        source_document: 'DBT Procurement Settlement Protocol',
+        source_url: 'https://pfms.nic.in',
+        authority: 'Ministry of Finance / DA&FW, GoI',
+        document: 'DBT Procurement Settlement Protocol',
+        url: 'https://pfms.nic.in',
+        effective_from: '2024-04-01',
+        effective_to: null,
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+        data_origin: 'user_entered',
+        field_associated: 'actual_payment',
+        details: 'Actual bank credit recorded: ₹105,000.00.',
+        details_hi: 'बैंक खाते में दर्ज जमा राशि: ₹105,000.00।',
+      },
+    ],
+    reasons: [
+      'Quality moisture discount (refraction / FAQ grade variation)',
+      'Partial procurement disbursement released; remaining balance scheduled',
+      'Mandi cess, handling charges, or gunny bag security withheld',
+      'Bank transaction delay or IFSC settlement pending',
+    ],
+  });
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -287,6 +380,25 @@ export const MSPVerificationPage: React.FC = () => {
                   </p>
                 </div>
               )}
+
+              {/* Basis of this check card */}
+              <BasisOfCheckCard
+                checkType="msp"
+                sources={result.sources}
+                flaggedRuleCode={result.flagged_rule_code}
+                flaggedRuleThreshold={result.flagged_rule_threshold}
+                flaggedRuleReasonEn={result.flagged_rule_reason_en}
+                flaggedRuleReasonHi={result.flagged_rule_reason_hi}
+                isFlagged={result.is_flagged}
+                arithmetic={{
+                  crop: result.crop,
+                  quantity: result.quantity_quintals,
+                  rate: result.msp_rate,
+                  expected: result.expected_payment,
+                  actual: result.actual_payment,
+                  difference: result.difference,
+                }}
+              />
 
               {/* Reasons */}
               <div>

@@ -22,6 +22,7 @@ import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { verifyLoanApi, extractLoanOcrApi, fetchDocumentsApi, DocumentItem } from '../services/api';
+import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 
 export const LoanVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -94,10 +95,68 @@ export const LoanVerificationPage: React.FC = () => {
     disbursed_amount: 70000,
     deductions: 5000,
     difference: 10000,
+    unaccounted_difference: 5000,
+    flagged_rule_code: 'RULE-LOAN-DISBURSEMENT',
+    flagged_rule_threshold: 'Disbursed < Approved Sanction Limit',
+    flagged_rule_reason_en: 'Disbursed amount (₹70,000) is less than approved limit (₹80,000) with ₹5,000 unexplained difference after legitimate deductions.',
+    flagged_rule_reason_hi: 'वितरित राशि (₹70,000) स्वीकृत सीमा (₹80,000) से कम है, जिससे वैध कटौतियों के बाद ₹5,000 का अस्पष्ट अंतर रहता है।',
+    sources: [
+      {
+        rule_code: 'BANK-SANCTION-TERMS',
+        scheme_name: 'State Bank of India Sanction Agreement',
+        scheme_name_hi: 'भारतीय स्टेट बैंक ऋण स्वीकृति अनुबंध',
+        rule_type: 'loan_disbursement',
+        authority: 'State Bank of India',
+        document: 'Loan Sanction Letter (Patan Branch)',
+        url: 'https://www.rbi.org.in',
+        effective_from: '2024-04-01',
+        effective_to: null,
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+        data_origin: 'bank_document',
+        field_associated: 'approved_amount',
+        details: 'Approved limit of ₹80,000 with recorded disbursement of ₹70,000.',
+        details_hi: 'स्वीकृत ऋण सीमा ₹80,000 और दर्ज संवितरण ₹70,000।',
+      },
+      {
+        rule_code: 'RBI-FEE-WAIVER-2019',
+        scheme_name: 'Agricultural Loan Service Charges Waiver',
+        scheme_name_hi: 'कृषि ऋण सेवा शुल्क छूट निर्देश',
+        rule_type: 'processing_fee',
+        authority: 'Reserve Bank of India (RBI)',
+        document: 'FIDD.CO.FSD.BC.No.13/05.05.010/2018-19',
+        url: 'https://www.rbi.org.in',
+        effective_from: '2019-02-07',
+        effective_to: null,
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+        data_origin: 'official',
+        field_associated: 'deductions',
+        details: '₹0 charges for processing, documentation, or inspection on crop loans up to ₹3,00,000.',
+        details_hi: '₹3 लाख तक के फसल ऋण पर कोई प्रोसेसिंग या दस्तावेजी शुल्क नहीं काटा जा सकता।',
+      },
+      {
+        rule_code: 'MOA-MISS-PRI-2024',
+        scheme_name: 'Modified Interest Subvention Scheme (MISS)',
+        scheme_name_hi: 'संशोधित ब्याज अनुदान योजना (MISS)',
+        rule_type: 'interest_subvention',
+        authority: 'Ministry of Agriculture & Farmers Welfare, GoI / RBI',
+        document: 'Operational Guidelines for MISS',
+        url: 'https://agriwelfare.gov.in',
+        effective_from: '2024-04-01',
+        effective_to: '2025-03-31',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+        data_origin: 'official',
+        field_associated: 'interest_rate',
+        details: '7.0% p.a. standard benchmark lending rate; 3.0% Prompt Repayment Incentive (effective 4.0% p.a.) up to ₹3 Lakh.',
+        details_hi: '7% मानक ब्याज दर और समय पर अदायगी पर 3% प्रोत्साहन छूट (प्रभावी 4% ब्याज)।',
+      },
+    ],
     reasons: [
-      'Deductions for processing fees',
-      'Incomplete documentation',
-      'Bank policy variation'
+      'Deductions for processing fees and documentation charges',
+      'Incomplete documentation or policy variation',
+      'Bank policy variation or insurance auto-deduction'
     ]
   });
 
@@ -599,6 +658,24 @@ export const LoanVerificationPage: React.FC = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Basis of this check card */}
+              <BasisOfCheckCard
+                checkType="loan"
+                sources={result.sources}
+                flaggedRuleCode={result.flagged_rule_code}
+                flaggedRuleThreshold={result.flagged_rule_threshold}
+                flaggedRuleReasonEn={result.flagged_rule_reason_en}
+                flaggedRuleReasonHi={result.flagged_rule_reason_hi}
+                isFlagged={result.is_flagged}
+                arithmetic={{
+                  approved: result.approved_amount,
+                  disbursed: result.disbursed_amount,
+                  deductions: result.deductions,
+                  difference: result.difference,
+                  unaccounted: result.unaccounted_difference,
+                }}
+              />
 
               {/* Possible Reasons List */}
               {result.reasons && result.reasons.length > 0 && (
