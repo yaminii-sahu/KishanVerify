@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
 import { User, ShieldCheck, ArrowRight } from 'lucide-react';
-import farmerFieldsImg from '../assets/illustrations/farmer-fields.svg';
 
 export const SplashPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,19 +11,8 @@ export const SplashPage: React.FC = () => {
   return (
     <div className="min-h-[100dvh] bg-cream flex flex-col justify-between items-center px-4 py-8 max-w-md mx-auto text-center">
       {/* Top Centered Logo & Tagline */}
-      <div className="pt-4 flex flex-col items-center">
+      <div className="flex-1 flex flex-col items-center justify-center py-8">
         <Logo variant="tile" size="xl" showTagline={true} stacked={true} />
-      </div>
-
-      {/* Hero Farmer in Fields Artwork */}
-      <div className="my-4 w-full max-w-sm rounded-2xl overflow-hidden shadow-soft border border-warm-border bg-cream-surface p-2">
-        <div className="w-full h-60 sm:h-64 rounded-xl overflow-hidden">
-          <img 
-            src={farmerFieldsImg} 
-            alt="Farmer in fields holding phone" 
-            className="w-full h-full object-cover"
-          />
-        </div>
       </div>
 
       {/* Action Buttons */}
