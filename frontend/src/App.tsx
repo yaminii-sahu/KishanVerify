@@ -20,6 +20,7 @@ import { AIAssistantPage } from './pages/AIAssistantPage';
 import { GrievancePage } from './pages/GrievancePage';
 import { ReportsPage } from './pages/ReportsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { DocumentsPage } from './pages/DocumentsPage';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="insurance-verify" element={<InsuranceVerificationPage />} />
               <Route path="assistant" element={<AIAssistantPage />} />
               <Route path="grievance" element={<GrievancePage />} />
+              <Route path="documents" element={<DocumentsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>

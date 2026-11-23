@@ -11,13 +11,14 @@ import {
   ShieldAlert, 
   ArrowRight,
   FileCheck,
-  Loader2
+  Loader2,
+  FolderLock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { StatusBadge } from '../components/StatusBadge';
-import { fileGrievanceApi } from '../services/api';
+import { fileGrievanceApi, fetchDocumentsApi, DocumentItem } from '../services/api';
 
 export const GrievancePage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -31,6 +32,35 @@ export const GrievancePage: React.FC = () => {
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedGrievance, setSubmittedGrievance] = useState<any | null>(null);
+
+  // Vault picker state
+  const [isVaultModalOpen, setIsVaultModalOpen] = useState(false);
+  const [vaultDocs, setVaultDocs] = useState<DocumentItem[]>([]);
+  const [isLoadingVault, setIsLoadingVault] = useState(false);
+
+  const openVaultPicker = async () => {
+    setIsLoadingVault(true);
+    setIsVaultModalOpen(true);
+    try {
+      const res = await fetchDocumentsApi(farmer.farmerId);
+      setVaultDocs(res.documents || []);
+    } catch {
+      setVaultDocs([]);
+    } finally {
+      setIsLoadingVault(false);
+    }
+  };
+
+  const attachVaultDoc = (doc: DocumentItem) => {
+    setFiles((prev) => [
+      ...prev,
+      {
+        name: doc.original_name,
+        size: `${(doc.size_bytes / 1024).toFixed(0)} KB`,
+      },
+    ]);
+    setIsVaultModalOpen(false);
+  };
 
   interface GrievanceHistoryItem {
     id: string;
@@ -257,15 +287,25 @@ export const GrievancePage: React.FC = () => {
               </div>
             ))}
 
-            {/* Add More Files Dashed Button */}
-            <button
-              type="button"
-              onClick={handleAddFile}
-              className="w-full py-2.5 rounded-xl border border-dashed border-warm-border hover:border-olive bg-cream-surface text-muted hover:text-charcoal text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add more files</span>
-            </button>
+            {/* Add More Files / Attach from Vault */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleAddFile}
+                className="py-2.5 rounded-xl border border-dashed border-warm-border hover:border-olive bg-cream-surface text-muted hover:text-charcoal text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Upload from device</span>
+              </button>
+              <button
+                type="button"
+                onClick={openVaultPicker}
+                className="py-2.5 rounded-xl border border-forest/30 bg-tint hover:bg-tint/80 text-forest text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-soft"
+              >
+                <FolderLock className="w-3.5 h-3.5" />
+                <span>Attach from My Documents</span>
+              </button>
+            </div>
           </div>
 
           {/* Submit Button (Full Width 52px) */}
@@ -309,6 +349,90 @@ export const GrievancePage: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Vault Attachment Modal */}
+      {isVaultModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-cream-surface rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col border border-warm-border shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="p-4 border-b border-warm-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderLock className="w-5 h-5 text-forest" />
+                <h3 className="font-bold text-charcoal text-sm">
+                  {language === 'hi' ? 'दस्तावेज़ वॉल्ट से संलग्न करें' : 'Attach from My Documents'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsVaultModalOpen(false)}
+                className="w-8 h-8 rounded-lg hover:bg-cream flex items-center justify-center text-muted"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 overflow-y-auto space-y-2 flex-1">
+              <p className="text-xs text-muted mb-3">
+                {language === 'hi'
+                  ? 'अपनी शिकायत के साक्ष्य के रूप में संलग्न करने के लिए दस्तावेज़ चुनें:'
+                  : 'Select a document from your private vault to attach as evidence for this grievance:'}
+              </p>
+
+              {isLoadingVault ? (
+                <div className="py-8 text-center text-xs text-muted flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-forest" />
+                  <span>Loading vault documents...</span>
+                </div>
+              ) : vaultDocs.length === 0 ? (
+                <div className="py-8 text-center text-xs text-muted">
+                  No documents found in vault. Upload one in <button type="button" onClick={() => navigate('/farmer/documents')} className="text-forest underline font-bold">My Documents</button>.
+                </div>
+              ) : (
+                vaultDocs.map((doc) => (
+                  <div
+                    key={doc.doc_uuid}
+                    onClick={() => attachVaultDoc(doc)}
+                    className="p-3 rounded-xl bg-cream hover:bg-tint/50 border border-warm-border cursor-pointer flex items-center justify-between transition-all group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-tint text-forest flex items-center justify-center font-bold text-xs shrink-0">
+                        {doc.mime_type.includes('pdf') ? 'PDF' : 'IMG'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-charcoal group-hover:text-forest truncate">
+                          {doc.original_name}
+                        </p>
+                        <p className="text-[11px] text-muted">
+                          {doc.category} • {(doc.size_bytes / 1024).toFixed(0)} KB {doc.masked_id && `• ${doc.masked_id}`}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-forest bg-white px-2.5 py-1 rounded-lg border border-warm-border group-hover:bg-forest group-hover:text-white transition-all shrink-0">
+                      Attach
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="p-3 border-t border-warm-border flex justify-between items-center text-xs">
+              <button
+                type="button"
+                onClick={() => navigate('/farmer/documents')}
+                className="text-forest hover:underline font-semibold"
+              >
+                Go to My Documents →
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsVaultModalOpen(false)}
+                className="px-4 py-1.5 rounded-lg bg-cream border border-warm-border font-semibold text-charcoal"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

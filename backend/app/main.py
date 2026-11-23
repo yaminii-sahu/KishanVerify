@@ -17,11 +17,14 @@ from app.api.ai import router as ai_router
 from app.api.admin import router as admin_router
 from app.api.ocr import router as ocr_router
 from app.api.farmers import router as farmers_router
+from app.api.documents import router as documents_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Auto-init DB tables and run seed ONLY if database is empty
     try:
+        from app.core.database import Base, engine
+        Base.metadata.create_all(bind=engine)
         seed_database()
     except Exception as e:
         print(f"Startup DB auto-init warning: {e}")
@@ -54,6 +57,7 @@ app.include_router(ai_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
 app.include_router(ocr_router, prefix=settings.API_V1_STR)
 app.include_router(farmers_router, prefix=settings.API_V1_STR)
+app.include_router(documents_router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 def health_check():

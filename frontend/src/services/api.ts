@@ -125,6 +125,144 @@ export async function fetchSchemeSourceInfoApi() {
   }
 }
 
+// ==========================================
+// MY DOCUMENTS VAULT APIS
+// ==========================================
+
+export interface DocumentItem {
+  id?: number;
+  doc_uuid: string;
+  farmer_id: string;
+  category: string;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  size_formatted?: string;
+  note?: string;
+  masked_id?: string;
+  expiry_date?: string;
+  uploaded_at: string;
+}
+
+export async function fetchDocumentsApi(farmerId: string = 'FV12345', category?: string, search?: string) {
+  try {
+    const q = new URLSearchParams({ farmer_id: farmerId });
+    if (category && category !== 'All') q.append('category', category);
+    if (search) q.append('search', search);
+
+    return await apiClient.get<any>(`/documents/?${q.toString()}`, {
+      'X-Farmer-Id': farmerId,
+    });
+  } catch (err) {
+    console.warn('Backend documents fetch failed, using fallback mock', err);
+    return {
+      farmer_id: farmerId,
+      total_documents: 5,
+      storage: {
+        used_bytes: 4200000,
+        used_formatted: '4.2 MB',
+        quota_bytes: 52428800,
+        quota_formatted: '50 MB',
+        usage_percent: 8.4,
+      },
+      documents: [
+        {
+          id: 1,
+          doc_uuid: 'doc-aadhaar',
+          farmer_id: farmerId,
+          category: 'Identity',
+          original_name: 'Aadhaar_Card_Ramesh.pdf',
+          mime_type: 'application/pdf',
+          size_bytes: 1250000,
+          size_formatted: '1.2 MB',
+          note: 'Aadhaar seeded with SBI account for PM-KISAN DBT',
+          masked_id: 'XXXX-XXXX-8921',
+          uploaded_at: '12 Jan 2025, 10:30 AM',
+        },
+        {
+          id: 2,
+          doc_uuid: 'doc-khasra',
+          farmer_id: farmerId,
+          category: 'Land',
+          original_name: 'Khasra_B1_Patan_142.pdf',
+          mime_type: 'application/pdf',
+          size_bytes: 1450000,
+          size_formatted: '1.4 MB',
+          note: 'Patan Durg land parcel record (3.0 acres)',
+          masked_id: 'KH-142/1',
+          uploaded_at: '15 Feb 2025, 02:15 PM',
+        },
+        {
+          id: 3,
+          doc_uuid: 'doc-passbook',
+          farmer_id: farmerId,
+          category: 'Bank',
+          original_name: 'SBI_Passbook_FrontPage.png',
+          mime_type: 'image/png',
+          size_bytes: 850000,
+          size_formatted: '850 KB',
+          note: 'SBI Patan branch primary account',
+          masked_id: 'SBIN*******1234',
+          uploaded_at: '01 Mar 2025, 11:00 AM',
+        },
+        {
+          id: 4,
+          doc_uuid: 'doc-insurance',
+          farmer_id: farmerId,
+          category: 'Insurance',
+          original_name: 'PMFBY_Policy_Certificate_2025.pdf',
+          mime_type: 'application/pdf',
+          size_bytes: 650000,
+          size_formatted: '650 KB',
+          note: 'Paddy crop insurance policy receipt',
+          expiry_date: '31 Dec 2025',
+          masked_id: 'CI20251234',
+          uploaded_at: '10 Mar 2025, 04:45 PM',
+        },
+        {
+          id: 5,
+          doc_uuid: 'doc-sanction',
+          farmer_id: farmerId,
+          category: 'Bank',
+          original_name: 'Loan_Sanction_Letter_SBI.pdf',
+          mime_type: 'application/pdf',
+          size_bytes: 980000,
+          size_formatted: '980 KB',
+          note: 'Approved ₹80,000 KCC Sanction from SBI Patan',
+          expiry_date: '15 Mar 2026',
+          masked_id: 'LN-2024-8812',
+          uploaded_at: '12 Apr 2025, 09:30 AM',
+        },
+      ]
+    };
+  }
+}
+
+export async function uploadDocumentApi(formData: FormData, farmerId: string = 'FV12345') {
+  if (!formData.has('farmer_id')) {
+    formData.append('farmer_id', farmerId);
+  }
+  return await apiClient.upload<any>('/documents/upload', formData);
+}
+
+export async function updateDocumentApi(docUuid: string, patchData: any, farmerId: string = 'FV12345') {
+  return await apiClient.patch<any>(`/documents/${docUuid}`, patchData, {
+    'X-Farmer-Id': farmerId,
+  });
+}
+
+export async function deleteDocumentApi(docUuid: string, farmerId: string = 'FV12345') {
+  return await apiClient.delete<any>(`/documents/${docUuid}`, {
+    'X-Farmer-Id': farmerId,
+  });
+}
+
+export async function deleteAllDocumentsApi(farmerId: string = 'FV12345') {
+  return await apiClient.delete<any>('/documents/all/purge', {
+    'X-Farmer-Id': farmerId,
+  });
+}
+
 export async function verifyLoanApi(payload: {
   bank_name: string;
   loan_account_ref: string;

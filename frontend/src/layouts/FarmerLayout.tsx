@@ -14,7 +14,8 @@ import {
   Globe, 
   ArrowLeft,
   Menu,
-  X
+  X,
+  FolderLock
 } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { useLanguage } from '../context/LanguageContext';
@@ -38,6 +39,7 @@ export const FarmerLayout: React.FC = () => {
     { path: '/farmer/msp-verify', labelKey: 'nav.msp', icon: Coins },
     { path: '/farmer/insurance-verify', labelKey: 'nav.insurance', icon: ShieldCheck },
     { path: '/farmer/assistant', labelKey: 'nav.assistant', icon: Bot, highlight: true },
+    { path: '/farmer/documents', labelKey: 'nav.documents', icon: FolderLock },
     { path: '/farmer/grievance', labelKey: 'nav.grievances', icon: HelpCircle },
     { path: '/farmer/reports', labelKey: 'nav.reports', icon: FileText },
     { path: '/farmer/profile', labelKey: 'nav.profile', icon: User },
@@ -62,6 +64,7 @@ export const FarmerLayout: React.FC = () => {
     if (path.includes('msp-verify')) return { title: 'MSP Mandi Verification', subtitle: 'Verify crop weight benchmark formula vs bank payout.' };
     if (path.includes('insurance-verify')) return { title: 'Crop Insurance', subtitle: 'Check your claim status and settlement.' };
     if (path.includes('assistant')) return { title: 'AI Assistant', subtitle: 'Ask anything about schemes, loans, MSP or crop insurance.' };
+    if (path.includes('documents')) return { title: 'My Documents', subtitle: 'Secure, private vault for your agricultural and identity records.' };
     if (path.includes('grievance')) return { title: 'Raise a Grievance', subtitle: 'Report any issue related to loan, MSP, insurance or scheme.' };
     if (path.includes('reports')) return { title: 'My Reports', subtitle: 'View and download your financial and verification reports.' };
     if (path.includes('profile')) return { title: 'Profile', subtitle: 'Farmer profile and personal information.' };

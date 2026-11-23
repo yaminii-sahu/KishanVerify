@@ -146,6 +146,22 @@ class Grievance(Base):
 
     farmer = relationship("Farmer", back_populates="grievances")
 
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    doc_uuid = Column(String(50), unique=True, index=True, nullable=False)
+    farmer_id = Column(String(50), index=True, nullable=False) # Owner farmer_id (e.g. "FV12345")
+    category = Column(String(50), nullable=False) # Identity, Land, Bank, Insurance, Scheme, Other
+    original_name = Column(String(255), nullable=False)
+    stored_filename = Column(String(255), nullable=False)
+    mime_type = Column(String(100), nullable=False)
+    size_bytes = Column(Integer, nullable=False)
+    note = Column(String(500), nullable=True)
+    expiry_date = Column(String(50), nullable=True)
+    masked_id = Column(String(100), nullable=True)
+    uploaded_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 class Report(Base):
     __tablename__ = "reports"
 

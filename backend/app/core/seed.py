@@ -17,7 +17,12 @@ from app.models.models import (
     Scheme,
     Grievance,
     Report,
+    Document,
 )
+from app.services.storage import get_storage_backend
+
+DUMMY_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000052 00000 n \n0000000101 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF"
+DUMMY_PNG_BYTES = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\rIDATx\x9cc\xf8\xff\xff?\x03\x05\xfe\x02\xfe\x1c\xc1m\x00\x00\x00\x00IEND\xaeB`\x82"
 
 def seed_database():
     print("Creating all database tables...")
@@ -385,6 +390,76 @@ def seed_database():
             ),
         ]
         db.add_all(reports)
+
+        # 9. My Documents Vault (Ramesh Kumar - FV12345)
+        storage = get_storage_backend()
+        aadhaar_file = storage.save(DUMMY_PDF_BYTES, "pdf")
+        khasra_file = storage.save(DUMMY_PDF_BYTES, "pdf")
+        passbook_file = storage.save(DUMMY_PNG_BYTES, "png")
+        insurance_file = storage.save(DUMMY_PDF_BYTES, "pdf")
+        sanction_file = storage.save(DUMMY_PDF_BYTES, "pdf")
+
+        import uuid
+        documents = [
+            Document(
+                doc_uuid=str(uuid.uuid4()),
+                farmer_id="FV12345",
+                category="Identity",
+                original_name="Aadhaar_Card_Ramesh.pdf",
+                stored_filename=aadhaar_file,
+                mime_type="application/pdf",
+                size_bytes=len(DUMMY_PDF_BYTES),
+                note="Aadhaar verified with bank for DBT transfers",
+                masked_id="XXXX-XXXX-8921",
+            ),
+            Document(
+                doc_uuid=str(uuid.uuid4()),
+                farmer_id="FV12345",
+                category="Land",
+                original_name="Khasra_B1_Patan_142.pdf",
+                stored_filename=khasra_file,
+                mime_type="application/pdf",
+                size_bytes=len(DUMMY_PDF_BYTES),
+                note="3.0 Acres Land Record for Patan, Durg",
+                masked_id="KH-142/1",
+            ),
+            Document(
+                doc_uuid=str(uuid.uuid4()),
+                farmer_id="FV12345",
+                category="Bank",
+                original_name="SBI_Passbook_FrontPage.png",
+                stored_filename=passbook_file,
+                mime_type="image/png",
+                size_bytes=len(DUMMY_PNG_BYTES),
+                note="SBI Patan Branch savings account",
+                masked_id="SBIN*******1234",
+            ),
+            Document(
+                doc_uuid=str(uuid.uuid4()),
+                farmer_id="FV12345",
+                category="Insurance",
+                original_name="PMFBY_Policy_Certificate_2025.pdf",
+                stored_filename=insurance_file,
+                mime_type="application/pdf",
+                size_bytes=len(DUMMY_PDF_BYTES),
+                note="Kharif 2024-25 Paddy insurance policy certificate",
+                expiry_date="31 Dec 2025",
+                masked_id="CI20251234",
+            ),
+            Document(
+                doc_uuid=str(uuid.uuid4()),
+                farmer_id="FV12345",
+                category="Bank",
+                original_name="Loan_Sanction_Letter_SBI.pdf",
+                stored_filename=sanction_file,
+                mime_type="application/pdf",
+                size_bytes=len(DUMMY_PDF_BYTES),
+                note="Approved ₹80,000 KCC Sanction from SBI Patan",
+                expiry_date="15 Mar 2026",
+                masked_id="LN-2024-8812",
+            ),
+        ]
+        db.add_all(documents)
 
         db.commit()
         print("Demo database seeded successfully with all synthetic records!")

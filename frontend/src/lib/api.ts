@@ -172,6 +172,46 @@ export const apiClient = {
     }
   },
 
+  async patch<T>(endpoint: string, body?: any, headers?: HeadersInit): Promise<T> {
+    const url = normalizeUrl(endpoint);
+    try {
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...headers,
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      return await handleResponse<T>(res);
+    } catch (err: any) {
+      if (err instanceof ApiError) throw err;
+      const friendlyMsg = "Can't reach the server, retrying...";
+      emitApiToast(friendlyMsg, 'warning');
+      throw new ApiError(friendlyMsg, 0, err);
+    }
+  },
+
+  async delete<T>(endpoint: string, headers?: HeadersInit): Promise<T> {
+    const url = normalizeUrl(endpoint);
+    try {
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          Accept: 'application/json',
+          ...headers,
+        },
+      });
+      return await handleResponse<T>(res);
+    } catch (err: any) {
+      if (err instanceof ApiError) throw err;
+      const friendlyMsg = "Can't reach the server, retrying...";
+      emitApiToast(friendlyMsg, 'warning');
+      throw new ApiError(friendlyMsg, 0, err);
+    }
+  },
+
   async upload<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = normalizeUrl(endpoint);
     try {
