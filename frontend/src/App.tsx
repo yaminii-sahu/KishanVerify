@@ -24,6 +24,7 @@ import { DocumentsPage } from './pages/DocumentsPage';
 import { MandiPricesPage } from './pages/MandiPricesPage';
 import { WeatherPage } from './pages/WeatherPage';
 import { NearbyOfficesPage } from './pages/NearbyOfficesPage';
+import { ContactPage } from './pages/ContactPage';
 
 // Admin Pages
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
@@ -57,6 +58,7 @@ export default function App() {
               <Route path="mandi" element={<MandiPricesPage />} />
               <Route path="weather" element={<WeatherPage />} />
               <Route path="offices" element={<NearbyOfficesPage />} />
+              <Route path="contact" element={<ContactPage />} />
               <Route path="insurance-verify" element={<InsuranceVerificationPage />} />
               <Route path="assistant" element={<AIAssistantPage />} />
               <Route path="grievance" element={<GrievancePage />} />

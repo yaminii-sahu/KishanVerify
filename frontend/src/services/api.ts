@@ -1252,3 +1252,122 @@ export async function fetchOfficesApi(params?: {
   }
 }
 
+// ---------------------------------------------------------------------------
+// 6. CONTACT US & VERIFIED HELPLINES API
+// ---------------------------------------------------------------------------
+
+export interface HelplineItem {
+  code: string;
+  title: string;
+  title_hi?: string;
+  number: string;
+  alt_number?: string;
+  department: string;
+  hours: string;
+  languages: string;
+  description: string;
+  description_hi?: string;
+  is_toll_free: boolean;
+  verified: boolean;
+}
+
+export interface ContactSubmitPayload {
+  name: string;
+  phone: string;
+  email?: string;
+  category: string;
+  message: string;
+  attached_doc_uuid?: string;
+  farmer_id?: string;
+  website_url?: string; // honeypot
+}
+
+export interface ContactSubmitResponse {
+  ticket_id: string;
+  status: string;
+  message: string;
+  turnaround_time: string;
+  created_at: string;
+}
+
+export async function fetchHelplinesApi(): Promise<HelplineItem[]> {
+  try {
+    return await apiClient.get<HelplineItem[]>('/contact/helplines');
+  } catch (err) {
+    console.warn('Failed to fetch helplines from backend, using verified fallback list', err);
+    return [
+      {
+        code: "GOI-KCC",
+        title: "Kisan Call Centre (All India)",
+        title_hi: "किसान कॉल सेंटर (अखिल भारतीय)",
+        number: "1800-180-1551",
+        department: "Ministry of Agriculture & Farmers Welfare, GoI",
+        hours: "6:00 AM - 10:00 PM (All 7 Days)",
+        languages: "22 Official Languages (Hindi, Chhattisgarhi, English, etc.)",
+        description: "Toll-free telephonic agricultural extension service answering queries on farming, seeds, pests, weather, and technologies.",
+        description_hi: "खेती, बीज, कीट नियंत्रण, मौसम और नई तकनीकों पर सभी 22 आधिकारिक भाषाओं में निःशुल्क कृषि सलाह।",
+        is_toll_free: true,
+        verified: true,
+      },
+      {
+        code: "GOI-PM-KISAN",
+        title: "PM-KISAN National Helpline",
+        title_hi: "पीएम-किसान राष्ट्रीय हेल्पलाइन",
+        number: "155261",
+        alt_number: "011-24300606",
+        department: "PM-KISAN Nodal Unit, MoA&FW",
+        hours: "Mon-Sat: 9:30 AM - 6:00 PM",
+        languages: "Hindi, English",
+        description: "Inquiries regarding installment status, e-KYC validation, Aadhaar bank seeding, and rejected beneficiary accounts.",
+        description_hi: "किस्त की स्थिति, ई-केवाईसी सत्यापन, आधार बैंक सीडिंग और खारिज किए गए खातों से संबंधित आधिकारिक सहायता।",
+        is_toll_free: true,
+        verified: true,
+      },
+      {
+        code: "GOI-PMFBY",
+        title: "Pradhan Mantri Fasal Bima Helpline",
+        title_hi: "प्रधानमंत्री फसल बीमा हेल्पलाइन",
+        number: "14447",
+        department: "Department of Agriculture & Farmers Welfare",
+        hours: "Mon-Sat: 9:00 AM - 7:00 PM",
+        languages: "Hindi, English, Regional Languages",
+        description: "Assistance on crop loss intimation (within 72 hours), surveyor contacts, policy certificate download, and claim settlement.",
+        description_hi: "72 घंटे के भीतर फसल नुकसान सूचना, सर्वेक्षक संपर्क, बीमा पॉलिसी डाउनलोड और क्लेम निपटान सहायता।",
+        is_toll_free: true,
+        verified: true,
+      },
+      {
+        code: "GOI-RBI",
+        title: "Banking Ombudsman (RBI Financial Redressal)",
+        title_hi: "बैंकिंग लोकपाल (आरबीआई वित्तीय समाधान)",
+        number: "14440",
+        department: "Reserve Bank of India",
+        hours: "Mon-Fri: 9:30 AM - 5:15 PM",
+        languages: "Hindi, English",
+        description: "Redressal for wrongful interest charges, excess processing fees on KCC loans below ₹3 Lakh, or withheld subsidies.",
+        description_hi: "केसीसी ऋण पर गलत ब्याज, ₹3 लाख से कम पर अवैध प्रोसेसिंग शुल्क या रोकी गई ब्याज सब्सिडी के लिए शिकायत।",
+        is_toll_free: true,
+        verified: true,
+      },
+      {
+        code: "CG-AGRI-DESK",
+        title: "Chhattisgarh Krishi Samvaad Helpline",
+        title_hi: "छत्तीसगढ़ कृषि संवाद हेल्पलाइन",
+        number: "0771-2442537",
+        department: "Directorate of Agriculture, Govt. of Chhattisgarh, Raipur",
+        hours: "Mon-Fri: 10:00 AM - 5:30 PM",
+        languages: "Chhattisgarhi, Hindi",
+        description: "State input subsidy assistance (Rajiv Gandhi / Krishak Unnati), paddy procurement bonus, seed certification, and mandi grievances.",
+        description_hi: "राज्य आदान सहायता (राजीव गांधी / कृषक उन्नति), धान अंतर राशि, प्रमाणित बीज और स्थानीय मंडी समाधान।",
+        is_toll_free: false,
+        verified: true,
+      },
+    ];
+  }
+}
+
+export async function submitContactApi(payload: ContactSubmitPayload): Promise<ContactSubmitResponse> {
+  return await apiClient.post<ContactSubmitResponse>('/contact/submit', payload);
+}
+
+
