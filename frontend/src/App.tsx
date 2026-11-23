@@ -26,6 +26,17 @@ import { WeatherPage } from './pages/WeatherPage';
 import { NearbyOfficesPage } from './pages/NearbyOfficesPage';
 import { ContactPage } from './pages/ContactPage';
 
+// Policy & Information Pages
+import { AboutPage } from './pages/policies/AboutPage';
+import { TermsPage } from './pages/policies/TermsPage';
+import { PrivacyPage } from './pages/policies/PrivacyPage';
+import { DisclaimerPage } from './pages/policies/DisclaimerPage';
+import { HyperlinkPolicyPage } from './pages/policies/HyperlinkPolicyPage';
+import { CopyrightPage } from './pages/policies/CopyrightPage';
+import { AccessibilityPage } from './pages/policies/AccessibilityPage';
+import { FaqPage } from './pages/policies/FaqPage';
+import { SitemapPage } from './pages/policies/SitemapPage';
+
 // Admin Pages
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { AdminComplaintsPage } from './pages/AdminComplaintsPage';
@@ -75,6 +86,17 @@ export default function App() {
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
+
+            {/* Policy & Information Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/disclaimer" element={<DisclaimerPage />} />
+            <Route path="/hyperlinking-policy" element={<HyperlinkPolicyPage />} />
+            <Route path="/copyright-policy" element={<CopyrightPage />} />
+            <Route path="/accessibility" element={<AccessibilityPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/sitemap" element={<SitemapPage />} />
 
             {/* Catch-all redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
