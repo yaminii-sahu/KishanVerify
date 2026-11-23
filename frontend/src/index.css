@@ -21,6 +21,10 @@
   --color-status-review-text: #8C531E;
   --color-status-discrepancy: #FCEAE4;
   --color-status-discrepancy-text: #B83227;
+
+  /* Saffron Accent Token (Sampled from Logo Arc: #FE900A / #F7941D) */
+  --accent-saffron: #FE900A;
+  --color-saffron: #FE900A;
 }
 
 body {

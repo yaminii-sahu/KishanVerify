@@ -60,7 +60,7 @@ export const OnboardingPage: React.FC = () => {
             <div
               key={i}
               className={`h-2 rounded-full transition-all duration-300 ${
-                i === step ? 'w-6 bg-forest' : 'w-2 bg-tint'
+                i === step ? 'w-6 bg-saffron' : 'w-2 bg-tint'
               }`}
             />
           ))}

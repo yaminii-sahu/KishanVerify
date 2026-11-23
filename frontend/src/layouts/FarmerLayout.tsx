@@ -254,7 +254,7 @@ export const FarmerLayout: React.FC = () => {
                   aria-label="Notifications"
                 >
                   <Bell className="w-4 h-4" />
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-400"></span>
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-saffron"></span>
                 </button>
               </div>
             </div>

@@ -35,6 +35,11 @@ export default {
         muted: {
           DEFAULT: '#6B7565', // Muted grey-green subtitles
         },
+        saffron: {
+          DEFAULT: '#FE900A', // Sampled from logo saffron arc (#FE900A / #F7941D)
+          light: '#FFF4E5',
+          dark: '#E07D00',
+        },
         status: {
           eligible: {
             bg: '#EBF2DE',
