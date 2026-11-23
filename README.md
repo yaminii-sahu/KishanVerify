@@ -63,6 +63,51 @@ All screens share an exact tokenized palette sampled directly from the design mo
 
 ---
 
+## 🏛️ Government-Portal-Style Responsive Footer & Transparency Framework
+
+KisanVerify features an accessible, government-portal-style footer adhering to rural design tokens (`#4A6538` dark olive background, `#FF9933` saffron accent line, `#F7F5EC` cream typography):
+
+<p align="center">
+  <img src="docs/screenshots/footer-1440px.png" alt="KisanVerify Government-Style Responsive Footer (Desktop View)" width="850" style="border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
+</p>
+
+### Responsive Multi-Viewport Adaptations
+- **Desktop (1440px & 1024px)**: 4-column structured grid (Brand, Quick Links, Information & Support, Verified Official Government Links) with inline help strip, prototype legal disclaimer, and bottom bar.
+- **Tablet (768px)**: 2×2 grid layout with accessible touch-friendly spacing and clear navigation grouping.
+- **Mobile Phones (360px)**: Collapsible accordion sections for links with dedicated `pb-24` padding ensuring zero overlap with the fixed 5-tab mobile bottom bar.
+
+<p align="center">
+  <img src="docs/screenshots/footer-768px.png" alt="Tablet Footer View (768px)" width="48%" style="border-radius: 8px; margin-right: 2%;" />
+  <img src="docs/screenshots/footer-360px.png" alt="Mobile Accordion Footer (360px)" width="48%" style="border-radius: 8px;" />
+</p>
+
+### Key Footer & Policy Elements
+1. **Verified Government Links**: Direct `target="_blank" rel="noopener noreferrer"` links to official portals:
+   - National Portal of India: [india.gov.in](https://www.india.gov.in)
+   - Ministry of Agriculture & Farmers Welfare: [agriwelfare.gov.in](https://agriwelfare.gov.in)
+   - PM-KISAN Portal: [pmkisan.gov.in](https://pmkisan.gov.in)
+   - PMFBY Crop Insurance: [pmfby.gov.in](https://pmfby.gov.in)
+   - e-NAM (National Agriculture Market): [enam.gov.in](https://enam.gov.in)
+   - Soil Health Card Portal: [soilhealth.dac.gov.in](https://soilhealth.dac.gov.in)
+   - India Meteorological Department: [mausam.imd.gov.in](https://mausam.imd.gov.in)
+   - Kisan Call Centre / mKisan Portal: [mkisan.gov.in](https://mkisan.gov.in)
+2. **Help Strip**: Toll-free Kisan Call Centre (`1800-180-1551`) with one-tap dialing and support email.
+3. **Legal Prototype Disclaimer**: Clear notice that KisanVerify is an independent civic hackathon prototype not affiliated with GoI, containing synthetic demo records (no misuse of State Emblems).
+4. **Policy Pages Suite**: Complete bilingual (EN/HI) pages for:
+   - [About KisanVerify](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/AboutPage.tsx) (`/about`)
+   - [Terms & Conditions](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/TermsPage.tsx) (`/terms`)
+   - [Privacy Policy](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/PrivacyPage.tsx) (`/privacy`)
+   - [Disclaimer](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/DisclaimerPage.tsx) (`/disclaimer`)
+   - [Hyperlinking Policy](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/HyperlinkPolicyPage.tsx) (`/hyperlinking-policy`)
+   - [Copyright Policy](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/CopyrightPage.tsx) (`/copyright-policy`)
+   - [Accessibility Statement](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/AccessibilityPage.tsx) (`/accessibility`)
+   - [Help & FAQ](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/FaqPage.tsx) (`/faq`)
+   - [HTML Sitemap](file:///c:/hackathon/KishanVerify/frontend/src/pages/policies/SitemapPage.tsx) (`/sitemap`)
+5. **Accessibility**: `footer[role="contentinfo"]`, `<nav aria-label>`, keyboard focus rings, "Skip to main content", "Back to top", and >5.4:1 WCAG AA contrast ratio.
+
+
+---
+
 ## 🏛️ System Architecture
 
 ```
