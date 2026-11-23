@@ -15,136 +15,158 @@ import {
   FileText,
   X,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Flag,
+  Check,
+  Building2,
+  Droplets,
+  Tractor,
+  HandCoins
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { StatusBadge } from '../components/StatusBadge';
-import { checkEligibilityApi } from '../services/api';
+import { fetchSchemesListApi, reportBrokenLinkApi } from '../services/api';
+
+export const INDIAN_STATES_AND_UTS = [
+  'All States & UTs',
+  'Andaman and Nicobar Islands',
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chandigarh',
+  'Chhattisgarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jammu and Kashmir',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Ladakh',
+  'Lakshadweep',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Puducherry',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal'
+];
 
 export const SchemesPage: React.FC = () => {
   const { t, language } = useLanguage();
   const { farmer } = useAuth();
   const navigate = useNavigate();
 
-  const [activeCategory, setActiveCategory] = useState<'All' | 'Subsidy' | 'Insurance' | 'Loan'>('All');
+  // Filters state
+  const [selectedLevel, setSelectedLevel] = useState<'All' | 'Central' | 'State'>('All');
+  const [selectedState, setSelectedState] = useState<string>(farmer?.state || 'Chhattisgarh');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Data state
+  const [schemes, setSchemes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedScheme, setSelectedScheme] = useState<any | null>(null);
 
-  // Checker form state
-  const [state, setState] = useState('Chhattisgarh');
-  const [district, setDistrict] = useState('Durg');
-  const [crop, setCrop] = useState('Paddy');
-  const [landArea, setLandArea] = useState(3.0);
-  const [farmerCategory, setFarmerCategory] = useState('Small Farmer');
-  const [loanStatus, setLoanStatus] = useState('Yes');
-  
-  const [isChecking, setIsChecking] = useState(false);
-  const [evaluatedSchemes, setEvaluatedSchemes] = useState<any[]>([
-    {
-      id: 'PM_KISAN',
-      scheme_code: 'PM-KISAN',
-      title: 'PM-KISAN Samman Nidhi',
-      title_hi: 'प्रधानमंत्री किसान सम्मान निधि',
-      category: 'Subsidy',
-      description: 'Income support of ₹6,000/year in three equal installments directly to bank account.',
-      description_hi: 'सभी पात्र किसान परिवारों को ₹6,000 प्रति वर्ष की आय सहायता।',
-      benefits: '₹6,000 / year',
-      benefits_hi: '₹6,000 / वर्ष',
-      eligibility_status: 'Eligible',
-      deadline: 'Apply by 31 Dec 2025',
-      myscheme_url: 'https://www.myscheme.gov.in/schemes/pm-kisan',
-      ministry: 'Ministry of Agriculture and Farmers Welfare',
-      source: 'myScheme.gov.in',
-      documents_required: ['Aadhaar Card', 'Land Ownership Record (B-1/Khasra)', 'Bank Passbook'],
-      state: 'All India',
-    },
-    {
-      id: 'PMFBY',
-      scheme_code: 'PMFBY',
-      title: 'Pradhan Mantri Fasal Bima Yojana',
-      title_hi: 'प्रधानमंत्री फसल बीमा योजना (PMFBY)',
-      category: 'Insurance',
-      description: 'Comprehensive crop insurance against drought, floods, pests and unseasonal weather.',
-      description_hi: 'सूखा, बाढ़ और कीट हमलों से फसल सुरक्षा हेतु व्यापक बीमा।',
-      benefits: 'Up to ₹1,50,000 coverage',
-      benefits_hi: '₹1,50,000 तक बीमा',
-      eligibility_status: 'Eligible',
-      deadline: 'Apply by 31 Mar 2026',
-      myscheme_url: 'https://www.myscheme.gov.in/schemes/pmfby',
-      ministry: 'Ministry of Agriculture and Farmers Welfare',
-      source: 'myScheme.gov.in',
-      documents_required: ['Patwari Girdawari Sowing Certificate', 'Land Record (Khasra/B-1)', 'Aadhaar Card'],
-      state: 'All India',
-    },
-    {
-      id: 'KCC',
-      scheme_code: 'KCC',
-      title: 'Kisan Credit Card (KCC)',
-      title_hi: 'किसान क्रेडिट कार्ड (KCC)',
-      category: 'Loan',
-      description: 'Short-term crop loan at subsidized interest rate of 4% with prompt repayment incentive.',
-      description_hi: '4% रियायती ब्याज दर पर अल्पकालिक फसली ऋण।',
-      benefits: 'Credit limit up to ₹3,00,000',
-      benefits_hi: '₹3,00,000 तक ऋण सीमा',
-      eligibility_status: 'Eligible',
-      deadline: 'Apply by 31 Dec 2025',
-      myscheme_url: 'https://www.myscheme.gov.in/schemes/kcc',
-      ministry: 'Ministry of Agriculture and Farmers Welfare',
-      source: 'myScheme.gov.in',
-      documents_required: ['Land Title (B-1 copy)', 'Identity Proof', 'Address Proof', 'No-Dues Certificate'],
-      state: 'All India',
-    },
-    {
-      id: 'CG_INPUT_SUBSIDY',
-      scheme_code: 'INPUT-SUB',
-      title: 'Input Subsidy Scheme',
-      title_hi: 'कृषि इनपुट सब्सिडी योजना',
-      category: 'Subsidy',
-      description: 'Subsidy on certified quality seeds, fertilizers, and modern farm machinery.',
-      description_hi: 'प्रमाणित बीजों, उर्वरकों और कृषि यंत्रों पर सब्सिडी सहायता।',
-      benefits: '₹9,000 / acre',
-      benefits_hi: '₹9,000 / एकड़',
-      eligibility_status: 'Possibly Eligible',
-      deadline: 'Check details at local Krishi Kendra',
-      myscheme_url: 'https://www.myscheme.gov.in/schemes/smam',
-      ministry: 'Department of Agriculture & Farmers Welfare',
-      source: 'myScheme.gov.in',
-      documents_required: ['Kisan Rin Pustika (KRP)', 'Mandi Registration Slip', 'Aadhaar Card'],
-      state: 'Chhattisgarh',
-    }
-  ]);
+  // Broken link report modal state
+  const [reportingScheme, setReportingScheme] = useState<any | null>(null);
+  const [reportNote, setReportNote] = useState('Official website link is not opening or timed out');
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
 
-  const categories = ['All', 'Subsidy', 'Insurance', 'Loan'] as const;
+  const categories = [
+    'All',
+    'Subsidy',
+    'Insurance',
+    'Loan',
+    'Income Support',
+    'Irrigation',
+    'Equipment'
+  ];
 
-  // Run eligibility check
-  const handleRunEligibilityCheck = async () => {
-    setIsChecking(true);
+  // Load schemes from backend API
+  const loadSchemes = async () => {
+    setIsLoading(true);
     try {
-      const res = await checkEligibilityApi({
-        state,
-        district,
-        crop,
-        land_holding_acres: landArea,
-        farmer_category: farmerCategory,
-        loan_status: loanStatus,
+      const data = await fetchSchemesListApi({
+        level: selectedLevel,
+        state: selectedLevel === 'Central' ? undefined : selectedState,
+        category: selectedCategory,
+        search: searchQuery,
       });
-      if (res && res.schemes) {
-        setEvaluatedSchemes(res.schemes);
-      }
+      setSchemes(data || []);
     } catch (err) {
-      console.error(err);
+      console.warn('Failed to fetch schemes list', err);
     } finally {
-      setIsChecking(false);
+      setIsLoading(false);
     }
   };
 
-  const filteredSchemes = evaluatedSchemes.filter((s) => {
-    if (activeCategory === 'All') return true;
-    return s.category.toLowerCase() === activeCategory.toLowerCase();
-  });
+  useEffect(() => {
+    loadSchemes();
+  }, [selectedLevel, selectedState, selectedCategory]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadSchemes();
+  };
+
+  const handleReportBrokenLink = async () => {
+    if (!reportingScheme) return;
+    setIsReporting(true);
+    try {
+      await reportBrokenLinkApi(reportingScheme.scheme_code, {
+        reported_url: reportingScheme.official_url,
+        note: reportNote,
+      });
+      setReportSuccess(true);
+      setTimeout(() => {
+        setReportSuccess(false);
+        setReportingScheme(null);
+      }, 1800);
+    } catch {
+      setReportingScheme(null);
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Loan':
+        return <Landmark className="w-5 h-5" strokeWidth={1.75} />;
+      case 'Insurance':
+        return <ShieldCheck className="w-5 h-5" strokeWidth={1.75} />;
+      case 'Income Support':
+        return <HandCoins className="w-5 h-5" strokeWidth={1.75} />;
+      case 'Irrigation':
+        return <Droplets className="w-5 h-5" strokeWidth={1.75} />;
+      case 'Equipment':
+        return <Tractor className="w-5 h-5" strokeWidth={1.75} />;
+      default:
+        return <Coins className="w-5 h-5" strokeWidth={1.75} />;
+    }
+  };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-5xl mx-auto pb-10">
       
       {/* Desktop Header */}
       <div className="hidden md:flex items-center gap-3">
@@ -157,15 +179,17 @@ export const SchemesPage: React.FC = () => {
         </button>
         <div>
           <h1 className="text-xl font-bold text-charcoal tracking-tight">
-            {language === 'hi' ? 'योजना पात्रता परीक्षक' : 'Scheme Eligibility Checker'}
+            {language === 'hi' ? 'सरकारी योजनाएं एवं प्रत्यक्ष लाभ' : 'Government Schemes & Subsidies'}
           </h1>
           <p className="text-xs text-muted">
-            {language === 'hi' ? 'देखें कि आप किन सरकारी योजनाओं के लिए पात्र हैं' : 'Find out which government schemes you may be eligible for.'}
+            {language === 'hi' 
+              ? 'केंद्रीय व राज्य स्तरीय आधिकारिक योजनाएं, पात्रता गाइड और सीधे सरकारी आवेदन पोर्टल।' 
+              : 'Official Central and State agricultural schemes, eligibility guides, and direct portal access.'}
           </p>
         </div>
       </div>
 
-      {/* Official myScheme.gov.in Attribution & Verification Banner */}
+      {/* Official Government Verification Banner */}
       <div className="bg-[#EAF0E2] border border-[#CAD8B6] rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-soft">
         <div className="flex items-start gap-3.5">
           <div className="w-10 h-10 rounded-xl bg-forest text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
@@ -174,16 +198,16 @@ export const SchemesPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-bold text-charcoal">
-                {language === 'hi' ? 'आधिकारिक योजना विवरण myScheme.gov.in से प्राप्त' : 'Official Scheme Details Sourced from myScheme.gov.in'}
+                {language === 'hi' ? 'सत्यापित आधिकारिक सरकारी पोर्टल लिंक' : 'Verified Official Government Portals'}
               </span>
               <span className="px-2 py-0.5 rounded-full bg-forest text-white text-[10px] font-bold tracking-wide">
-                Govt of India
+                .gov.in / .nic.in
               </span>
             </div>
             <p className="text-xs text-[#4F6244] mt-1 leading-relaxed max-w-2xl">
               {language === 'hi'
-                ? 'सभी योजनाओं के नियम, पात्रता, लाभ व आवेदन प्रक्रिया myScheme (राष्ट्रीय योजना मंच, डिजिटल इंडिया व MeitY) के आधिकारिक डेटा से सीधे सत्यापित हैं।'
-                : 'All scheme rules, eligibility criteria, subsidy slabs, and application steps are retrieved and cross-verified with official data from myScheme.gov.in (National Portal for Government Schemes).'}
+                ? 'सभी "Apply Now" लिंक केवल आधिकारिक भारत सरकार (.gov.in / .nic.in) पोर्टल खोलते हैं। पात्रता स्थितियां सांकेतिक हैं ("संभावित पात्र"), कोई गारंटीकृत दावा नहीं है।'
+                : 'Every "Apply Now" link connects directly to official Government of India (.gov.in or .nic.in) portals. Eligibility tags reflect potential criteria, never a guaranteed approval.'}
             </p>
           </div>
         </div>
@@ -200,199 +224,243 @@ export const SchemesPage: React.FC = () => {
       </div>
 
       {/* ============================================================== */}
-      {/* ELIGIBILITY CHECKER FORM (2-col grid on desktop per Image A)   */}
+      {/* FILTER CONTROLS CARD                                           */}
       {/* ============================================================== */}
-      <div className="bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-5">
-        <div className="border-b border-warm-border pb-3">
-          <h2 className="text-base font-bold text-charcoal">
-            {language === 'hi' ? 'आपका कृषि विवरण' : 'Your Details'}
-          </h2>
-          <p className="text-xs text-muted mt-0.5">
-            {language === 'hi' ? 'पात्रता नियमों के अनुसार योजनाएं निर्धारित की जाती हैं' : 'Rules are verified deterministically against official department guidelines.'}
-          </p>
-        </div>
+      <div className="bg-cream-surface rounded-2xl p-5 border border-warm-border shadow-soft space-y-4">
+        
+        {/* Row 1: Level Pills + State Dropdown + Search Input */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          
+          {/* Level Switcher (4 cols) */}
+          <div className="md:col-span-4 flex items-center p-1 bg-cream rounded-xl border border-warm-border">
+            {(['All', 'Central', 'State'] as const).map((lvl) => {
+              const isSel = selectedLevel === lvl;
+              const label = lvl === 'All' 
+                ? (language === 'hi' ? 'सभी स्तर' : 'All Levels')
+                : lvl === 'Central'
+                ? (language === 'hi' ? 'केंद्रीय (राष्ट्रीय)' : 'Central (National)')
+                : (language === 'hi' ? 'राज्य स्तरीय' : 'State');
+              return (
+                <button
+                  key={lvl}
+                  onClick={() => setSelectedLevel(lvl)}
+                  className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                    isSel 
+                      ? 'bg-forest text-white shadow-soft' 
+                      : 'text-charcoal/80 hover:text-charcoal'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
 
-        {/* 2-Column Inputs Grid (Image A) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-semibold text-charcoal mb-1.5">
-              State
-            </label>
+          {/* State Dropdown (4 cols) - disabled when Level = Central */}
+          <div className="md:col-span-4">
             <select
-              value={state}
-              onChange={(e) => setState(e.target.value)}
-              className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
+              value={selectedState}
+              disabled={selectedLevel === 'Central'}
+              onChange={(e) => setSelectedState(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-cream rounded-xl border border-warm-border text-xs font-semibold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive disabled:opacity-50 min-h-[42px]"
             >
-              <option value="Chhattisgarh">Chhattisgarh</option>
-              <option value="Madhya Pradesh">Madhya Pradesh</option>
-              <option value="Uttar Pradesh">Uttar Pradesh</option>
-              <option value="Punjab">Punjab</option>
+              {INDIAN_STATES_AND_UTS.map((st) => (
+                <option key={st} value={st}>
+                  {st}
+                </option>
+              ))}
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-charcoal mb-1.5">
-              District
-            </label>
-            <select
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
-            >
-              <option value="Durg">Durg</option>
-              <option value="Raipur">Raipur</option>
-              <option value="Bilaspur">Bilaspur</option>
-              <option value="Rajnandgaon">Rajnandgaon</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-charcoal mb-1.5">
-              Crop
-            </label>
-            <select
-              value={crop}
-              onChange={(e) => setCrop(e.target.value)}
-              className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
-            >
-              <option value="Paddy">Paddy</option>
-              <option value="Wheat">Wheat</option>
-              <option value="Maize">Maize</option>
-              <option value="Soybean">Soybean</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-charcoal mb-1.5">
-              Land Holding (Acres)
-            </label>
+          {/* Search Box (4 cols) */}
+          <form onSubmit={handleSearchSubmit} className="md:col-span-4 relative">
             <input
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              value={landArea}
-              onChange={(e) => setLandArea(parseFloat(e.target.value) || 0)}
-              className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={language === 'hi' ? 'योजना खोजें (जैसे पीएम-किसान, सोलर)...' : 'Search schemes (e.g. PM-KISAN, Solar)...'}
+              className="w-full pl-9 pr-8 py-2.5 bg-cream rounded-xl border border-warm-border text-xs font-medium text-charcoal placeholder-muted focus:outline-none focus:ring-2 focus:ring-olive min-h-[42px]"
             />
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-charcoal mb-1.5">
-              Farmer Category
-            </label>
-            <select
-              value={farmerCategory}
-              onChange={(e) => setFarmerCategory(e.target.value)}
-              className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
-            >
-              <option value="Small Farmer">Small Farmer (1-2 Ha)</option>
-              <option value="Marginal Farmer">Marginal Farmer (&lt; 1 Ha)</option>
-              <option value="Large Farmer">Large Farmer (&gt; 2 Ha)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-charcoal mb-1.5">
-              Loan Status
-            </label>
-            <select
-              value={loanStatus}
-              onChange={(e) => setLoanStatus(e.target.value)}
-              className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive min-h-[48px]"
-            >
-              <option value="Yes">Yes (Active KCC)</option>
-              <option value="No">No (No active loan)</option>
-            </select>
-          </div>
+            <Search className="w-4 h-4 text-muted absolute left-3 top-3 pointer-events-none" />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); loadSchemes(); }}
+                className="w-5 h-5 rounded-full hover:bg-warm-border text-muted absolute right-2.5 top-2.5 flex items-center justify-center"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </form>
         </div>
 
-        {/* Action Button */}
-        <div>
-          <button
-            onClick={handleRunEligibilityCheck}
-            disabled={isChecking}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-xs shadow-soft transition-all min-h-[46px]"
-          >
-            {isChecking ? 'Checking Eligibility...' : 'Check Eligible Schemes'}
-          </button>
+        {/* Row 2: Category Chips */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
+          <span className="text-xs font-bold text-muted uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+            <Filter className="w-3 h-3" />
+            <span>Category:</span>
+          </span>
+          {categories.map((cat) => {
+            const isActive = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all min-h-[34px] ${
+                  isActive
+                    ? 'bg-forest text-white shadow-soft'
+                    : 'bg-cream text-muted border border-warm-border hover:bg-tint/40'
+                }`}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* ============================================================== */}
-      {/* FILTER CHIPS (Mobile Image B & Desktop)                        */}
+      {/* SCHEMES CARDS LIST                                             */}
       {/* ============================================================== */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {categories.map((cat) => {
-          const isActive = activeCategory === cat;
-          return (
+      <div className="space-y-3.5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-charcoal flex items-center gap-2">
+            <span>{language === 'hi' ? 'उपलब्ध सरकारी योजनाएं' : 'Available Government Schemes'}</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-tint text-forest">
+              {schemes.length}
+            </span>
+          </h3>
+          <span className="text-[11px] text-muted">
+            {language === 'hi' ? 'पात्रता स्थिति: संभावित पात्र' : 'Status: Potentially Eligible'}
+          </span>
+        </div>
+
+        {isLoading ? (
+          <div className="py-12 text-center text-xs text-muted flex flex-col items-center justify-center gap-2">
+            <div className="w-6 h-6 border-2 border-forest border-t-transparent rounded-full animate-spin"></div>
+            <span>Loading verified schemes...</span>
+          </div>
+        ) : schemes.length === 0 ? (
+          <div className="bg-cream-surface rounded-2xl p-8 border border-dashed border-warm-border text-center text-muted space-y-2">
+            <p className="font-bold text-charcoal text-sm">No schemes match the selected filters.</p>
+            <p className="text-xs">Try selecting "All Levels" or clearing the search query.</p>
             <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all min-h-[38px] ${
-                isActive
-                  ? 'bg-forest text-white shadow-soft'
-                  : 'bg-cream-surface text-muted border border-warm-border hover:bg-tint/40'
-              }`}
+              onClick={() => { setSelectedLevel('All'); setSelectedCategory('All'); setSearchQuery(''); }}
+              className="mt-2 px-4 py-2 bg-tint text-forest font-bold rounded-xl text-xs hover:bg-tint/80"
             >
-              {cat}
+              Reset Filters
             </button>
-          );
-        })}
-      </div>
-
-      {/* ============================================================== */}
-      {/* SCHEMES LIST (Image A & Image B)                               */}
-      {/* ============================================================== */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-charcoal">
-          {language === 'hi' ? 'आप निम्नलिखित योजनाओं के लिए पात्र हो सकते हैं:' : 'You may be eligible for'}
-        </h3>
-
-        {filteredSchemes.map((scheme) => (
-          <div
-            key={scheme.id}
-            onClick={() => setSelectedScheme(scheme)}
-            className="bg-cream-surface rounded-2xl p-4 sm:p-5 border border-warm-border hover:border-olive hover:shadow-card transition-all cursor-pointer flex items-center justify-between gap-4 group shadow-soft"
-          >
-            <div className="flex items-start gap-3.5">
-              {/* Tinted icon box */}
-              <div className="w-10 h-10 rounded-xl bg-tint text-forest flex items-center justify-center shrink-0 group-hover:bg-forest group-hover:text-white transition-colors">
-                {scheme.category === 'Loan' ? (
-                  <Landmark className="w-5 h-5" strokeWidth={1.75} />
-                ) : scheme.category === 'Insurance' ? (
-                  <ShieldCheck className="w-5 h-5" strokeWidth={1.75} />
-                ) : (
-                  <Coins className="w-5 h-5" strokeWidth={1.75} />
-                )}
-              </div>
-
-              <div className="space-y-1">
-                <h4 className="text-sm sm:text-base font-bold text-charcoal group-hover:text-forest transition-colors leading-tight">
-                  {language === 'hi' ? scheme.title_hi : scheme.title}
-                </h4>
-
-                <p className="text-xs text-muted line-clamp-1 leading-snug">
-                  {language === 'hi' ? scheme.description_hi : scheme.description}
-                </p>
-
-                {scheme.deadline && (
-                  <span className="inline-block text-[11px] text-muted font-medium pt-0.5">
-                    {scheme.deadline}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 shrink-0">
-              <StatusBadge status={scheme.eligibility_status} size="sm" />
-              <ChevronRight className="w-4 h-4 text-muted group-hover:text-forest group-hover:translate-x-1 transition-transform" />
-            </div>
           </div>
-        ))}
+        ) : (
+          schemes.map((scheme) => (
+            <div
+              key={scheme.id}
+              className="bg-cream-surface rounded-2xl p-4 sm:p-5 border border-warm-border hover:border-olive hover:shadow-card transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-soft group"
+            >
+              {/* Left Column: Icon + Titles + Badges + Short Description */}
+              <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-xl bg-tint text-forest flex items-center justify-center shrink-0 group-hover:bg-forest group-hover:text-white transition-colors mt-0.5">
+                  {getCategoryIcon(scheme.category)}
+                </div>
+
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  {/* Badges: Level, State, Category */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      scheme.level === 'Central' 
+                        ? 'bg-blue-50 text-blue-800 border border-blue-200' 
+                        : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    }`}>
+                      {scheme.level === 'Central' ? 'Central (National)' : `State: ${scheme.state || 'State'}`}
+                    </span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cream border border-warm-border text-charcoal">
+                      {scheme.category}
+                    </span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-status-eligible-bg text-status-eligible-text border border-status-eligible-text/20">
+                      Potentially Eligible
+                    </span>
+                  </div>
+
+                  {/* Title */}
+                  <h4 
+                    onClick={() => setSelectedScheme(scheme)}
+                    className="text-sm sm:text-base font-bold text-charcoal group-hover:text-forest transition-colors leading-tight cursor-pointer"
+                  >
+                    {language === 'hi' ? scheme.title_hi : scheme.title}
+                  </h4>
+
+                  {/* Short description */}
+                  <p className="text-xs text-muted leading-relaxed line-clamp-2">
+                    {language === 'hi' ? scheme.description_hi : (scheme.short_description || scheme.description)}
+                  </p>
+
+                  {/* Verification & Deadline metadata */}
+                  <div className="flex items-center gap-3 text-[11px] text-muted flex-wrap pt-0.5">
+                    <span className="flex items-center gap-1 text-forest font-semibold">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{scheme.source_note || 'Verified Official Portal'}</span>
+                    </span>
+                    <span>•</span>
+                    <span>Deadline: <strong>{scheme.deadline}</strong></span>
+                    {scheme.last_verified_on && (
+                      <>
+                        <span>•</span>
+                        <span className="text-[10px] font-mono text-muted/80">Verified {scheme.last_verified_on}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Actions (Apply Now + View Details + Report link) */}
+              <div className="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-warm-border/60">
+                {scheme.has_verified_official_portal && scheme.official_url ? (
+                  <div className="flex flex-col items-end gap-1 w-full sm:w-auto">
+                    <a
+                      href={scheme.official_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-xs shadow-soft flex items-center justify-center gap-1.5 transition-all min-h-[38px]"
+                    >
+                      <span>Apply Now</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <span className="text-[10px] text-muted text-right">
+                      Leaves to official gov site (.gov.in / .nic.in)
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setSelectedScheme(scheme)}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-cream border border-warm-border text-charcoal font-semibold text-xs hover:bg-tint transition-all min-h-[38px]"
+                  >
+                    See Official Guidance
+                  </button>
+                )}
+
+                <div className="flex items-center justify-between sm:justify-end gap-3 w-full text-xs">
+                  <button
+                    onClick={() => setSelectedScheme(scheme)}
+                    className="text-forest hover:underline font-bold text-xs"
+                  >
+                    Full Details →
+                  </button>
+                  <button
+                    onClick={() => setReportingScheme(scheme)}
+                    className="text-[11px] text-muted hover:text-status-discrepancy-text hover:underline flex items-center gap-1"
+                  >
+                    <Flag className="w-3 h-3" />
+                    <span>Report broken link</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* ============================================================== */}
-      {/* SCHEME DETAIL MODAL (myScheme.gov.in integrated)               */}
+      {/* SCHEME DETAIL MODAL                                            */}
       {/* ============================================================== */}
       {selectedScheme && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-charcoal/40 backdrop-blur-xs">
@@ -401,10 +469,17 @@ export const SchemesPage: React.FC = () => {
             <div className="flex items-start justify-between border-b border-warm-border pb-3.5">
               <div className="space-y-1.5 pr-3">
                 <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase ${
+                    selectedScheme.level === 'Central' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {selectedScheme.level === 'Central' ? 'Central Scheme' : `State: ${selectedScheme.state}`}
+                  </span>
                   <span className="px-2.5 py-0.5 rounded-full bg-tint text-forest text-[11px] font-bold">
                     {selectedScheme.category}
                   </span>
-                  <StatusBadge status={selectedScheme.eligibility_status} size="sm" />
+                  <span className="px-2 py-0.5 rounded-full bg-status-eligible-bg text-status-eligible-text text-[10px] font-bold">
+                    Potentially Eligible
+                  </span>
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-charcoal leading-tight">
                   {language === 'hi' ? selectedScheme.title_hi : selectedScheme.title}
@@ -412,7 +487,7 @@ export const SchemesPage: React.FC = () => {
                 <p className="text-[11px] text-muted flex items-center gap-1.5 flex-wrap">
                   <span>{selectedScheme.ministry || 'Ministry of Agriculture and Farmers Welfare'}</span>
                   <span>•</span>
-                  <span className="font-semibold text-forest">myScheme.gov.in</span>
+                  <span className="font-semibold text-forest">{selectedScheme.source || 'Official Government Portal'}</span>
                 </p>
               </div>
               <button 
@@ -424,8 +499,9 @@ export const SchemesPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Description & Benefits */}
+            {/* Content */}
             <div className="space-y-3 text-xs">
+              {/* Benefits */}
               <div className="p-4 rounded-xl bg-cream border border-warm-border space-y-2">
                 <p className="font-bold text-charcoal flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-olive" />
@@ -439,29 +515,25 @@ export const SchemesPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* Reasons / Rule matching */}
-              {selectedScheme.reasons && selectedScheme.reasons.length > 0 && (
-                <div className="p-3.5 rounded-xl bg-tint/30 border border-warm-border space-y-1.5">
-                  <p className="font-bold text-charcoal">
-                    {language === 'hi' ? 'पात्रता विश्लेषण:' : 'Eligibility Assessment:'}
-                  </p>
-                  <ul className="space-y-1 text-muted text-[11px]">
-                    {(language === 'hi' && selectedScheme.reasons_hi ? selectedScheme.reasons_hi : selectedScheme.reasons).map((reason: string, idx: number) => (
-                      <li key={idx} className="flex items-start gap-1.5">
-                        <span className="text-forest font-bold">•</span>
-                        <span>{reason}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {/* Eligibility Criteria */}
+              <div className="p-3.5 rounded-xl bg-tint/30 border border-warm-border space-y-1">
+                <p className="font-bold text-charcoal">
+                  {language === 'hi' ? 'पात्रता सारांश:' : 'Eligibility Summary:'}
+                </p>
+                <p className="text-muted leading-relaxed">
+                  {selectedScheme.eligibility_summary || 'Available for verified landholding agricultural families.'}
+                </p>
+                <p className="text-[10px] text-muted/80 italic pt-0.5">
+                  Note: Final eligibility is determined by the competent department upon document review.
+                </p>
+              </div>
 
               {/* Required Documents */}
               {selectedScheme.documents_required && selectedScheme.documents_required.length > 0 && (
                 <div className="space-y-2">
                   <p className="font-bold text-charcoal flex items-center gap-1.5">
                     <FileText className="w-4 h-4 text-forest" />
-                    <span>{language === 'hi' ? 'आवश्यक दस्तावेज़ (myScheme अनुसार):' : 'Documents Required (per myScheme):'}</span>
+                    <span>{language === 'hi' ? 'आवश्यक दस्तावेज़:' : 'Documents Required:'}</span>
                   </p>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {selectedScheme.documents_required.map((doc: string, idx: number) => (
@@ -474,36 +546,125 @@ export const SchemesPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Deadline & State */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-cream border border-warm-border text-[11px]">
-                <span className="font-semibold text-charcoal">
-                  {language === 'hi' ? 'अंतिम तिथि:' : 'Application Deadline:'} <span className="text-forest font-bold">{selectedScheme.deadline}</span>
-                </span>
-                <span className="font-semibold text-muted">
-                  {selectedScheme.state || 'All India'}
-                </span>
+              {/* Verification & Source Box */}
+              <div className="p-3 rounded-xl bg-cream border border-warm-border text-[11px] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-charcoal">Official Domain:</span>
+                  <span className="font-mono text-forest font-bold">{selectedScheme.official_url ? new URL(selectedScheme.official_url).hostname : 'Official Portal'}</span>
+                </div>
+                <div className="flex items-center justify-between text-muted text-[10px]">
+                  <span>Last verified: {selectedScheme.last_verified_on || '10 Apr 2025'}</span>
+                  <button
+                    onClick={() => {
+                      setReportingScheme(selectedScheme);
+                      setSelectedScheme(null);
+                    }}
+                    className="text-status-discrepancy-text hover:underline"
+                  >
+                    Report broken link
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Actions: View on myScheme button */}
+            {/* Actions: Apply Now + Close */}
             <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
-              <a
-                href={selectedScheme.myscheme_url || 'https://www.myscheme.gov.in'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 py-3 px-4 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-xs shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98"
-              >
-                <span>{language === 'hi' ? 'myScheme.gov.in पर आधिकारिक विवरण देखें' : 'View Official Scheme on myScheme.gov.in'}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+              {selectedScheme.official_url ? (
+                <a
+                  href={selectedScheme.official_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3 px-4 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-xs shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98"
+                >
+                  <span>Apply Now on Official Portal</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              ) : (
+                <a
+                  href={selectedScheme.myscheme_url || 'https://www.myscheme.gov.in'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-3 px-4 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-xs shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98"
+                >
+                  <span>View on myScheme.gov.in</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
 
               <button
                 onClick={() => setSelectedScheme(null)}
                 className="py-3 px-5 rounded-xl bg-cream-surface border border-warm-border text-charcoal font-semibold text-xs hover:bg-tint transition-colors"
               >
-                {language === 'hi' ? 'बंद करें' : 'Close'}
+                Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* REPORT BROKEN LINK MODAL                                       */}
+      {/* ============================================================== */}
+      {reportingScheme && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/40 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-cream-surface rounded-2xl p-5 border border-warm-border shadow-dropdown space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-warm-border pb-3">
+              <div className="flex items-center gap-2">
+                <Flag className="w-4 h-4 text-status-discrepancy-text" />
+                <h3 className="text-sm font-bold text-charcoal">Report Broken Link</h3>
+              </div>
+              <button onClick={() => setReportingScheme(null)} className="w-7 h-7 rounded-lg hover:bg-cream flex items-center justify-center text-muted">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {reportSuccess ? (
+              <div className="py-6 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-status-eligible-bg text-status-eligible-text flex items-center justify-center mx-auto">
+                  <Check className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-bold text-charcoal">Thank you!</p>
+                <p className="text-[11px] text-muted">Your report has been logged and our portal team will verify the link.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-[11px] font-semibold text-charcoal mb-1">Scheme</label>
+                  <p className="p-2.5 bg-cream rounded-xl border border-warm-border font-bold text-charcoal">{reportingScheme.title}</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-charcoal mb-1">Official Portal URL</label>
+                  <p className="p-2.5 bg-cream rounded-xl border border-warm-border font-mono text-muted text-[11px] truncate">{reportingScheme.official_url || 'N/A'}</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-charcoal mb-1">What went wrong?</label>
+                  <textarea
+                    rows={3}
+                    value={reportNote}
+                    onChange={(e) => setReportNote(e.target.value)}
+                    className="w-full px-3 py-2 bg-cream rounded-xl border border-warm-border text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-olive resize-none"
+                  />
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    onClick={handleReportBrokenLink}
+                    disabled={isReporting}
+                    className="flex-1 py-2.5 bg-forest hover:bg-forest-dark text-white rounded-xl font-bold shadow-soft transition-all"
+                  >
+                    {isReporting ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                  <button
+                    onClick={() => setReportingScheme(null)}
+                    className="px-4 py-2.5 bg-cream border border-warm-border rounded-xl font-semibold text-charcoal"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

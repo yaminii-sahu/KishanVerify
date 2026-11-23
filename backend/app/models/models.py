@@ -116,16 +116,22 @@ class Scheme(Base):
     scheme_code = Column(String(50), unique=True, index=True, nullable=False)
     title = Column(String(200), nullable=False)
     title_hi = Column(String(200), nullable=True)
-    category = Column(String(50), nullable=False) # "Subsidy", "Insurance", "Loan"
+    level = Column(String(50), default="Central") # "Central" or "State"
+    state = Column(String(100), nullable=True) # None for Central, state name for State
+    category = Column(String(50), nullable=False) # "Subsidy", "Insurance", "Loan", "Income Support", "Irrigation", "Equipment"
     description = Column(Text, nullable=False)
     description_hi = Column(Text, nullable=True)
+    short_description = Column(String(255), nullable=True)
+    eligibility_summary = Column(Text, nullable=True)
     benefits = Column(Text, nullable=False)
     benefits_hi = Column(Text, nullable=True)
     eligibility_rules = Column(JSON, default=dict)
     documents_required = Column(JSON, default=list)
     deadline = Column(String(50), nullable=False)
-    state = Column(String(100), default="All India")
+    official_url = Column(String(255), nullable=True) # Must be official .gov.in or .nic.in
     myscheme_url = Column(String(255), nullable=True)
+    source_note = Column(String(255), nullable=True)
+    last_verified_on = Column(String(50), nullable=True)
     ministry = Column(String(200), default="Ministry of Agriculture and Farmers Welfare")
     source = Column(String(100), default="myScheme.gov.in")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)

@@ -7,6 +7,7 @@ backend_dir = os.path.dirname(os.path.dirname(current_dir))
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
+from sqlalchemy import text
 from app.core.database import Base, engine, SessionLocal
 from app.models.models import (
     User,
@@ -24,14 +25,264 @@ from app.services.storage import get_storage_backend
 DUMMY_PDF_BYTES = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj 3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000052 00000 n \n0000000101 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF"
 DUMMY_PNG_BYTES = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\rIDATx\x9cc\xf8\xff\xff?\x03\x05\xfe\x02\xfe\x1c\xc1m\x00\x00\x00\x00IEND\xaeB`\x82"
 
+def get_all_seed_schemes():
+    return [
+        Scheme(
+            scheme_code="PM-KISAN",
+            title="PM-KISAN Samman Nidhi",
+            title_hi="पीएम-किसान सम्मान निधि",
+            level="Central",
+            state=None,
+            category="Income Support",
+            short_description="Direct income support of ₹6,000/year to landholding farmer families.",
+            eligibility_summary="All landholding farmer families having cultivable landholding in their name.",
+            description="Central sector scheme providing income support of ₹6,000 per year in three equal 4-monthly installments directly to farmer bank accounts.",
+            description_hi="किसानों के बैंक खातों में सीधे तीन समान 4-मासिक किश्तों में प्रति वर्ष ₹6,000 की आय सहायता प्रदान करने वाली केंद्रीय योजना।",
+            benefits="₹6,000 / year via Direct Benefit Transfer (DBT)",
+            benefits_hi="₹6,000 प्रति वर्ष सीधे बैंक खाते में (डीबीटी)",
+            eligibility_rules={
+                "max_land_holding": 999.0,
+                "categories": ["Small Farmer", "Marginal Farmer", "Large Farmer"],
+                "institutional_landholder": False,
+            },
+            documents_required=["Aadhaar Card", "Land Ownership Record (B-1/Khasra)", "Bank Passbook"],
+            deadline="Apply by 31 Dec 2025",
+            official_url="https://pmkisan.gov.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/pm-kisan",
+            source_note="Official portal of PM-KISAN, Ministry of Agriculture & Farmers Welfare, GoI",
+            last_verified_on="2025-04-10",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
+        ),
+        Scheme(
+            scheme_code="PMFBY",
+            title="Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+            title_hi="प्रधानमंत्री फसल बीमा योजना",
+            level="Central",
+            state=None,
+            category="Insurance",
+            short_description="Subsidized crop insurance coverage against non-preventable natural risks.",
+            eligibility_summary="All farmers growing notified crops in notified areas including sharecroppers and tenant farmers.",
+            description="Comprehensive crop insurance covering non-preventable natural risks from pre-sowing to post-harvest at very low farmer premiums (2% for Kharif, 1.5% for Rabi).",
+            description_hi="बुवाई से पहले से लेकर कटाई के बाद तक गैर-रोकथाम प्राकृतिक जोखिमों को कवर करने वाला व्यापक फसल बीमा।",
+            benefits="Up to ₹50,000/acre insurance sum assured against natural calamities",
+            benefits_hi="प्राकृतिक आपदाओं के विरुद्ध ₹50,000/एकड़ तक की बीमा राशि",
+            eligibility_rules={
+                "crops": ["Paddy", "Wheat", "Maize", "Pulses", "Oilseeds"],
+                "states": ["Chhattisgarh", "All India"],
+            },
+            documents_required=["Land Girdawari Certificate", "Sowing Certificate", "Aadhaar Card", "Bank Account Details"],
+            deadline="Apply by 31 Mar 2026",
+            official_url="https://pmfby.gov.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/pmfby",
+            source_note="Official PMFBY Portal, Ministry of Agriculture & Farmers Welfare, GoI",
+            last_verified_on="2025-04-10",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
+        ),
+        Scheme(
+            scheme_code="KCC",
+            title="Kisan Credit Card (KCC) Scheme",
+            title_hi="किसान क्रेडिट कार्ड योजना",
+            level="Central",
+            state=None,
+            category="Loan",
+            short_description="Flexible revolving cash credit for cultivation and farm asset maintenance at 4% interest.",
+            eligibility_summary="All farmers, individual/joint borrowers who are owner cultivators or tenant farmers.",
+            description="Timely, flexible and cost-effective institutional short-term credit for cultivation, post-harvest expenses and maintenance @ effective 4% interest upon prompt repayment.",
+            description_hi="समय पर पुनर्भुगतान करने पर प्रभावी 4% ब्याज पर खेती और रख-रखाव के लिए समयबद्ध और लचीला संस्थागत ऋण।",
+            benefits="Credit limit up to ₹3,00,000 with 3% prompt repayment subvention",
+            benefits_hi="3% ब्याज छूट के साथ ₹3,00,000 तक की ऋण सीमा",
+            eligibility_rules={
+                "land_holding_min": 0.1,
+                "age_min": 18,
+                "age_max": 75,
+            },
+            documents_required=["Land Title (B-1/Khasra Copy)", "Identity Proof", "Address Proof", "No-Dues Certificate"],
+            deadline="Apply by 31 Dec 2025",
+            official_url="https://agricoop.nic.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/kcc",
+            source_note="Official portal under Department of Agriculture & Farmers Welfare, GoI",
+            last_verified_on="2025-04-10",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
+        ),
+        Scheme(
+            scheme_code="SOIL-CARD",
+            title="Soil Health Card Scheme",
+            title_hi="मृदा स्वास्थ्य कार्ड योजना",
+            level="Central",
+            state=None,
+            category="Subsidy",
+            short_description="Free soil testing report card with crop-wise nutrient recommendations.",
+            eligibility_summary="Open to all farmers across India holding cultivable land.",
+            description="Provides farmers with soil health cards carrying nutrient status and fertilizer dosage recommendations every 2 years to reduce farming costs.",
+            description_hi="किसानों को मिट्टी की गुणवत्ता और पोषक तत्वों की सटीक रिपोर्ट तथा खाद उपयोग की सिफारिशें।",
+            benefits="Free scientific soil laboratory test and customized fertilizer advisory",
+            benefits_hi="निःशुल्क वैज्ञानिक मिट्टी परीक्षण और उर्वरक सलाह",
+            eligibility_rules={"categories": ["All Farmers"]},
+            documents_required=["Aadhaar Card", "Land Identification Details (Khasra No.)"],
+            deadline="Ongoing cycle 2025-26",
+            official_url="https://soilhealth.dac.gov.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/shc",
+            source_note="Official Soil Health Portal, Ministry of Agriculture & Farmers Welfare, GoI",
+            last_verified_on="2025-04-10",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
+        ),
+        Scheme(
+            scheme_code="ENAM",
+            title="National Agriculture Market (e-NAM)",
+            title_hi="राष्ट्रीय कृषि बाजार (ई-नाम)",
+            level="Central",
+            state=None,
+            category="Equipment",
+            short_description="Pan-India electronic trading portal integrating APMC mandis.",
+            eligibility_summary="Farmers selling agricultural commodities through regulated APMC markets.",
+            description="Online trading platform for agricultural commodities facilitating transparent price discovery and online payment directly into farmer accounts.",
+            description_hi="पारदर्शी बोली और बेहतर मूल्य प्राप्ति के लिए अखिल भारतीय इलेक्ट्रॉनिक कृषि व्यापार पोर्टल।",
+            benefits="Direct access to nationwide buyers and transparent digital bidding",
+            benefits_hi="देशभर के व्यापारियों से सीधे ऑनलाइन बोली और बैंक भुगतान",
+            eligibility_rules={"categories": ["All Farmers"]},
+            documents_required=["Aadhaar Card", "Bank Account Details", "Mandi Entry Pass"],
+            deadline="Year-round operation",
+            official_url="https://enam.gov.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/e-nam",
+            source_note="Official e-NAM portal under Small Farmers Agribusiness Consortium (SFAC), GoI",
+            last_verified_on="2025-04-10",
+            ministry="Ministry of Agriculture and Farmers Welfare",
+            source="myScheme.gov.in",
+        ),
+        Scheme(
+            scheme_code="PM-KUSUM",
+            title="Pradhan Mantri KUSUM Yojana",
+            title_hi="प्रधानमंत्री कुसुम योजना (सोलर पंप)",
+            level="Central",
+            state=None,
+            category="Irrigation",
+            short_description="Up to 60% subsidy for installation of stand-alone solar agriculture pumps.",
+            eligibility_summary="Individual farmers, cooperatives, panchayats with agricultural land.",
+            description="Supports farmers in installing solar irrigation water pumps, replacing expensive diesel pumps and securing reliable daytime irrigation.",
+            description_hi="कृषि में सिंचाई के लिए सोलर पंप स्थापना पर 60% तक का भारी सरकारी अनुदान।",
+            benefits="60% government subsidy (30% Central + 30% State) on solar pump systems",
+            benefits_hi="सोलर पंप स्थापना पर 60% तक का अनुदान",
+            eligibility_rules={"categories": ["Small Farmer", "Marginal Farmer", "Large Farmer"]},
+            documents_required=["Land Ownership Papers (Khasra/B1)", "Bank Details", "Aadhaar Card"],
+            deadline="Apply by 31 Dec 2025",
+            official_url="https://pmkusum.mnre.gov.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/pm-kusum",
+            source_note="Official portal of PM-KUSUM, Ministry of New and Renewable Energy, GoI",
+            last_verified_on="2025-04-10",
+            ministry="Ministry of New and Renewable Energy",
+            source="myScheme.gov.in",
+        ),
+        Scheme(
+            scheme_code="CG-KUY",
+            title="Krishi Unnati Yojana (Chhattisgarh)",
+            title_hi="कृषक उन्नति योजना (छत्तीसगढ़)",
+            level="State",
+            state="Chhattisgarh",
+            category="Subsidy",
+            short_description="State input incentive ensuring up to ₹3,100/quintal remunerative price for paddy.",
+            eligibility_summary="Farmers selling paddy at designated Primary Agricultural Cooperative Societies (PACS) in Chhattisgarh.",
+            description="Flagship scheme of Govt of Chhattisgarh providing input assistance to paddy farmers, ensuring ₹3,100 per quintal total price for up to 21 quintals/acre.",
+            description_hi="धान उत्पादक किसानों को ₹3,100 प्रति क्विंटल तक का सुनिश्चित लाभकारी मूल्य व आदान सहायता।",
+            benefits="Input assistance bridging market price to ₹3,100 per quintal up to 21 quintals/acre",
+            benefits_hi="21 क्विंटल/एकड़ तक ₹3,100 प्रति क्विंटल का भुगतान",
+            eligibility_rules={
+                "states": ["Chhattisgarh"],
+                "crops": ["Paddy"],
+            },
+            documents_required=["Kisan Rin Pustika (KRP)", "Girdawari Registration Slip", "Aadhaar Card", "Bank Passbook"],
+            deadline="Procurement season cycle",
+            official_url="https://agriportal.cg.nic.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/smam",
+            source_note="Official Portal of Directorate of Agriculture, Government of Chhattisgarh",
+            last_verified_on="2025-04-10",
+            ministry="Department of Agriculture, Govt of Chhattisgarh",
+            source="agriportal.cg.nic.in",
+        ),
+        Scheme(
+            scheme_code="CG-SSY",
+            title="Saur Sujala Yojana (Chhattisgarh)",
+            title_hi="सौर सुजला योजना (छत्तीसगढ़)",
+            level="State",
+            state="Chhattisgarh",
+            category="Irrigation",
+            short_description="Subsidized solar-powered water irrigation pumps for Chhattisgarh farmers.",
+            eligibility_summary="Farmers in un-electrified or low-voltage agricultural regions of Chhattisgarh.",
+            description="CREDA initiative to deploy 3HP and 5HP solar irrigation pumps to farmers at highly subsidized rates for un-electrified agricultural lands.",
+            description_hi="छत्तीसगढ़ के गैर-विद्युतीकृत कृषि क्षेत्रों में 3HP/5HP सोलर पंप नाममात्र दर पर उपलब्ध कराना।",
+            benefits="Solar water pump installation at 90%+ subsidized cost for small/marginal farmers",
+            benefits_hi="लघु व सीमांत किसानों को 90% से अधिक अनुदान पर सोलर पंप",
+            eligibility_rules={
+                "states": ["Chhattisgarh"],
+            },
+            documents_required=["B-1/P-II Khasra Copy", "Caste Certificate (for SC/ST concession)", "Aadhaar Card", "Bank Details"],
+            deadline="Apply via District CREDA office",
+            official_url="https://creda.cgstate.gov.in",
+            myscheme_url="https://www.myscheme.gov.in/schemes/pm-kusum",
+            source_note="Official Portal of Chhattisgarh State Renewable Energy Development Agency (CREDA)",
+            last_verified_on="2025-04-10",
+            ministry="CREDA, Energy Department, Govt of Chhattisgarh",
+            source="creda.cgstate.gov.in",
+        ),
+    ]
+
+def seed_schemes_list(db):
+    schemes = get_all_seed_schemes()
+    for s in schemes:
+        existing = db.query(Scheme).filter_by(scheme_code=s.scheme_code).first()
+        if existing:
+            existing.title = s.title
+            existing.title_hi = s.title_hi
+            existing.level = s.level
+            existing.state = s.state
+            existing.category = s.category
+            existing.short_description = s.short_description
+            existing.description = s.description
+            existing.description_hi = s.description_hi
+            existing.benefits = s.benefits
+            existing.benefits_hi = s.benefits_hi
+            existing.eligibility_summary = s.eligibility_summary
+            existing.official_url = s.official_url
+            existing.myscheme_url = s.myscheme_url
+            existing.source_note = s.source_note
+            existing.last_verified_on = s.last_verified_on
+            existing.deadline = s.deadline
+            existing.documents_required = s.documents_required
+        else:
+            db.add(s)
+    db.commit()
+
+def ensure_sqlite_columns():
+    try:
+        from sqlalchemy import text
+        # If schemes table exists but lacks new columns like level or ministry, recreate it
+        with engine.connect() as conn:
+            res = conn.execute(text("PRAGMA table_info(schemes)")).fetchall()
+            col_names = [r[1] for r in res]
+            if col_names and ("level" not in col_names or "ministry" not in col_names or "official_url" not in col_names):
+                conn.execute(text("DROP TABLE IF EXISTS schemes"))
+                conn.commit()
+        Base.metadata.tables["schemes"].create(bind=engine, checkfirst=True)
+    except Exception as e:
+        print(f"Schemes table check notice: {e}")
+
 def seed_database():
     print("Creating all database tables...")
     Base.metadata.create_all(bind=engine)
+    ensure_sqlite_columns()
 
     db = SessionLocal()
     try:
         # Check if already seeded
-        if db.query(Farmer).filter_by(farmer_id="FV12345").first():
+        farmer_exists = db.query(Farmer).filter_by(farmer_id="FV12345").first()
+        if farmer_exists:
+            # Check if schemes need enrichment
+            if not db.query(Scheme).filter_by(scheme_code="SOIL-CARD").first():
+                print("Enriching schemes with Central/State entries...")
+                seed_schemes_list(db)
             print("Database already seeded with demo data.")
             return
 
@@ -226,92 +477,8 @@ def seed_database():
         )
         db.add_all([ins1, ins2])
 
-        # 6. Schemes (Blueprint & Screenshots: PM-KISAN, PMFBY, KCC, Input Subsidy)
-        schemes = [
-            Scheme(
-                scheme_code="PM-KISAN",
-                title="PM-KISAN Samman Nidhi",
-                title_hi="पीएम-किसान सम्मान निधि",
-                category="Subsidy",
-                description="Central sector scheme providing income support of ₹6,000 per year in three equal 4-monthly installments directly to farmer bank accounts.",
-                description_hi="किसानों के बैंक खातों में सीधे तीन समान 4-मासिक किश्तों में प्रति वर्ष ₹6,000 की आय सहायता प्रदान करने वाली केंद्रीय योजना।",
-                benefits="₹6,000 / year via Direct Benefit Transfer (DBT)",
-                benefits_hi="₹6,000 प्रति वर्ष सीधे बैंक खाते में (डीबीटी)",
-                eligibility_rules={
-                    "max_land_holding": 999.0,
-                    "categories": ["Small Farmer", "Marginal Farmer", "Large Farmer"],
-                    "institutional_landholder": False,
-                },
-                documents_required=["Aadhaar Card", "Land Ownership Record (B-1/Khasra)", "Bank Passbook"],
-                deadline="Apply by 31 Dec 2025",
-                state="All India",
-                myscheme_url="https://www.myscheme.gov.in/schemes/pm-kisan",
-                ministry="Ministry of Agriculture and Farmers Welfare",
-                source="myScheme.gov.in",
-            ),
-            Scheme(
-                scheme_code="PMFBY",
-                title="Pradhan Mantri Fasal Bima Yojana (PMFBY)",
-                title_hi="प्रधानमंत्री फसल बीमा योजना",
-                category="Insurance",
-                description="Comprehensive crop insurance covering non-preventable natural risks from pre-sowing to post-harvest at very low farmer premiums (2% for Kharif, 1.5% for Rabi).",
-                description_hi="बुवाई से पहले से लेकर कटाई के बाद तक गैर-रोकथाम प्राकृतिक जोखिमों को कवर करने वाला व्यापक फसल बीमा।",
-                benefits="Up to ₹50,000/acre insurance sum assured against natural calamities",
-                benefits_hi="प्राकृतिक आपदाओं के विरुद्ध ₹50,000/एकड़ तक की बीमा राशि",
-                eligibility_rules={
-                    "crops": ["Paddy", "Wheat", "Maize", "Pulses", "Oilseeds"],
-                    "states": ["Chhattisgarh", "All India"],
-                },
-                documents_required=["Land Girdawari Certificate", "Sowing Certificate", "Aadhaar Card", "Bank Account Details"],
-                deadline="Apply by 31 Mar 2026",
-                state="All India",
-                myscheme_url="https://www.myscheme.gov.in/schemes/pmfby",
-                ministry="Ministry of Agriculture and Farmers Welfare",
-                source="myScheme.gov.in",
-            ),
-            Scheme(
-                scheme_code="KCC",
-                title="Kisan Credit Card (KCC) Scheme",
-                title_hi="किसान क्रेडिट कार्ड योजना",
-                category="Loan",
-                description="Timely, flexible and cost-effective institutional short-term credit for cultivation, post-harvest expenses and maintenance @ effective 4% interest upon prompt repayment.",
-                description_hi="समय पर पुनर्भुगतान करने पर प्रभावी 4% ब्याज पर खेती और रख-रखाव के लिए समयबद्ध और लचीला संस्थागत ऋण।",
-                benefits="Credit limit up to ₹3,00,000 with 3% prompt repayment subvention",
-                benefits_hi="3% ब्याज छूट के साथ ₹3,00,000 तक की ऋण सीमा",
-                eligibility_rules={
-                    "land_holding_min": 0.1,
-                    "age_min": 18,
-                    "age_max": 75,
-                },
-                documents_required=["Land Title (B-1/Khasra Copy)", "Identity Proof", "Address Proof", "No-Dues Certificate"],
-                deadline="Apply by 31 Dec 2025",
-                state="All India",
-                myscheme_url="https://www.myscheme.gov.in/schemes/kcc",
-                ministry="Ministry of Agriculture and Farmers Welfare",
-                source="myScheme.gov.in",
-            ),
-            Scheme(
-                scheme_code="INPUT-SUB",
-                title="Input Subsidy Scheme (Chhattisgarh)",
-                title_hi="कृषि आदान सहायता योजना (छत्तीसगढ़)",
-                category="Subsidy",
-                description="State initiative providing financial support on seeds, micro-nutrients, bio-fertilizers and drip irrigation equipment to boost agricultural productivity.",
-                description_hi="कृषि उत्पादकता बढ़ाने के लिए बीज, सूक्ष्म पोषक तत्वों, जैव उर्वरकों और ड्रिप सिंचाई पर वित्तीय सहायता।",
-                benefits="Subsidy on seeds, fertilizers, and farm equipment up to ₹9,000/acre",
-                benefits_hi="बीज, खाद और कृषि उपकरणों पर ₹9,000/एकड़ तक की सब्सिडी",
-                eligibility_rules={
-                    "states": ["Chhattisgarh"],
-                    "categories": ["Small Farmer", "Marginal Farmer"],
-                },
-                documents_required=["Kisan Rin Pustika (KRP)", "Mandi Registration Slip", "Aadhaar"],
-                deadline="Check details at local Krishi Kendra",
-                state="Chhattisgarh",
-                myscheme_url="https://www.myscheme.gov.in/schemes/smam",
-                ministry="Department of Agriculture & Farmers Welfare",
-                source="myScheme.gov.in",
-            ),
-        ]
-        db.add_all(schemes)
+        # 6. Schemes (Central and State Schemes with verified government portals)
+        seed_schemes_list(db)
 
         # 7. Grievances
         grievances = [
