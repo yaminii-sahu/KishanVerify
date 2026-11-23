@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.verification import (
@@ -13,8 +14,10 @@ from app.services.verification_engine import (
     LoanVerificationOutput,
     MSPVerificationOutput,
     InsuranceVerificationOutput,
+    OFFICIAL_MSP_RULES,
+    OFFICIAL_LOAN_RULES,
 )
-from app.models.models import Farmer, Loan, MSPRecord, InsuranceRecord
+from app.models.models import Farmer, Loan, MSPRecord, InsuranceRecord, RuleSource
 
 router = APIRouter(prefix="/verify", tags=["Verification Engine"])
 
@@ -152,3 +155,101 @@ def get_farmer_summary(farmer_id: str, db: Session = Depends(get_db)):
         "msp": msp_res,
         "insurance": ins_res,
     }
+
+@router.get("/rules")
+def get_rule_sources(
+    rule_type: Optional[str] = Query(None, description="Filter by rule type: loan_disbursement, msp, interest_subvention, processing_fee, insurance_claim"),
+    crop: Optional[str] = Query(None, description="Filter by crop name"),
+    db: Session = Depends(get_db)
+):
+    """
+    Retrieve cited reference rules, statutory MSP benchmarks, and interest rate guidelines.
+    Reads from database, falling back gracefully to static official benchmarks if table is empty.
+    """
+    try:
+        query = db.query(RuleSource)
+        if rule_type:
+            query = query.filter(RuleSource.rule_type == rule_type)
+        if crop:
+            query = query.filter(RuleSource.crop.ilike(f"%{crop}%"))
+        db_rules = query.all()
+    except Exception:
+        db.rollback()
+        db_rules = []
+
+    if db_rules:
+        return [
+            {
+                "id": r.id,
+                "rule_code": r.rule_code,
+                "scheme_name": r.scheme_name,
+                "rule_type": r.rule_type,
+                "crop": r.crop,
+                "season": r.season,
+                "description_en": r.description_en,
+                "description_hi": r.description_hi,
+                "formula_or_value": r.formula_or_value,
+                "source_name": r.source_name,
+                "source_document": r.source_document,
+                "source_url": r.source_url,
+                "effective_from": r.effective_from,
+                "effective_to": r.effective_to,
+                "last_verified_on": r.last_verified_on,
+                "status": r.status,
+                "data_origin": r.data_origin,
+            }
+            for r in db_rules
+        ]
+
+    # In-memory fallback if db not seeded yet
+    rules = []
+    for c_name, m in OFFICIAL_MSP_RULES.items():
+        if rule_type and rule_type != "msp":
+            continue
+        if crop and crop.lower() not in c_name.lower():
+            continue
+        rules.append({
+            "rule_code": m["rule_code"],
+            "scheme_name": m["scheme_name"],
+            "scheme_name_hi": m.get("scheme_name_hi"),
+            "rule_type": "msp",
+            "crop": c_name,
+            "season": m.get("season"),
+            "description_en": f"Official MSP rate for {c_name} at ₹{m['rate']}/quintal.",
+            "description_hi": f"{c_name} के लिए आधिकारिक एमएसपी दर ₹{m['rate']}/क्विंटल।",
+            "formula_or_value": f"₹{m['rate']:,.2f} / quintal",
+            "source_name": m["authority"],
+            "source_document": m["document"],
+            "source_url": m["url"],
+            "effective_from": m["effective_from"],
+            "effective_to": m.get("effective_to"),
+            "last_verified_on": m["last_verified_on"],
+            "status": m["status"],
+            "data_origin": m["data_origin"],
+        })
+
+    for k, lr in OFFICIAL_LOAN_RULES.items():
+        r_type = "processing_fee" if "FEE" in k else ("interest_subvention" if "INTEREST" in k else "loan_disbursement")
+        if rule_type and rule_type != r_type:
+            continue
+        rules.append({
+            "rule_code": lr["rule_code"],
+            "scheme_name": lr["scheme_name"],
+            "scheme_name_hi": lr.get("scheme_name_hi"),
+            "rule_type": r_type,
+            "crop": None,
+            "season": None,
+            "description_en": lr["formula_or_value"],
+            "description_hi": lr.get("document_hi"),
+            "formula_or_value": lr["formula_or_value"],
+            "source_name": lr["authority"],
+            "source_document": lr["document"],
+            "source_url": lr["url"],
+            "effective_from": lr["effective_from"],
+            "effective_to": lr.get("effective_to"),
+            "last_verified_on": lr["last_verified_on"],
+            "status": lr["status"],
+            "data_origin": lr["data_origin"],
+        })
+
+    return rules

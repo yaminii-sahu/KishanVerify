@@ -223,3 +223,26 @@ class ContactMessage(Base):
     status = Column(String(50), default="Open")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class RuleSource(Base):
+    __tablename__ = "rule_sources"
+
+    id = Column(Integer, primary_key=True, index=True)
+    rule_code = Column(String(50), unique=True, index=True, nullable=False)
+    scheme_name = Column(String(100), nullable=False)
+    rule_type = Column(String(50), nullable=False, index=True) # loan_disbursement, interest_subvention, processing_fee, msp, insurance_claim
+    crop = Column(String(50), nullable=True)
+    season = Column(String(50), nullable=True)
+    description_en = Column(Text, nullable=False)
+    description_hi = Column(Text, nullable=False)
+    formula_or_value = Column(String(200), nullable=False)
+    source_name = Column(String(200), nullable=False)
+    source_document = Column(String(300), nullable=False)
+    source_url = Column(String(500), nullable=True)
+    effective_from = Column(String(50), nullable=False)
+    effective_to = Column(String(50), nullable=True)
+    last_verified_on = Column(String(50), nullable=False)
+    status = Column(String(20), default="verified") # verified, demo, unverified
+    data_origin = Column(String(30), default="official") # official, bank_document, user_entered, demo
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
