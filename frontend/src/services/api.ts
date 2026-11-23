@@ -568,6 +568,138 @@ export async function fetchMandiTrendsApi(params: {
 }
 
 // ==========================================
+// WEATHER & AGRO-ADVISORIES APIS
+// ==========================================
+
+export interface WeatherAdvisory {
+  id: string;
+  level: 'Warning' | 'Watch' | 'Info';
+  category: string;
+  title: string;
+  title_hi: string;
+  description: string;
+  description_hi: string;
+  action: string;
+  action_hi: string;
+}
+
+export interface WeatherDayForecast {
+  date: string;
+  day: string;
+  temp_max: number;
+  temp_min: number;
+  rain_prob: number;
+  precipitation_mm: number;
+  weather_code: number;
+  condition: string;
+  condition_hi: string;
+}
+
+export interface WeatherResponse {
+  status: string;
+  location: {
+    district: string;
+    state: string;
+    latitude: number;
+    longitude: number;
+  };
+  current: {
+    temperature: number;
+    humidity: number;
+    wind_speed: number;
+    weather_code: number;
+    condition: string;
+    condition_hi: string;
+    rain_prob: number;
+  };
+  forecast: WeatherDayForecast[];
+  advisories: WeatherAdvisory[];
+  has_severe_warning: boolean;
+  is_demo_data: boolean;
+  source: string;
+  official_imd_url: string;
+  last_updated: string;
+  disclaimer: string;
+}
+
+export async function fetchWeatherApi(params?: {
+  lat?: number;
+  lon?: number;
+  district?: string;
+  state?: string;
+}): Promise<WeatherResponse> {
+  try {
+    const q = new URLSearchParams();
+    if (params?.lat !== undefined) q.append('lat', params.lat.toString());
+    if (params?.lon !== undefined) q.append('lon', params.lon.toString());
+    if (params?.district) q.append('district', params.district);
+    if (params?.state) q.append('state', params.state);
+
+    const queryStr = q.toString() ? `?${q.toString()}` : '';
+    return await apiClient.get<WeatherResponse>(`/weather${queryStr}`);
+  } catch (err) {
+    console.warn('Backend weather fetch failed, using fallback mock', err);
+    return {
+      status: 'success',
+      location: {
+        district: params?.district || 'Durg',
+        state: params?.state || 'Chhattisgarh',
+        latitude: params?.lat || 21.03,
+        longitude: params?.lon || 81.53,
+      },
+      current: {
+        temperature: 32.5,
+        humidity: 62,
+        wind_speed: 14.5,
+        weather_code: 2,
+        condition: 'Partly cloudy',
+        condition_hi: 'आंशिक रूप से बादल',
+        rain_prob: 25,
+      },
+      forecast: [
+        { date: '12 Apr', day: 'Sat', temp_max: 33, temp_min: 24, rain_prob: 20, precipitation_mm: 0, weather_code: 2, condition: 'Partly cloudy', condition_hi: 'आंशिक बादल' },
+        { date: '13 Apr', day: 'Sun', temp_max: 30, temp_min: 23, rain_prob: 75, precipitation_mm: 22, weather_code: 65, condition: 'Heavy rain', condition_hi: 'भारी बारिश' },
+        { date: '14 Apr', day: 'Mon', temp_max: 31, temp_min: 22, rain_prob: 60, precipitation_mm: 12, weather_code: 63, condition: 'Moderate rain', condition_hi: 'मध्यम बारिश' },
+        { date: '15 Apr', day: 'Tue', temp_max: 34, temp_min: 23, rain_prob: 25, precipitation_mm: 2, weather_code: 1, condition: 'Mainly clear', condition_hi: 'साफ' },
+        { date: '16 Apr', day: 'Wed', temp_max: 36, temp_min: 24, rain_prob: 10, precipitation_mm: 0, weather_code: 0, condition: 'Clear sky', condition_hi: 'साफ आसमान' },
+        { date: '17 Apr', day: 'Thu', temp_max: 38, temp_min: 25, rain_prob: 10, precipitation_mm: 0, weather_code: 0, condition: 'Sunny', condition_hi: 'धूप' },
+        { date: '18 Apr', day: 'Fri', temp_max: 37, temp_min: 25, rain_prob: 15, precipitation_mm: 0, weather_code: 1, condition: 'Mainly clear', condition_hi: 'साफ' },
+      ],
+      advisories: [
+        {
+          id: 'adv-rain-heavy',
+          level: 'Warning',
+          category: 'Spraying & Drainage',
+          title: 'Heavy Rain Alert: Halt all pesticide & fertilizer spraying',
+          title_hi: 'भारी वर्षा चेतावनी: कीटनाशक व उर्वरक छिड़काव तुरंत रोकें',
+          description: 'High precipitation of 22 mm expected over the next 24-48 hours. Sprays will be washed off.',
+          description_hi: 'अगले 24-48 घंटों में 22 मिमी बारिश का अनुमान है। कीटनाशक धुल जाएंगे।',
+          action: 'Ensure field drainage channels are clear and cover harvested paddy with tarpaulins.',
+          action_hi: 'जल निकासी की व्यवस्था करें और कटी फसल को तिरपाल से ढकें।',
+        },
+        {
+          id: 'adv-heat-moderate',
+          level: 'Watch',
+          category: 'Moisture Management',
+          title: 'High Temperature Watch: Monitor soil moisture',
+          title_hi: 'उच्च तापमान सलाह: मिट्टी की नमी की निगरानी रखें',
+          description: 'Day temperature climbing up to 38°C increases crop evapotranspiration.',
+          description_hi: 'दिन का तापमान 38°C पहुंचने से वाष्पीकरण बढ़ जाता है।',
+          action: 'Irrigate during evening hours to maintain root moisture.',
+          action_hi: 'शाम के समय हल्की सिंचाई करें।',
+        },
+      ],
+      has_severe_warning: true,
+      is_demo_data: true,
+      source: 'Open-Meteo & IMD Agromet Advisory Benchmark',
+      official_imd_url: 'https://mausam.imd.gov.in',
+      last_updated: '12 Apr 2025, 12:00 PM',
+      disclaimer: 'KisanVerify agricultural advisories are deterministic decision-support suggestions for farmers. Always verify with India Meteorological Department (mausam.imd.gov.in) for statutory disaster alerts.',
+    };
+  }
+}
+
+// ==========================================
 // MY DOCUMENTS VAULT APIS
 // ==========================================
 

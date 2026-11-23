@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   FolderLock,
-  TrendingUp
+  TrendingUp,
+  CloudSun
 } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { useLanguage } from '../context/LanguageContext';
@@ -39,6 +40,7 @@ export const FarmerLayout: React.FC = () => {
     { path: '/farmer/loan-verify', labelKey: 'nav.loan', icon: Landmark },
     { path: '/farmer/msp-verify', labelKey: 'nav.msp', icon: Coins },
     { path: '/farmer/mandi', labelKey: 'nav.mandi', icon: TrendingUp },
+    { path: '/farmer/weather', labelKey: 'nav.weather', icon: CloudSun },
     { path: '/farmer/insurance-verify', labelKey: 'nav.insurance', icon: ShieldCheck },
     { path: '/farmer/assistant', labelKey: 'nav.assistant', icon: Bot, highlight: true },
     { path: '/farmer/documents', labelKey: 'nav.documents', icon: FolderLock },
@@ -65,6 +67,7 @@ export const FarmerLayout: React.FC = () => {
     if (path.includes('loan-verify')) return { title: 'Loan Verification', subtitle: 'Check if your loan details match the expected amount.' };
     if (path.includes('msp-verify')) return { title: 'MSP Mandi Verification', subtitle: 'Verify crop weight benchmark formula vs bank payout.' };
     if (path.includes('mandi')) return { title: 'Mandi Prices & Trends', subtitle: 'Daily market rates and official MSP benchmarks from Agmarknet.' };
+    if (path.includes('weather')) return { title: 'Weather & Agro-Advisories', subtitle: 'Local forecast, rain probability, and deterministic crop advisories.' };
     if (path.includes('insurance-verify')) return { title: 'Crop Insurance', subtitle: 'Check your claim status and settlement.' };
     if (path.includes('assistant')) return { title: 'AI Assistant', subtitle: 'Ask anything about schemes, loans, MSP or crop insurance.' };
     if (path.includes('documents')) return { title: 'My Documents', subtitle: 'Secure, private vault for your agricultural and identity records.' };

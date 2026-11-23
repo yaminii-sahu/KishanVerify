@@ -13,11 +13,13 @@ import {
   Info,
   CheckCircle2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  CloudSun,
+  AlertTriangle
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { fetchFarmerAttentionApi } from '../services/api';
+import { fetchFarmerAttentionApi, fetchWeatherApi, WeatherResponse } from '../services/api';
 
 export const FarmerHomePage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -44,6 +46,7 @@ export const FarmerHomePage: React.FC = () => {
   });
   const [isLoadingAttention, setIsLoadingAttention] = useState(true);
   const [isAttentionExpanded, setIsAttentionExpanded] = useState(false);
+  const [weatherAlert, setWeatherAlert] = useState<WeatherResponse | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -60,9 +63,22 @@ export const FarmerHomePage: React.FC = () => {
         if (isMounted) setIsLoadingAttention(false);
       }
     }
+
+    async function loadWeather() {
+      try {
+        const w = await fetchWeatherApi({ district: farmer.district || 'Durg', state: farmer.state || 'Chhattisgarh' });
+        if (isMounted && w) {
+          setWeatherAlert(w);
+        }
+      } catch (err) {
+        console.warn('Failed to load weather for home banner', err);
+      }
+    }
+
     loadAttention();
+    loadWeather();
     return () => { isMounted = false; };
-  }, [farmer.farmerId]);
+  }, [farmer.farmerId, farmer.district, farmer.state]);
 
   const tiles = [
     {
@@ -193,6 +209,47 @@ export const FarmerHomePage: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* ============================================================== */}
+      {/* SEVERE WEATHER ALERT BANNER (If Active in District)            */}
+      {/* ============================================================== */}
+      {weatherAlert?.has_severe_warning && (
+        <div 
+          onClick={() => navigate('/farmer/weather')}
+          className="p-4 sm:p-5 rounded-2xl bg-rose-50 border border-rose-300 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-rose-100/70 transition-all group"
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-soft mt-0.5">
+              <CloudSun className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 bg-rose-200 px-2 py-0.5 rounded-full">
+                  Severe Weather Forecast
+                </span>
+                <span className="text-xs text-rose-950 font-bold">
+                  {weatherAlert.location.district} ({weatherAlert.current.temperature}°C)
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-rose-950 mt-1">
+                {language === 'hi' 
+                  ? weatherAlert.advisories.find(a => a.level === 'Warning')?.title_hi 
+                  : weatherAlert.advisories.find(a => a.level === 'Warning')?.title}
+              </h3>
+              <p className="text-xs text-rose-900 mt-0.5 leading-relaxed line-clamp-1">
+                {language === 'hi'
+                  ? weatherAlert.advisories.find(a => a.level === 'Warning')?.action_hi
+                  : weatherAlert.advisories.find(a => a.level === 'Warning')?.action}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 group-hover:bg-rose-700 text-white text-xs font-bold shrink-0 self-end sm:self-center transition-colors">
+            <span>View Advisory</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      )}
 
       {/* ============================================================== */}
       {/* ATTENTION BANNER (Dynamic count with View Details button)      */}
