@@ -6,6 +6,7 @@ Includes arithmetic tables, farmer metadata, procedural reasons, and non-accusat
 """
 
 import io
+import os
 import datetime
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
@@ -17,6 +18,7 @@ from reportlab.platypus import (
     TableStyle,
     HRFlowable,
     KeepTogether,
+    Image as RLImage,
 )
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -112,18 +114,37 @@ def generate_verification_pdf(
 
     story = []
 
-    # 1. Header Banner
-    header_data = [
-        [
-            Paragraph("<b>KISANVERIFY</b><br/><font size=8 color='#555555'>Agricultural Financial Transparency Platform</font>", body_style),
-            Paragraph(f"<b>REPORT REF:</b> {report_ref}<br/><b>DATE:</b> {datetime.date.today().strftime('%d %b %Y')}", ParagraphStyle('RightText', parent=body_style, alignment=2))
+    # 1. Header Banner with Official Logo
+    logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "logo-tile.png")
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "assets", "logo-mark.png")
+
+    if os.path.exists(logo_path):
+        logo_img = RLImage(logo_path, width=0.65 * inch, height=0.65 * inch)
+        header_data = [
+            [
+                logo_img,
+                Paragraph("<b>KISANVERIFY</b><br/><font size=8 color='#555555'>Agricultural Financial Transparency Platform</font>", body_style),
+                Paragraph(f"<b>REPORT REF:</b> {report_ref}<br/><b>DATE:</b> {datetime.date.today().strftime('%d %b %Y')}", ParagraphStyle('RightText', parent=body_style, alignment=2))
+            ]
         ]
-    ]
-    header_table = Table(header_data, colWidths=[3.8 * inch, 3.4 * inch])
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-    ]))
+        header_table = Table(header_data, colWidths=[0.8 * inch, 3.4 * inch, 3.0 * inch])
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+    else:
+        header_data = [
+            [
+                Paragraph("<b>KISANVERIFY</b><br/><font size=8 color='#555555'>Agricultural Financial Transparency Platform</font>", body_style),
+                Paragraph(f"<b>REPORT REF:</b> {report_ref}<br/><b>DATE:</b> {datetime.date.today().strftime('%d %b %Y')}", ParagraphStyle('RightText', parent=body_style, alignment=2))
+            ]
+        ]
+        header_table = Table(header_data, colWidths=[3.8 * inch, 3.4 * inch])
+        header_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
     story.append(header_table)
     story.append(HRFlowable(width="100%", thickness=1.5, color=sage_green, spaceBefore=4, spaceAfter=14))
 

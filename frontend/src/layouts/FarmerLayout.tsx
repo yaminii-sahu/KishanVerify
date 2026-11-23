@@ -81,7 +81,7 @@ export const FarmerLayout: React.FC = () => {
         <div className="flex flex-col">
           {/* Logo Header */}
           <div className="p-5 lg:p-6 border-b border-white/10">
-            <Logo variant="white" showTagline={true} size="md" />
+            <Logo variant="mono-white" showTagline={true} size="md" />
           </div>
 
           {/* Nav items list */}
@@ -239,7 +239,7 @@ export const FarmerLayout: React.FC = () => {
           {isHome ? (
             /* Home Header Band: Dark Olive Green (Image B Screen 3) */
             <div className="bg-forest text-white px-4 py-3 safe-top flex items-center justify-between shadow-soft">
-              <Logo variant="white" showTagline={false} size="sm" />
+              <Logo variant="mono-white" showTagline={false} size="sm" />
               <div className="flex items-center gap-2">
                 <button
                   onClick={toggleLanguage}

@@ -40,7 +40,7 @@ export const AdminLayout: React.FC = () => {
         <div>
           {/* Logo */}
           <div className="p-6 border-b border-white/10 flex items-center justify-between">
-            <Logo variant="white" showTagline={true} size="md" />
+            <Logo variant="mono-white" showTagline={true} size="md" />
           </div>
 
           <div className="px-6 py-3 bg-white/5 border-b border-white/10 text-xs flex items-center justify-between text-tint">

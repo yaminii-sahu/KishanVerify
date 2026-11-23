@@ -11,14 +11,14 @@ export const SplashPage: React.FC = () => {
 
   return (
     <div className="min-h-[100dvh] bg-cream flex flex-col justify-between items-center px-4 py-8 max-w-md mx-auto text-center">
-      {/* Top Logo & Tagline */}
+      {/* Top Centered Logo & Tagline */}
       <div className="pt-4 flex flex-col items-center">
-        <Logo variant="dark" size="lg" showTagline={true} />
+        <Logo variant="tile" size="xl" showTagline={true} stacked={true} />
       </div>
 
-      {/* Hero Farmer in Fields Artwork (Image B Screen 1) */}
+      {/* Hero Farmer in Fields Artwork */}
       <div className="my-4 w-full max-w-sm rounded-2xl overflow-hidden shadow-soft border border-warm-border bg-cream-surface p-2">
-        <div className="w-full h-64 sm:h-72 rounded-xl overflow-hidden">
+        <div className="w-full h-60 sm:h-64 rounded-xl overflow-hidden">
           <img 
             src={farmerFieldsImg} 
             alt="Farmer in fields holding phone" 
@@ -54,7 +54,7 @@ export const SplashPage: React.FC = () => {
         </button>
 
         {/* 4-Step Interactive Tour Link */}
-        <div className="pt-2 flex items-center justify-center gap-3 text-xs text-muted">
+        <div className="pt-2 flex items-center justify-center gap-3 text-xs text-charcoal-muted">
           <button
             onClick={() => navigate('/onboarding')}
             className="hover:text-forest font-semibold inline-flex items-center gap-1"

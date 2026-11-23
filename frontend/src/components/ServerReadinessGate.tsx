@@ -83,10 +83,7 @@ export const ServerReadinessGate: React.FC<ServerReadinessGateProps> = ({ childr
         
         {/* Brand Header */}
         <div className="flex flex-col items-center gap-3">
-          <Logo size="lg" showTagline={false} />
-          <div>
-            <p className="text-xs text-sage-700 font-medium mt-0.5">Every rupee. Every benefit. Verified.</p>
-          </div>
+          <Logo variant="tile" size="lg" showTagline={true} stacked={true} />
         </div>
 
         {/* Status Display */}
