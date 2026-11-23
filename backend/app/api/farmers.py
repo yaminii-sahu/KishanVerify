@@ -42,7 +42,7 @@ def compute_farmer_attention(farmer: Farmer, db: Session) -> AttentionResponse:
                     title_hi=f"केसीसी ऋण ({l.bank_name})",
                     difference=float(l.difference or 0.0),
                     status=l.status,
-                    link="/farmer/loan",
+                    link=f"/farmer/loan-verify?recordId={l.loan_ref}",
                     date=l.loan_date,
                     reasons=l.reasons or []
                 )
@@ -60,7 +60,7 @@ def compute_farmer_attention(farmer: Farmer, db: Session) -> AttentionResponse:
                     title_hi=f"एमएसपी भुगतान ({m.crop})",
                     difference=float(m.difference or 0.0),
                     status=m.status,
-                    link="/farmer/msp",
+                    link=f"/farmer/msp-verify?recordId={m.record_ref}",
                     date=m.payment_date,
                     reasons=m.reasons or []
                 )
@@ -78,7 +78,7 @@ def compute_farmer_attention(farmer: Farmer, db: Session) -> AttentionResponse:
                     title_hi=f"फसल बीमा ({ins.crop})",
                     difference=float(ins.difference or 0.0),
                     status=ins.claim_status,
-                    link="/farmer/insurance",
+                    link=f"/farmer/insurance-verify?recordId={ins.insurance_ref}",
                     date=ins.filing_date,
                     reasons=ins.reasons or []
                 )

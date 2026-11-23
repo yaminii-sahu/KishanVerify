@@ -201,6 +201,18 @@ def test_attention_counting_multiple_records_including_insurance():
         types = {i.record_type for i in result.items}
         assert types == {"Loan", "MSP", "Insurance"}
 
+        # Verify links point to verification pages with recordId query param
+        for item in result.items:
+            if item.record_type == "Loan":
+                assert "/farmer/loan-verify?recordId=" in item.link
+                assert item.record_ref in item.link
+            elif item.record_type == "MSP":
+                assert "/farmer/msp-verify?recordId=" in item.link
+                assert item.record_ref in item.link
+            elif item.record_type == "Insurance":
+                assert "/farmer/insurance-verify?recordId=" in item.link
+                assert item.record_ref in item.link
+
     finally:
         db.rollback()
         db.query(Loan).filter_by(loan_ref="LN-TEST-M").delete()
@@ -209,3 +221,29 @@ def test_attention_counting_multiple_records_including_insurance():
         db.query(Farmer).filter_by(farmer_id="TEST_MULTI").delete()
         db.commit()
         db.close()
+
+
+def test_verify_record_by_ref_endpoint():
+    """
+    Test GET /api/v1/verify/record/{record_ref} returns pre-fill data and verification.
+    """
+    # Loan record
+    res_loan = client.get("/api/v1/verify/record/LN-2024-8812")
+    assert res_loan.status_code == 200
+    data_loan = res_loan.json()
+    assert data_loan["record_type"] == "loan"
+    assert data_loan["record_ref"] == "LN-2024-8812"
+    assert data_loan["data"]["approved_amount"] > 0
+    assert data_loan["data"]["disbursed_amount"] > 0
+    assert data_loan["verification"]["is_flagged"] is True
+
+    # MSP record
+    res_msp = client.get("/api/v1/verify/record/MSP-2024-4411")
+    assert res_msp.status_code == 200
+    data_msp = res_msp.json()
+    assert data_msp["record_type"] == "msp"
+    assert data_msp["record_ref"] == "MSP-2024-4411"
+    assert data_msp["data"]["quantity"] == 50.0
+    assert data_msp["data"]["msp_rate"] == 2300.0
+    assert data_msp["verification"]["is_flagged"] is True
+

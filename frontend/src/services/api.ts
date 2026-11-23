@@ -1309,7 +1309,7 @@ export async function fetchFarmerAttentionApi(farmerId: string = 'FV12345') {
         title_hi: 'केसीसी ऋण (State Bank of India)',
         difference: 10000,
         status: 'Needs Review',
-        link: '/farmer/loan',
+        link: '/farmer/loan-verify?recordId=LN-2024-8812',
       },
       {
         record_type: 'MSP',
@@ -1318,10 +1318,54 @@ export async function fetchFarmerAttentionApi(farmerId: string = 'FV12345') {
         title_hi: 'एमएसपी भुगतान (धान)',
         difference: 10000,
         status: 'Needs Review',
-        link: '/farmer/msp',
+        link: '/farmer/msp-verify?recordId=MSP-2024-4411',
       }
     ]
   };
+}
+
+export async function fetchVerificationRecordByRefApi(recordRef: string) {
+  try {
+    return await apiClient.get<any>(`/verify/record/${recordRef}`);
+  } catch (err) {
+    console.warn('Backend fetchVerificationRecordByRefApi offline, using fallback', err);
+  }
+
+  if (recordRef.toUpperCase().includes('LN') || recordRef.includes('8812')) {
+    return {
+      record_type: 'loan',
+      record_ref: recordRef,
+      data: {
+        bank_name: 'State Bank of India',
+        loan_account_ref: recordRef,
+        loan_type: 'Crop Loan (KCC)',
+        approved_amount: 80000,
+        disbursed_amount: 70000,
+        interest_rate: 7.5,
+        deductions: 5000,
+        loan_date: '12-03-2024',
+      },
+      verification: null,
+    };
+  }
+
+  if (recordRef.toUpperCase().includes('MSP') || recordRef.includes('4411')) {
+    return {
+      record_type: 'msp',
+      record_ref: recordRef,
+      data: {
+        crop: 'Paddy (Common)',
+        quantity: 50,
+        msp_rate: 2300,
+        actual_payment: 105000,
+        procurement_center: 'Patan Krishi Upaj Mandi',
+        payment_date: '05-04-2024',
+      },
+      verification: null,
+    };
+  }
+
+  return null;
 }
 
 export async function sendAiChatApi(message: string, language: string = 'hi', farmerId: string = 'FV12345') {

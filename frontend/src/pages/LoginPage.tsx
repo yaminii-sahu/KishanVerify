@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { Footer } from '../components/Footer';
 import { useAuth } from '../context/AuthContext';
@@ -7,21 +7,32 @@ import { User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { switchRole } = useAuth();
   const [tab, setTab] = useState<'farmer' | 'admin'>('farmer');
   const [phone, setPhone] = useState('9876543210');
   const [adminId, setAdminId] = useState('SBI-DURG-881');
   const [password, setPassword] = useState('••••••••');
 
+  const getTargetUrl = (selectedTab: 'farmer' | 'admin') => {
+    const searchParams = new URLSearchParams(location.search);
+    const stateFrom = (location.state as any)?.from;
+    if (stateFrom?.pathname) {
+      return `${stateFrom.pathname}${stateFrom.search || ''}`;
+    }
+    const nextParam = searchParams.get('next') || searchParams.get('redirect');
+    if (nextParam) return nextParam;
+    return selectedTab === 'farmer' ? '/farmer' : '/admin';
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (tab === 'farmer') {
       switchRole('farmer');
-      navigate('/farmer');
     } else {
       switchRole('admin');
-      navigate('/admin');
     }
+    navigate(getTargetUrl(tab), { replace: true });
   };
 
   return (
@@ -74,11 +85,10 @@ export const LoginPage: React.FC = () => {
             onClick={() => {
               if (tab === 'farmer') {
                 switchRole('farmer');
-                navigate('/farmer');
               } else {
                 switchRole('admin');
-                navigate('/admin');
               }
+              navigate(getTargetUrl(tab), { replace: true });
             }}
             className="px-3.5 py-1.5 rounded-xl bg-olive hover:bg-forest text-white text-xs font-bold shadow-soft transition-colors"
           >

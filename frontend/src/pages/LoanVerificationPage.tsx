@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Landmark, 
@@ -21,7 +21,7 @@ import {
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { verifyLoanApi, extractLoanOcrApi, fetchDocumentsApi, DocumentItem } from '../services/api';
+import { verifyLoanApi, extractLoanOcrApi, fetchDocumentsApi, fetchVerificationRecordByRefApi, DocumentItem } from '../services/api';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
 
@@ -29,6 +29,9 @@ export const LoanVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
   const { farmer } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const routeParams = useParams();
+  const recordId = searchParams.get('recordId') || searchParams.get('record_ref') || routeParams.id;
 
   // Form Inputs
   const [bankName, setBankName] = useState('State Bank of India');
@@ -39,6 +42,50 @@ export const LoanVerificationPage: React.FC = () => {
   const [interestRate, setInterestRate] = useState<number>(7.5);
   const [deductions, setDeductions] = useState<number>(5000);
   const [loanDate, setLoanDate] = useState('12-03-2024');
+
+  // Load record and pre-fill when recordId is passed via URL query/param
+  useEffect(() => {
+    if (!recordId) return;
+    let isMounted = true;
+    async function loadRecord() {
+      setIsLoading(true);
+      try {
+        const res = await fetchVerificationRecordByRefApi(recordId!);
+        if (isMounted && res?.data) {
+          if (res.data.bank_name) setBankName(res.data.bank_name);
+          if (res.data.loan_account_ref) setLoanAccountRef(res.data.loan_account_ref);
+          if (res.data.loan_type) setLoanType(res.data.loan_type);
+          if (res.data.approved_amount !== undefined) setApprovedAmount(Number(res.data.approved_amount));
+          if (res.data.disbursed_amount !== undefined) setDisbursedAmount(Number(res.data.disbursed_amount));
+          if (res.data.interest_rate !== undefined) setInterestRate(Number(res.data.interest_rate));
+          if (res.data.deductions !== undefined) setDeductions(Number(res.data.deductions));
+          if (res.data.loan_date) setLoanDate(res.data.loan_date);
+
+          if (res.verification) {
+            setResult(res.verification);
+          } else {
+            const vRes = await verifyLoanApi({
+              bank_name: res.data.bank_name || 'State Bank of India',
+              loan_account_ref: res.data.loan_account_ref || recordId!,
+              loan_type: res.data.loan_type || 'Crop Loan (KCC)',
+              approved_amount: Number(res.data.approved_amount || 80000),
+              disbursed_amount: Number(res.data.disbursed_amount || 70000),
+              interest_rate: Number(res.data.interest_rate || 7.5),
+              deductions: Number(res.data.deductions || 5000),
+              loan_date: res.data.loan_date || '12-03-2024',
+              farmer_id: farmer.farmerId,
+            });
+            if (isMounted) setResult(vRes);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load loan record by ref', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadRecord();
+  }, [recordId, farmer.farmerId]);
 
   // OCR state
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -685,7 +732,7 @@ export const LoanVerificationPage: React.FC = () => {
                     Possible Reasons
                   </h4>
                   <ul className="space-y-1.5 text-xs text-muted">
-                    {result.reasons.map((r: string, idx: number) => (
+                    {(result.reasons || result.possible_reasons || []).map((r: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-forest mt-1.5 shrink-0" />
                         <span>{r}</span>

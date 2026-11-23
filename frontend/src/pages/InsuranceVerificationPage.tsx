@@ -307,7 +307,7 @@ export const InsuranceVerificationPage: React.FC = () => {
                   Procedural Assessment
                 </h4>
                 <ul className="space-y-1.5 text-xs text-gray-600">
-                  {result.reasons.map((r: string, idx: number) => (
+                  {(result.reasons || result.possible_reasons || []).map((r: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-sage-600 mt-1.5 shrink-0" />
                       <span>{r}</span>

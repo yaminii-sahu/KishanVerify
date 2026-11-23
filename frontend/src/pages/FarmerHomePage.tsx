@@ -419,10 +419,10 @@ export const FarmerHomePage: React.FC = () => {
                   <div
                     key={idx}
                     onClick={() => navigate(item.link)}
-                    className="p-3 rounded-xl bg-cream border border-warm-border hover:border-olive hover:shadow-soft transition-all cursor-pointer flex items-center justify-between"
+                    className="p-3 rounded-xl bg-cream border border-warm-border hover:border-olive hover:shadow-soft transition-all cursor-pointer flex items-center justify-between group"
                   >
                     <div>
-                      <div className="text-xs font-bold text-charcoal">
+                      <div className="text-xs font-bold text-charcoal group-hover:text-forest transition-colors">
                         {language === 'hi' && item.title_hi ? item.title_hi : item.title}
                       </div>
                       <div className="text-[11px] text-muted font-medium mt-0.5">
@@ -430,9 +430,16 @@ export const FarmerHomePage: React.FC = () => {
                         <span className="font-bold text-status-discrepancy-text">₹{item.difference.toLocaleString()}</span>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-forest bg-tint px-2.5 py-1 rounded-lg transition-colors">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(item.link);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-forest bg-tint hover:bg-forest hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
                       Verify <ArrowRight className="w-3 h-3" />
-                    </span>
+                    </button>
                   </div>
                 ))}
               </div>

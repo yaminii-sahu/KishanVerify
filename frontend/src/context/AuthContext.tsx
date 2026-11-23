@@ -10,6 +10,10 @@ interface AuthContextType {
   isDemoMode: boolean;
   setDemoMode: (val: boolean) => void;
   updateFarmerAvatar: (url: string | null) => void;
+  isAuthenticated: boolean;
+  isAuthReady: boolean;
+  login: (role: Role, user?: User) => void;
+  logout: () => void;
 }
 
 const DEMO_FARMER: FarmerProfile = {
@@ -37,6 +41,13 @@ const DEMO_USER: User = {
   farmerId: 'FV12345',
 };
 
+const DEMO_ADMIN_USER: User = {
+  id: 'u-admin-1',
+  name: 'Vikas Sharma (SBI Durg)',
+  phone: '+91 91234 56789',
+  role: 'admin',
+};
+
 const AuthContext = createContext<AuthContextType>({
   user: DEMO_USER,
   farmer: DEMO_FARMER,
@@ -46,13 +57,47 @@ const AuthContext = createContext<AuthContextType>({
   isDemoMode: true,
   setDemoMode: () => {},
   updateFarmerAvatar: () => {},
+  isAuthenticated: true,
+  isAuthReady: true,
+  login: () => {},
+  logout: () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [role, setRoleState] = useState<Role>('farmer');
-  const [isDemoMode, setDemoMode] = useState<boolean>(true);
+  const [role, setRoleState] = useState<Role>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('kisanverify_user_role') : null;
+      if (saved === 'admin' || saved === 'farmer') return saved;
+    } catch {}
+    return 'farmer';
+  });
 
-  const [user, setUser] = useState<User>(DEMO_USER);
+  const [isDemoMode, setDemoModeState] = useState<boolean>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('kisanverify_demo_mode') : null;
+      if (saved !== null) return saved === 'true';
+    } catch {}
+    return true;
+  });
+
+  const [user, setUser] = useState<User>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('kisanverify_user') : null;
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return role === 'admin' ? DEMO_ADMIN_USER : DEMO_USER;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('kisanverify_authenticated') : null;
+      if (saved !== null) return saved === 'true';
+    } catch {}
+    return true; // Default true in Demo mode so farmer is always authenticated
+  });
+
+  const [isAuthReady] = useState<boolean>(true);
+
   const [farmer, setFarmer] = useState<FarmerProfile>(() => {
     try {
       const saved = typeof window !== 'undefined' ? localStorage.getItem('kisanverify_farmer_avatar') : null;
@@ -61,6 +106,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return DEMO_FARMER;
     }
   });
+
+  const setDemoMode = (val: boolean) => {
+    setDemoModeState(val);
+    try {
+      localStorage.setItem('kisanverify_demo_mode', String(val));
+    } catch {}
+  };
 
   const updateFarmerAvatar = (url: string | null) => {
     try {
@@ -84,16 +136,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const switchRole = (newRole: Role) => {
     setRoleState(newRole);
-    if (newRole === 'admin') {
-      setUser({
-        id: 'u-admin-1',
-        name: 'Vikas Sharma (SBI Durg)',
-        phone: '+91 91234 56789',
-        role: 'admin',
-      });
-    } else {
-      setUser(DEMO_USER);
-    }
+    setIsAuthenticated(true);
+    const targetUser = newRole === 'admin' ? DEMO_ADMIN_USER : DEMO_USER;
+    setUser(targetUser);
+    try {
+      localStorage.setItem('kisanverify_user_role', newRole);
+      localStorage.setItem('kisanverify_user', JSON.stringify(targetUser));
+      localStorage.setItem('kisanverify_authenticated', 'true');
+    } catch {}
+  };
+
+  const login = (newRole: Role, newUser?: User) => {
+    const targetUser = newUser || (newRole === 'admin' ? DEMO_ADMIN_USER : DEMO_USER);
+    setRoleState(newRole);
+    setUser(targetUser);
+    setIsAuthenticated(true);
+    try {
+      localStorage.setItem('kisanverify_user_role', newRole);
+      localStorage.setItem('kisanverify_user', JSON.stringify(targetUser));
+      localStorage.setItem('kisanverify_authenticated', 'true');
+    } catch {}
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    setUser(DEMO_USER);
+    setRoleState('farmer');
+    try {
+      localStorage.removeItem('kisanverify_authenticated');
+      localStorage.removeItem('kisanverify_user');
+      localStorage.removeItem('kisanverify_user_role');
+    } catch {}
   };
 
   const setRole = (newRole: Role) => {
@@ -111,6 +184,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isDemoMode,
         setDemoMode,
         updateFarmerAvatar,
+        isAuthenticated,
+        isAuthReady,
+        login,
+        logout,
       }}
     >
       {children}

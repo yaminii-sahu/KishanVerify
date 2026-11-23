@@ -66,18 +66,31 @@ export default function App() {
               <Route index element={<FarmerHomePage />} />
               <Route path="schemes" element={<SchemesPage />} />
               <Route path="loan-verify" element={<LoanVerificationPage />} />
+              <Route path="loan" element={<LoanVerificationPage />} />
               <Route path="msp-verify" element={<MSPVerificationPage />} />
+              <Route path="msp" element={<MSPVerificationPage />} />
+              <Route path="insurance-verify" element={<InsuranceVerificationPage />} />
+              <Route path="insurance" element={<InsuranceVerificationPage />} />
               <Route path="mandi" element={<MandiPricesPage />} />
               <Route path="weather" element={<WeatherPage />} />
               <Route path="offices" element={<NearbyOfficesPage />} />
               <Route path="contact" element={<ContactPage />} />
-              <Route path="insurance-verify" element={<InsuranceVerificationPage />} />
               <Route path="assistant" element={<AIAssistantPage />} />
               <Route path="grievance" element={<GrievancePage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="reports/:reportId" element={<ReportDetailPage />} />
               <Route path="profile" element={<ProfilePage />} />
+            </Route>
+
+            {/* Direct convenience aliases */}
+            <Route path="/loan-verification" element={<Navigate to="/farmer/loan-verify" replace />} />
+            <Route path="/msp-verification" element={<Navigate to="/farmer/msp-verify" replace />} />
+            <Route path="/verify/loan/:id" element={<FarmerLayout />}>
+              <Route index element={<LoanVerificationPage />} />
+            </Route>
+            <Route path="/verify/msp/:id" element={<FarmerLayout />}>
+              <Route index element={<MSPVerificationPage />} />
             </Route>
 
             {/* Bank / Admin Portal */}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Coins, 
@@ -14,7 +14,7 @@ import {
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { verifyMspApi } from '../services/api';
+import { verifyMspApi, fetchVerificationRecordByRefApi } from '../services/api';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
 
@@ -22,6 +22,9 @@ export const MSPVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
   const { farmer } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const routeParams = useParams();
+  const recordId = searchParams.get('recordId') || searchParams.get('record_ref') || routeParams.id;
 
   // Form Inputs (Blueprint example: 50 quintals * 2300 = 115000 expected, 105000 received, diff 10000)
   const [crop, setCrop] = useState('Paddy (Common)');
@@ -31,6 +34,43 @@ export const MSPVerificationPage: React.FC = () => {
   const [procurementCenter, setProcurementCenter] = useState('Patan Krishi Upaj Mandi');
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load record and pre-fill when recordId is passed via URL query/param
+  useEffect(() => {
+    if (!recordId) return;
+    let isMounted = true;
+    async function loadRecord() {
+      setIsLoading(true);
+      try {
+        const res = await fetchVerificationRecordByRefApi(recordId!);
+        if (isMounted && res?.data) {
+          if (res.data.crop) setCrop(res.data.crop);
+          if (res.data.quantity !== undefined) setQuantity(Number(res.data.quantity));
+          if (res.data.msp_rate !== undefined) setMspRate(Number(res.data.msp_rate));
+          if (res.data.actual_payment !== undefined) setActualPayment(Number(res.data.actual_payment));
+          if (res.data.procurement_center) setProcurementCenter(res.data.procurement_center);
+
+          if (res.verification) {
+            setResult(res.verification);
+          } else {
+            const vRes = await verifyMspApi({
+              crop: res.data.crop || 'Paddy (Common)',
+              quantity_quintals: Number(res.data.quantity || 50),
+              msp_rate: Number(res.data.msp_rate || 2300),
+              actual_payment: Number(res.data.actual_payment || 105000),
+              procurement_center: res.data.procurement_center || 'Patan Krishi Upaj Mandi',
+            });
+            if (isMounted) setResult(vRes);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load MSP record by ref', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadRecord();
+  }, [recordId]);
   const [result, setResult] = useState<any | null>({
     status: 'Needs Review',
     crop: 'Paddy (Common)',
@@ -407,7 +447,7 @@ export const MSPVerificationPage: React.FC = () => {
                   Possible reasons
                 </h4>
                 <ul className="space-y-1.5 text-xs text-gray-600">
-                  {result.reasons.map((r: string, idx: number) => (
+                  {(result.reasons || result.possible_reasons || []).map((r: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-sage-600 mt-1.5 shrink-0" />
                       <span>{r}</span>
