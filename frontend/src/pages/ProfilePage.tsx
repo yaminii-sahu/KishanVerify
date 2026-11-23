@@ -17,6 +17,7 @@ import {
   Camera,
   Upload,
   Trash2,
+  Volume2,
   X
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -29,10 +30,25 @@ export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [autoReadAudio, setAutoReadAudio] = useState<boolean>(() => {
+    return localStorage.getItem('kisanverify_auto_read_audio') === 'true';
+  });
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleToggleAutoRead = () => {
+    const nextVal = !autoReadAudio;
+    setAutoReadAudio(nextVal);
+    localStorage.setItem('kisanverify_auto_read_audio', String(nextVal));
+    setToastMessage(
+      nextVal
+        ? (language === 'hi' ? 'परिणाम स्वतः पढ़कर सुनाना चालू किया गया' : 'Auto-read results aloud enabled')
+        : (language === 'hi' ? 'परिणाम स्वतः पढ़कर सुनाना बंद किया गया' : 'Auto-read results aloud disabled')
+    );
+    setTimeout(() => setToastMessage(null), 2500);
+  };
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -190,7 +206,32 @@ export const ProfilePage: React.FC = () => {
           </span>
         </button>
 
-        {/* 4. About KisanVerify */}
+        {/* 4. Read results aloud automatically */}
+        <button
+          onClick={handleToggleAutoRead}
+          className="w-full p-4 flex items-center justify-between text-left hover:bg-tint/30 transition-colors min-h-[52px] cursor-pointer"
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-tint text-forest flex items-center justify-center shrink-0">
+              <Volume2 className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="text-sm font-bold text-charcoal block">
+                {language === 'hi' ? 'परिणाम स्वतः पढ़कर सुनाएं' : 'Read results aloud automatically'}
+              </span>
+              <span className="text-[11px] text-muted block text-left">
+                {language === 'hi' ? 'सत्यापन पूर्ण होने पर ऑडियो स्वतः शुरू करें' : 'Autoplay audio summary on verification'}
+              </span>
+            </div>
+          </div>
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+            autoReadAudio ? 'bg-forest/15 text-forest' : 'bg-warm-border text-muted'
+          }`}>
+            {autoReadAudio ? (language === 'hi' ? 'चालू' : 'Enabled') : (language === 'hi' ? 'बंद' : 'Disabled')}
+          </span>
+        </button>
+
+        {/* 5. About KisanVerify */}
         <button
           onClick={() => setShowAboutModal(true)}
           className="w-full p-4 flex items-center justify-between text-left hover:bg-tint/30 transition-colors min-h-[52px]"

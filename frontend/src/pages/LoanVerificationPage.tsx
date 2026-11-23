@@ -23,6 +23,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { verifyLoanApi, extractLoanOcrApi, fetchDocumentsApi, DocumentItem } from '../services/api';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
+import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
 
 export const LoanVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -693,6 +694,16 @@ export const LoanVerificationPage: React.FC = () => {
                   </ul>
                 </div>
               )}
+
+              {/* Spoken Audio Summary Player */}
+              <AudioSummaryPlayer
+                checkType="loan"
+                approvedAmount={result.approved_amount}
+                disbursedAmount={result.disbursed_amount}
+                difference={result.difference}
+                bankName={bankName}
+                autoPlayAllowed={true}
+              />
 
               {/* Action Buttons: View Detailed Report & Raise Grievance (Image A & B) */}
               <div className="space-y-2.5 pt-2">

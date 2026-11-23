@@ -16,6 +16,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { verifyMspApi } from '../services/api';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
+import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
 
 export const MSPVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -414,6 +415,19 @@ export const MSPVerificationPage: React.FC = () => {
                   ))}
                 </ul>
               </div>
+
+              {/* Spoken Audio Summary Player */}
+              <AudioSummaryPlayer
+                checkType="msp"
+                crop={result.crop}
+                quantity={result.quantity_quintals}
+                rate={result.msp_rate}
+                expectedPayment={result.expected_payment}
+                actualPayment={result.actual_payment}
+                difference={result.difference}
+                procurementCenter={procurementCenter}
+                autoPlayAllowed={true}
+              />
 
               {/* Action buttons */}
               <div className="space-y-2.5 pt-2">

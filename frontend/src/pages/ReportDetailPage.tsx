@@ -28,6 +28,7 @@ import { useAuth } from '../context/AuthContext';
 import { fetchReportDetailApi } from '../services/api';
 import { apiClient } from '../lib/api';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
+import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
 
 export const ReportDetailPage: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -241,6 +242,21 @@ export const ReportDetailPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Spoken Audio Summary Player */}
+      <AudioSummaryPlayer
+        checkType={isMsp ? 'msp' : 'loan'}
+        approvedAmount={figures.approved_amount}
+        disbursedAmount={figures.disbursed_amount}
+        difference={figures.difference}
+        bankName={report.farmer?.bank_name}
+        crop={figures.crop}
+        quantity={figures.quantity_quintals}
+        rate={figures.msp_rate}
+        expectedPayment={figures.expected_payment}
+        actualPayment={figures.actual_payment}
+        procurementCenter={figures.procurement_center}
+      />
 
       {/* 1. Beneficiary & Institutional Particulars Card */}
       <div className="bg-cream-surface rounded-2xl border border-warm-border p-4 sm:p-5 space-y-3 shadow-soft">
