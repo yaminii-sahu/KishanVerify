@@ -1,4 +1,5 @@
 import os
+import tempfile
 from typing import List, Union
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
@@ -25,6 +26,16 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "*"
     ]
+
+    @field_validator("DATABASE_URL", mode="before")
+    def assemble_database_url(cls, v):
+        # On Vercel, AWS Lambda or serverless container, use system temp directory for writable SQLite
+        if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+            if not v or v == "sqlite:///./kisanverify.db":
+                temp_dir = tempfile.gettempdir()
+                db_path = os.path.join(temp_dir, "kisanverify.db").replace("\\", "/")
+                return f"sqlite:///{db_path}"
+        return v
 
     @field_validator("CORS_ORIGINS", mode="before")
     def assemble_cors_origins(cls, v):

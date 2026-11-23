@@ -1,4 +1,7 @@
-import fitz  # PyMuPDF
+try:
+    import fitz  # PyMuPDF
+except ImportError:
+    fitz = None
 import re
 import io
 from fastapi import APIRouter, UploadFile, File, HTTPException
@@ -44,22 +47,25 @@ async def extract_loan_document(file: UploadFile = File(...)):
 
     # 1. PyMuPDF text extraction for PDFs
     if file.filename.lower().endswith('.pdf'):
-        try:
-            doc = fitz.open(stream=contents, filetype="pdf")
-            for page in doc:
-                page_text = page.get_text()
-                raw_text += page_text + "\n"
+        if fitz is not None:
+            try:
+                doc = fitz.open(stream=contents, filetype="pdf")
+                for page in doc:
+                    page_text = page.get_text()
+                    raw_text += page_text + "\n"
 
-            # If PDF text layer is empty and pytesseract is available, OCR the first page
-            if not raw_text.strip() and pytesseract is not None:
-                try:
-                    first_page = doc[0]
-                    pix = first_page.get_pixmap()
-                    img = Image.open(io.BytesIO(pix.tobytes("png")))
-                    raw_text = pytesseract.image_to_string(img)
-                except Exception:
-                    pass
-        except Exception as e:
+                # If PDF text layer is empty and pytesseract is available, OCR the first page
+                if not raw_text.strip() and pytesseract is not None:
+                    try:
+                        first_page = doc[0]
+                        pix = first_page.get_pixmap()
+                        img = Image.open(io.BytesIO(pix.tobytes("png")))
+                        raw_text = pytesseract.image_to_string(img)
+                    except Exception:
+                        pass
+            except Exception as e:
+                raw_text = contents.decode("utf-8", errors="ignore")
+        else:
             raw_text = contents.decode("utf-8", errors="ignore")
     elif file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
         # 2. Image OCR via Tesseract if available
