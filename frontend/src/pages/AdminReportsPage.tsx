@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, FileText, Filter, Calendar, Search, CheckCircle2, AlertTriangle, Building2, Eye, Loader2, AlertCircle } from 'lucide-react';
+import { Download, FileText, Filter, Calendar, Search, Building2, Loader2, AlertCircle } from 'lucide-react';
 import { StatusBadge } from '../components/StatusBadge';
 import { downloadReportPdfApi } from '../services/api';
 import { apiClient } from '../lib/api';
@@ -57,7 +57,7 @@ export const AdminReportsPage: React.FC = () => {
       pending: 4,
       generatedDate: '02 Mar 2025',
       type: 'MSP Payout',
-      status: 'Possible Discrepancy'
+      status: 'Needs Review'
     }
   ];
 
@@ -95,14 +95,14 @@ export const AdminReportsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Error Toast */}
       {errorToast && (
-        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+        <div className="bg-status-discrepancy border border-red-200 text-status-discrepancy-text p-4 rounded-2xl flex items-center justify-between shadow-soft animate-in fade-in">
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{errorToast}</span>
           </div>
           <button
             onClick={() => setErrorToast(null)}
-            className="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 rounded"
+            className="text-status-discrepancy-text/80 hover:text-status-discrepancy-text text-xs font-semibold px-2 py-1 rounded"
           >
             Dismiss
           </button>
@@ -112,11 +112,11 @@ export const AdminReportsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            <Building2 className="w-7 h-7 text-primary-700" />
+          <h1 className="text-xl sm:text-2xl font-bold text-charcoal tracking-tight flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-forest" />
             Bank & Institutional Audit Reports
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-xs sm:text-sm text-charcoal-muted mt-1">
             Official reconciliation logs, branch audit summaries, and automated compliance records.
           </p>
         </div>
@@ -129,7 +129,7 @@ export const AdminReportsPage: React.FC = () => {
               console.error('Export error:', err);
             }
           }}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-700 hover:bg-primary-800 text-white font-medium text-sm rounded-lg shadow-sm transition-all"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-olive hover:bg-forest text-white font-semibold text-xs sm:text-sm rounded-xl shadow-soft transition-all"
         >
           <Download className="w-4 h-4" />
           Export All Reconciliation CSV
@@ -137,24 +137,24 @@ export const AdminReportsPage: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-3">
+      <div className="bg-cream-surface p-3.5 sm:p-4 rounded-2xl border border-warm-border shadow-card flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-charcoal-muted" />
           <input
             type="text"
             placeholder="Search report by ID or title..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
+            className="w-full pl-9 pr-3 py-2 text-xs bg-cream border border-warm-border rounded-xl text-charcoal focus:outline-none focus:ring-2 focus:ring-olive"
           />
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
+          <Filter className="w-4 h-4 text-charcoal-muted" />
           <select
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-600"
+            className="px-3 py-2 text-xs border border-warm-border rounded-xl bg-cream text-charcoal font-semibold focus:outline-none focus:ring-2 focus:ring-olive"
           >
             <option value="All">All Branches</option>
             <option value="Durg">Durg Main</option>
@@ -167,44 +167,44 @@ export const AdminReportsPage: React.FC = () => {
       {/* Reports List */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredReports.map((report) => (
-          <div key={report.id} className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div key={report.id} className="bg-cream-surface rounded-2xl border border-warm-border p-5 shadow-card hover:border-olive/40 transition-colors">
             <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-lg bg-primary-50 border border-primary-200 flex items-center justify-center text-primary-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-xl bg-tint border border-forest/10 flex items-center justify-center text-forest">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-primary-800 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
+                  <span className="text-[10px] font-bold text-forest bg-tint px-2 py-0.5 rounded-md">
                     {report.id}
                   </span>
-                  <div className="text-xs text-gray-500 mt-0.5">{report.branch}</div>
+                  <div className="text-xs text-charcoal-muted mt-0.5">{report.branch}</div>
                 </div>
               </div>
-              <StatusBadge status={report.status as any} />
+              <StatusBadge status={report.status as any} size="sm" />
             </div>
 
-            <h3 className="text-base font-semibold text-gray-900 mb-2 leading-snug">
+            <h3 className="text-sm sm:text-base font-bold text-charcoal mb-2 leading-snug">
               {report.title}
             </h3>
 
-            <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 mb-4 grid grid-cols-3 gap-2 text-center">
+            <div className="bg-cream rounded-xl p-3 text-xs text-charcoal mb-4 grid grid-cols-3 gap-2 text-center border border-warm-border">
               <div>
-                <div className="text-gray-400 font-medium">Cases</div>
-                <div className="text-sm font-bold text-gray-900">{report.totalCases}</div>
+                <div className="text-charcoal-muted font-medium text-[10px] uppercase">Cases</div>
+                <div className="text-sm font-bold text-charcoal">{report.totalCases}</div>
               </div>
               <div>
-                <div className="text-gray-400 font-medium">Resolved</div>
-                <div className="text-sm font-bold text-emerald-700">{report.resolved}</div>
+                <div className="text-charcoal-muted font-medium text-[10px] uppercase">Resolved</div>
+                <div className="text-sm font-bold text-status-eligible-text">{report.resolved}</div>
               </div>
               <div>
-                <div className="text-gray-400 font-medium">Pending</div>
-                <div className="text-sm font-bold text-amber-700">{report.pending}</div>
+                <div className="text-charcoal-muted font-medium text-[10px] uppercase">Pending</div>
+                <div className="text-sm font-bold text-status-review-text">{report.pending}</div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-gray-100 text-xs text-gray-500">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+            <div className="flex items-center justify-between pt-3 border-t border-warm-border text-xs text-charcoal-muted">
+              <span className="flex items-center gap-1 text-[11px]">
+                <Calendar className="w-3.5 h-3.5 text-charcoal-muted" />
                 Generated on {report.generatedDate}
               </span>
 
@@ -212,7 +212,7 @@ export const AdminReportsPage: React.FC = () => {
                 <button
                   onClick={() => handleDownload(report.id)}
                   disabled={downloadingId === report.id}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 hover:bg-primary-100 disabled:opacity-50 text-primary-800 font-medium rounded-lg border border-primary-200 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-tint hover:bg-olive hover:text-white disabled:opacity-50 text-forest font-semibold rounded-xl border border-forest/15 transition-colors text-xs shadow-soft"
                 >
                   {downloadingId === report.id ? (
                     <>

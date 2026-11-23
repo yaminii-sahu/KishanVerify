@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
-import { User, ShieldCheck, Phone, Lock, Sparkles, ArrowRight } from 'lucide-react';
+import { User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,48 +24,48 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-warm-bg flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-warm-border">
+    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-cream-surface rounded-3xl p-6 sm:p-8 shadow-card border border-warm-border">
         {/* Brand */}
         <div className="flex justify-center mb-6">
           <Logo variant="dark" size="md" showTagline={true} />
         </div>
 
         {/* Tab switch */}
-        <div className="flex p-1 bg-warm-card rounded-2xl mb-6 border border-warm-border">
+        <div className="flex p-1 bg-cream rounded-2xl mb-6 border border-warm-border">
           <button
             type="button"
             onClick={() => setTab('farmer')}
-            className={`flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
               tab === 'farmer'
-                ? 'bg-white text-gray-900 shadow-soft'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-cream-surface text-charcoal shadow-soft'
+                : 'text-charcoal-muted hover:text-charcoal'
             }`}
           >
-            <User className="w-4 h-4 text-sage-600" />
+            <User className="w-4 h-4 text-forest" />
             <span>Farmer Portal</span>
           </button>
           <button
             type="button"
             onClick={() => setTab('admin')}
-            className={`flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
               tab === 'admin'
-                ? 'bg-white text-gray-900 shadow-soft'
-                : 'text-gray-500 hover:text-gray-900'
+                ? 'bg-cream-surface text-charcoal shadow-soft'
+                : 'text-charcoal-muted hover:text-charcoal'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-sage-600" />
+            <ShieldCheck className="w-4 h-4 text-forest" />
             <span>Bank / Admin</span>
           </button>
         </div>
 
         {/* 1-Click Instant Demo Button */}
-        <div className="mb-6 p-3 rounded-2xl bg-sage-50 border border-sage-200 flex items-center justify-between">
+        <div className="mb-6 p-3 rounded-2xl bg-tint border border-forest/10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 text-sage-600 shrink-0" />
+            <Sparkles className="w-4 h-4 text-forest shrink-0" />
             <div className="text-left">
-              <p className="text-xs font-bold text-sage-900">1-Click Demo Mode</p>
-              <p className="text-[11px] text-sage-700">Pre-seeded sample farmer & bank records</p>
+              <p className="text-xs font-bold text-forest">1-Click Quick Demo</p>
+              <p className="text-[11px] text-charcoal-muted">Pre-seeded farmer & bank records</p>
             </div>
           </div>
           <button
@@ -78,7 +78,7 @@ export const LoginPage: React.FC = () => {
                 navigate('/admin');
               }
             }}
-            className="px-3 py-1.5 rounded-xl bg-sage-600 hover:bg-sage-700 text-white text-xs font-semibold shadow-soft"
+            className="px-3.5 py-1.5 rounded-xl bg-olive hover:bg-forest text-white text-xs font-bold shadow-soft transition-colors"
           >
             Launch
           </button>
@@ -87,48 +87,45 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleLogin} className="space-y-4">
           {tab === 'farmer' ? (
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+              <label className="block text-xs font-bold text-charcoal mb-1.5">
                 Mobile Number or Farmer ID
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs font-bold text-gray-500">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs font-bold text-charcoal-muted">
                   +91
                 </span>
                 <input
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white rounded-2xl border border-warm-border text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
-                  placeholder="Enter 10 digit number"
-                  required
+                  placeholder="Enter 10-digit mobile"
+                  className="w-full pl-12 pr-4 py-3 bg-cream rounded-xl border border-warm-border text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-olive font-medium"
                 />
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">Default demo: 9876543210 (Ramesh Kumar, Durg)</p>
             </div>
           ) : (
             <>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Bank Officer Employee ID
+                <label className="block text-xs font-bold text-charcoal mb-1.5">
+                  Bank / Officer Employee ID
                 </label>
                 <input
                   type="text"
                   value={adminId}
                   onChange={(e) => setAdminId(e.target.value)}
-                  className="w-full px-4 py-3 bg-white rounded-2xl border border-warm-border text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
-                  required
+                  placeholder="e.g. SBI-DURG-881"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-olive font-medium"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Branch Password
+                <label className="block text-xs font-bold text-charcoal mb-1.5">
+                  Password
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white rounded-2xl border border-warm-border text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500"
-                  required
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-olive font-medium"
                 />
               </div>
             </>
@@ -136,15 +133,15 @@ export const LoginPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full h-12 py-3 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all mt-2"
+            className="w-full h-[52px] rounded-xl bg-olive hover:bg-forest text-white font-bold text-sm shadow-soft flex items-center justify-center gap-2 transition-colors mt-2"
           >
-            <span>{tab === 'farmer' ? 'Enter Farmer Portal' : 'Login to Bank Console'}</span>
+            <span>Sign In to {tab === 'farmer' ? 'Farmer Portal' : 'Admin Console'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        <div className="mt-6 text-center text-xs text-gray-400">
-          <p>KisanVerify • Built for Agricultural Financial Transparency</p>
+        <div className="mt-6 text-center text-[11px] text-charcoal-muted">
+          Protected by Ministry of Agriculture & Farmers Welfare • GoI
         </div>
       </div>
     </div>

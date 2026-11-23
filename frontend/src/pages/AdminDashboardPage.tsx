@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { 
   FileSpreadsheet, 
@@ -6,16 +6,13 @@ import {
   AlertCircle, 
   MessageSquareWarning, 
   Search, 
-  Filter, 
   Download, 
   Eye, 
   X,
   TrendingUp, 
-  ShieldCheck, 
-  ArrowUpRight,
-  Sparkles,
   Layers,
-  ChevronRight
+  ChevronRight,
+  Filter
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -48,7 +45,7 @@ export const AdminDashboardPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedCase, setSelectedCase] = useState<AdminCase | null>(null);
 
-  // Pre-seeded cases matching blueprint examples
+  // Pre-seeded cases matching blueprint and Image A table
   const [cases, setCases] = useState<AdminCase[]>([
     {
       id: 'CASE-LN-1',
@@ -127,9 +124,9 @@ export const AdminDashboardPage: React.FC = () => {
   ];
 
   const typePieData = [
-    { name: 'Loan Deductions', value: 45, color: '#4E6E3D' },
-    { name: 'MSP Differences', value: 35, color: '#B45309' },
-    { name: 'Insurance Claims', value: 20, color: '#1D4ED8' },
+    { name: 'Loan Deductions', value: 45, color: '#4A6538' },
+    { name: 'MSP Differences', value: 35, color: '#D97706' },
+    { name: 'Insurance Claims', value: 20, color: '#2563EB' },
   ];
 
   // Filter cases based on search, status, and district
@@ -173,100 +170,109 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header matching Image A */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-charcoal tracking-tight">
+          Bank / Admin Dashboard
+        </h1>
+        <p className="text-xs sm:text-sm text-charcoal-muted mt-0.5">
+          Monitor records, verify discrepancies and resolve cases.
+        </p>
+      </div>
       
-      {/* Stat Cards (Matching mockups Screen 6 / Dashboard-2) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Stat Cards: 4 cols on desktop, 2x2 on phone/tablet */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         
         {/* Total Records */}
-        <div className="bg-white rounded-3xl p-5 border border-warm-border shadow-card flex items-center justify-between">
+        <div className="bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-warm-border shadow-card flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+            <p className="text-[10px] sm:text-xs font-semibold text-charcoal-muted uppercase tracking-wider mb-1">
               Total Records
             </p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-charcoal">
               {stats.totalRecords.toLocaleString()}
             </h3>
-            <p className="text-[11px] text-gray-400 mt-0.5">Audited in database</p>
+            <p className="text-[10px] sm:text-[11px] text-charcoal-muted mt-0.5">Audited in database</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-sage-50 text-sage-700 flex items-center justify-center shadow-soft">
-            <FileSpreadsheet className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-tint text-forest flex items-center justify-center shadow-soft shrink-0">
+            <FileSpreadsheet className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
         {/* Verified */}
-        <div className="bg-white rounded-3xl p-5 border border-warm-border shadow-card flex items-center justify-between">
+        <div className="bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-warm-border shadow-card flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+            <p className="text-[10px] sm:text-xs font-semibold text-charcoal-muted uppercase tracking-wider mb-1">
               Verified
             </p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-[#2E7D32]">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-status-eligible-text">
               {stats.verifiedCount.toLocaleString()}
             </h3>
-            <p className="text-[11px] text-green-700 mt-0.5">87.9% Match rate</p>
+            <p className="text-[10px] sm:text-[11px] text-status-eligible-text/90 mt-0.5">87.9% Match rate</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-[#EDF7ED] text-[#2E7D32] flex items-center justify-center shadow-soft">
-            <CheckCircle2 className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-status-eligible text-status-eligible-text flex items-center justify-center shadow-soft shrink-0">
+            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
         {/* Discrepancies */}
-        <div className="bg-white rounded-3xl p-5 border border-warm-border shadow-card flex items-center justify-between">
+        <div className="bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-warm-border shadow-card flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+            <p className="text-[10px] sm:text-xs font-semibold text-charcoal-muted uppercase tracking-wider mb-1">
               Discrepancies
             </p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-kisan-red">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-status-discrepancy-text">
               {stats.discrepanciesCount}
             </h3>
-            <p className="text-[11px] text-red-600 mt-0.5">Under investigation</p>
+            <p className="text-[10px] sm:text-[11px] text-status-discrepancy-text/90 mt-0.5">Under investigation</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-kisan-lightred text-kisan-red flex items-center justify-center shadow-soft">
-            <AlertCircle className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-status-discrepancy text-status-discrepancy-text flex items-center justify-center shadow-soft shrink-0">
+            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
         {/* Pending Complaints */}
-        <div className="bg-white rounded-3xl p-5 border border-warm-border shadow-card flex items-center justify-between">
+        <div className="bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-warm-border shadow-card flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+            <p className="text-[10px] sm:text-xs font-semibold text-charcoal-muted uppercase tracking-wider mb-1">
               Pending Complaints
             </p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-amber-700">
+            <h3 className="text-xl sm:text-3xl font-extrabold text-status-review-text">
               {stats.pendingComplaints}
             </h3>
-            <p className="text-[11px] text-amber-600 mt-0.5">Awaiting officer reply</p>
+            <p className="text-[10px] sm:text-[11px] text-status-review-text/90 mt-0.5">Awaiting reply</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-[#FEF3E2] text-amber-700 flex items-center justify-center shadow-soft">
-            <MessageSquareWarning className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-status-review text-status-review-text flex items-center justify-center shadow-soft shrink-0">
+            <MessageSquareWarning className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
       </div>
 
-      {/* Recent Cases Section (Matches mockup table layout) */}
-      <div className="bg-white rounded-3xl p-6 border border-warm-border shadow-card space-y-4">
+      {/* Recent Cases Section */}
+      <div className="bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-warm-border shadow-card space-y-4">
         
-        {/* Table Controls */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-warm-border pb-4">
+        {/* Table Controls matching Image A */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-warm-border pb-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight">
+            <h2 className="text-base sm:text-lg font-bold text-charcoal tracking-tight">
               Recent Cases
             </h2>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-charcoal-muted">
               Review individual farmer loans, MSP and insurance reconciliations
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             {/* Search Input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="w-4 h-4 text-charcoal-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search farmer or ID..."
-                className="pl-9 pr-4 py-2 bg-warm-bg rounded-2xl border border-warm-border text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 w-48 sm:w-60"
+                placeholder="Search farmer..."
+                className="pl-9 pr-4 py-2 bg-cream rounded-xl border border-warm-border text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-olive w-full sm:w-56"
               />
             </div>
 
@@ -274,7 +280,7 @@ export const AdminDashboardPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 bg-warm-bg rounded-2xl border border-warm-border text-xs font-semibold text-gray-700 focus:outline-none cursor-pointer"
+              className="px-3 py-2 bg-cream rounded-xl border border-warm-border text-xs font-semibold text-charcoal focus:outline-none cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="Needs Review">Needs Review</option>
@@ -285,19 +291,19 @@ export const AdminDashboardPage: React.FC = () => {
             {/* Export CSV Button */}
             <button
               onClick={handleExportCSV}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-sage-50 text-sage-800 border border-sage-200 hover:bg-sage-100 text-xs font-semibold shadow-soft transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-tint text-forest border border-forest/10 hover:bg-forest hover:text-white text-xs font-semibold shadow-soft transition-colors"
             >
-              <Download className="w-3.5 h-3.5 text-sage-600" />
-              <span>Export CSV</span>
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Export CSV</span>
             </button>
           </div>
         </div>
 
-        {/* Cases Table */}
-        <div className="overflow-x-auto">
+        {/* Desktop / Tablet Table View (md+) matching Image A */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-warm-border text-gray-400 uppercase tracking-wider font-semibold text-[11px]">
+              <tr className="border-b border-warm-border text-charcoal-muted uppercase tracking-wider font-semibold text-[11px]">
                 <th className="pb-3 pl-2">Farmer Name</th>
                 <th className="pb-3">Record Type</th>
                 <th className="pb-3 text-right">Expected</th>
@@ -308,23 +314,23 @@ export const AdminDashboardPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-warm-border/60">
               {filteredCases.map((c) => (
-                <tr key={c.id} className="hover:bg-warm-bg/70 transition-colors group">
+                <tr key={c.id} className="hover:bg-cream/70 transition-colors group">
                   <td className="py-3.5 pl-2">
                     <div>
-                      <p className="font-bold text-gray-900">{c.farmerName}</p>
-                      <p className="text-[11px] font-mono text-gray-400">{c.farmerId} • {c.district}</p>
+                      <p className="font-bold text-charcoal">{c.farmerName}</p>
+                      <p className="text-[11px] font-mono text-charcoal-muted">{c.farmerId} • {c.district}</p>
                     </div>
                   </td>
-                  <td className="py-3.5 font-medium text-gray-700">
-                    <span className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-800 font-mono text-[11px]">
+                  <td className="py-3.5 font-medium text-charcoal">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-tint text-forest font-semibold text-[11px]">
                       {c.recordType}
                     </span>
                   </td>
-                  <td className="py-3.5 text-right font-semibold text-gray-900">
-                    ₹{c.expectedAmount.toLocaleString()}
+                  <td className="py-3.5 text-right font-semibold text-charcoal">
+                    ₹{c.expectedAmount.toLocaleString('en-IN')}
                   </td>
-                  <td className="py-3.5 text-right font-semibold text-gray-900">
-                    ₹{c.actualAmount.toLocaleString()}
+                  <td className="py-3.5 text-right font-semibold text-charcoal">
+                    ₹{c.actualAmount.toLocaleString('en-IN')}
                   </td>
                   <td className="py-3.5 text-center">
                     <StatusBadge status={c.status} size="sm" />
@@ -332,7 +338,7 @@ export const AdminDashboardPage: React.FC = () => {
                   <td className="py-3.5 text-right pr-2">
                     <button
                       onClick={() => setSelectedCase(c)}
-                      className="px-3 py-1.5 rounded-xl bg-sage-50 text-sage-700 border border-sage-200 hover:bg-sage-600 hover:text-white transition-all text-xs font-semibold shadow-soft"
+                      className="px-3.5 py-1.5 rounded-xl bg-tint text-forest hover:bg-olive hover:text-white transition-all text-xs font-semibold shadow-soft"
                     >
                       View
                     </button>
@@ -343,57 +349,111 @@ export const AdminDashboardPage: React.FC = () => {
           </table>
         </div>
 
+        {/* Mobile Stacked Card View (< md) - Zero horizontal scroll on phones */}
+        <div className="md:hidden space-y-3">
+          {filteredCases.map((c) => (
+            <div
+              key={c.id}
+              className="p-3.5 rounded-2xl bg-cream border border-warm-border space-y-2.5"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-bold text-sm text-charcoal">{c.farmerName}</h4>
+                  <p className="text-[11px] text-charcoal-muted">{c.farmerId} • {c.district}</p>
+                </div>
+                <StatusBadge status={c.status} size="sm" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-cream-surface border border-warm-border text-center">
+                <div>
+                  <p className="text-[10px] text-charcoal-muted uppercase">Type</p>
+                  <p className="text-xs font-bold text-forest">{c.recordType}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-charcoal-muted uppercase">Expected</p>
+                  <p className="text-xs font-bold text-charcoal">₹{c.expectedAmount.toLocaleString('en-IN')}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-charcoal-muted uppercase">Actual</p>
+                  <p className="text-xs font-bold text-charcoal">₹{c.actualAmount.toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+
+              {c.difference > 0 && (
+                <div className="flex items-center justify-between text-xs px-1">
+                  <span className="text-charcoal-muted">Difference Flagged:</span>
+                  <span className="font-bold text-status-discrepancy-text">₹{c.difference.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+
+              <button
+                onClick={() => setSelectedCase(c)}
+                className="w-full py-2 rounded-xl bg-tint text-forest font-semibold text-xs hover:bg-olive hover:text-white transition-colors flex items-center justify-center gap-1 shadow-soft"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>View Full Details</span>
+              </button>
+            </div>
+          ))}
+
+          {filteredCases.length === 0 && (
+            <div className="text-center py-8 text-xs text-charcoal-muted">
+              No matching cases found for the selected filter.
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Analytics Section with Recharts */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* District Breakdown Bar Chart */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 border border-warm-border shadow-card space-y-3">
+        <div className="lg:col-span-7 bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-warm-border shadow-card space-y-3">
           <div className="flex items-center justify-between border-b border-warm-border pb-3">
             <div>
-              <h3 className="text-base font-bold text-gray-900">
+              <h3 className="text-sm sm:text-base font-bold text-charcoal">
                 Discrepancy Trends by District
               </h3>
-              <p className="text-xs text-gray-500">Verified matches vs records needing review</p>
+              <p className="text-xs text-charcoal-muted">Verified matches vs records needing review</p>
             </div>
-            <TrendingUp className="w-4 h-4 text-sage-600" />
+            <TrendingUp className="w-4 h-4 text-forest" />
           </div>
 
-          <div className="h-64 w-full pt-2">
+          <div className="h-60 sm:h-64 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={districtChartData}>
-                <XAxis dataKey="name" stroke="#888888" fontSize={11} />
-                <YAxis stroke="#888888" fontSize={11} />
+                <XAxis dataKey="name" stroke="#6B7565" fontSize={11} />
+                <YAxis stroke="#6B7565" fontSize={11} />
                 <Tooltip />
-                <Bar dataKey="verified" name="Verified Match" fill="#4E6E3D" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="discrepancies" name="Discrepancies" fill="#C53030" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="verified" name="Verified Match" fill="#4A6538" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="discrepancies" name="Discrepancies" fill="#C0392B" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Discrepancy Breakdown by Type Pie Chart */}
-        <div className="lg:col-span-5 bg-white rounded-3xl p-6 border border-warm-border shadow-card space-y-3">
+        <div className="lg:col-span-5 bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-warm-border shadow-card space-y-3">
           <div className="flex items-center justify-between border-b border-warm-border pb-3">
             <div>
-              <h3 className="text-base font-bold text-gray-900">
+              <h3 className="text-sm sm:text-base font-bold text-charcoal">
                 Discrepancies by Category
               </h3>
-              <p className="text-xs text-gray-500">Distribution across agricultural programs</p>
+              <p className="text-xs text-charcoal-muted">Distribution across agricultural programs</p>
             </div>
-            <Layers className="w-4 h-4 text-sage-600" />
+            <Layers className="w-4 h-4 text-forest" />
           </div>
 
-          <div className="h-64 w-full flex items-center justify-center">
+          <div className="h-60 sm:h-64 w-full flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={typePieData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={85}
+                  innerRadius={55}
+                  outerRadius={80}
                   paddingAngle={5}
                   dataKey="value"
                 >
@@ -410,53 +470,53 @@ export const AdminDashboardPage: React.FC = () => {
 
       </div>
 
-      {/* Case Review Modal */}
+      {/* Case Review Modal: Responsive Bottom-Sheet on mobile, Centered Modal on desktop */}
       {selectedCase && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-warm-border space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-start justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-cream-surface rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-warm-border space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-warm-border pb-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-sage-700">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-forest">
                   {selectedCase.id}
                 </span>
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className="text-base sm:text-lg font-bold text-charcoal">
                   {selectedCase.farmerName} • {selectedCase.recordType} Case
                 </h3>
-                <p className="text-xs text-gray-500">Farmer ID: {selectedCase.farmerId} • {selectedCase.district}</p>
+                <p className="text-xs text-charcoal-muted">Farmer ID: {selectedCase.farmerId} • {selectedCase.district}</p>
               </div>
               <button
                 onClick={() => setSelectedCase(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"
+                className="w-8 h-8 rounded-full bg-cream border border-warm-border flex items-center justify-center text-charcoal-muted hover:text-charcoal"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-warm-bg border border-warm-border space-y-2 text-xs">
+            <div className="p-3.5 rounded-2xl bg-cream border border-warm-border space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-500">Expected Entitlement:</span>
-                <strong className="text-gray-900">₹{selectedCase.expectedAmount.toLocaleString()}</strong>
+                <span className="text-charcoal-muted">Expected Entitlement:</span>
+                <strong className="text-charcoal">₹{selectedCase.expectedAmount.toLocaleString('en-IN')}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Actual Disbursed:</span>
-                <strong className="text-gray-900">₹{selectedCase.actualAmount.toLocaleString()}</strong>
+                <span className="text-charcoal-muted">Actual Disbursed:</span>
+                <strong className="text-charcoal">₹{selectedCase.actualAmount.toLocaleString('en-IN')}</strong>
               </div>
               <div className="flex justify-between pt-1 border-t border-warm-border">
-                <span className="font-bold text-gray-900">Difference Flagged:</span>
-                <strong className={`text-sm ${selectedCase.difference > 0 ? 'text-kisan-red' : 'text-[#2E7D32]'}`}>
-                  ₹{selectedCase.difference.toLocaleString()}
+                <span className="font-bold text-charcoal">Difference Flagged:</span>
+                <strong className={`text-sm ${selectedCase.difference > 0 ? 'text-status-discrepancy-text' : 'text-status-eligible-text'}`}>
+                  ₹{selectedCase.difference.toLocaleString('en-IN')}
                 </strong>
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-sage-50 border border-sage-200 text-xs text-sage-900 leading-relaxed">
+            <div className="p-3 rounded-2xl bg-tint border border-forest/10 text-xs text-forest leading-relaxed">
               <strong>Audit Note:</strong> {selectedCase.notes || 'Record requires inspection of processing fees and documentation charges.'}
             </div>
 
             <div className="space-y-2 pt-2">
               <button
                 onClick={() => handleResolveCase(selectedCase.id)}
-                className="w-full py-3 rounded-2xl bg-[#2E7D32] hover:bg-green-800 text-white font-semibold text-xs shadow-soft flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-xl bg-olive hover:bg-forest text-white font-semibold text-xs shadow-soft flex items-center justify-center gap-2 transition-colors"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Mark as Resolved / Fee Verified</span>
@@ -467,7 +527,7 @@ export const AdminDashboardPage: React.FC = () => {
                   alert(`Case ${selectedCase.id} escalated to District Collectorate / Lead Bank Office.`);
                   setSelectedCase(null);
                 }}
-                className="w-full py-2.5 rounded-2xl bg-white border border-warm-border text-gray-700 hover:bg-warm-bg font-semibold text-xs"
+                className="w-full py-2.5 rounded-xl bg-cream border border-warm-border text-charcoal hover:bg-cream-surface font-semibold text-xs"
               >
                 Escalate to District Collectorate
               </button>

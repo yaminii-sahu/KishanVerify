@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { 
   MessageSquareWarning, 
   Search, 
-  Filter, 
   CheckCircle2, 
   AlertCircle, 
   Clock, 
-  ArrowUpRight,
   X,
   FileText
 } from 'lucide-react';
@@ -69,11 +67,12 @@ export const AdminComplaintsPage: React.FC = () => {
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-warm-border pb-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-            Grievances & Farmer Complaints
+          <h1 className="text-xl sm:text-2xl font-bold text-charcoal tracking-tight flex items-center gap-2">
+            <MessageSquareWarning className="w-6 h-6 text-forest" />
+            Grievances & Farmer Inquiries
           </h1>
-          <p className="text-xs text-gray-500">
-            Official complaints submitted through the KisanVerify portal
+          <p className="text-xs sm:text-sm text-charcoal-muted mt-0.5">
+            Official inquiries submitted through the KisanVerify portal
           </p>
         </div>
 
@@ -81,7 +80,7 @@ export const AdminComplaintsPage: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-white rounded-2xl border border-warm-border text-xs font-semibold text-gray-700 shadow-soft focus:outline-none"
+            className="px-3.5 py-2 bg-cream-surface rounded-xl border border-warm-border text-xs font-semibold text-charcoal shadow-soft focus:outline-none focus:ring-2 focus:ring-olive cursor-pointer"
           >
             <option value="All">All Statuses</option>
             <option value="Open">Open</option>
@@ -95,97 +94,107 @@ export const AdminComplaintsPage: React.FC = () => {
         {filtered.map((item) => (
           <div
             key={item.id}
-            className="bg-white rounded-3xl p-5 border border-warm-border shadow-card flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-sage-400 transition-all"
+            className="bg-cream-surface rounded-2xl p-5 border border-warm-border shadow-card flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-olive/40 transition-all"
           >
             <div className="space-y-2 max-w-2xl">
-              <div className="flex items-center gap-3">
-                <span className="font-mono font-bold text-xs text-gray-900 px-2 py-0.5 rounded-lg bg-gray-100">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-bold text-forest bg-tint px-2 py-0.5 rounded-md">
                   {item.id}
                 </span>
-                <span className="text-xs font-bold text-gray-800">{item.type}</span>
-                <StatusBadge status={item.status} size="sm" />
+                <span className="text-xs font-bold text-charcoal">
+                  {item.farmerName} ({item.farmerId})
+                </span>
+                <span className="text-xs text-charcoal-muted">• {item.district}</span>
+                <StatusBadge status={item.status as any} size="sm" />
               </div>
 
-              <p className="text-sm font-semibold text-gray-900">
-                {item.farmerName} • <span className="font-mono text-xs text-gray-500">ID: {item.farmerId} ({item.district})</span>
-              </p>
+              <h3 className="text-sm sm:text-base font-bold text-charcoal">
+                {item.type}
+              </h3>
 
-              <p className="text-xs text-gray-600 leading-relaxed">
+              <p className="text-xs text-charcoal leading-relaxed bg-cream p-3 rounded-xl border border-warm-border">
                 "{item.desc}"
               </p>
 
-              <div className="text-[11px] text-gray-400 flex items-center gap-4">
-                <span>Submitted: {item.date}</span>
-                {item.attachment && (
-                  <span className="text-sage-700 flex items-center gap-1">
-                    <FileText className="w-3.5 h-3.5" />
-                    {item.attachment}
-                  </span>
-                )}
-              </div>
+              {item.notes && (
+                <p className="text-[11px] text-charcoal-muted flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-forest" />
+                  <span><strong>Audit Trail:</strong> {item.notes}</span>
+                </p>
+              )}
             </div>
 
-            <div className="shrink-0 flex items-center gap-2 self-end md:self-center">
+            <div className="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end gap-2 shrink-0">
               <button
                 onClick={() => setSelectedComplaint(item)}
-                className="px-4 py-2 rounded-2xl bg-sage-50 text-sage-800 border border-sage-200 hover:bg-sage-600 hover:text-white transition-all text-xs font-semibold shadow-soft"
+                className="px-4 py-2 rounded-xl bg-olive hover:bg-forest text-white text-xs font-semibold shadow-soft transition-colors"
               >
-                Review & Resolve
+                Review & Respond
               </button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Resolution Modal */}
+      {/* Review Modal */}
       {selectedComplaint && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-warm-border space-y-4">
-            <div className="flex items-start justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-cream-surface rounded-t-3xl sm:rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-warm-border space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-warm-border pb-3">
               <div>
-                <span className="text-[10px] font-mono font-bold text-sage-700">{selectedComplaint.id}</span>
-                <h3 className="text-lg font-bold text-gray-900">{selectedComplaint.farmerName}</h3>
-                <p className="text-xs text-gray-500">{selectedComplaint.type}</p>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-forest">
+                  {selectedComplaint.id}
+                </span>
+                <h3 className="text-base sm:text-lg font-bold text-charcoal">
+                  {selectedComplaint.farmerName} • {selectedComplaint.type}
+                </h3>
+                <p className="text-xs text-charcoal-muted">District: {selectedComplaint.district}</p>
               </div>
               <button
                 onClick={() => setSelectedComplaint(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200"
+                className="w-8 h-8 rounded-full bg-cream border border-warm-border flex items-center justify-center text-charcoal-muted hover:text-charcoal"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3 bg-warm-bg rounded-2xl text-xs text-gray-700 space-y-1">
-              <p className="font-semibold text-gray-900">Complaint Details:</p>
-              <p className="leading-relaxed">{selectedComplaint.desc}</p>
+            <div className="p-3.5 rounded-xl bg-cream border border-warm-border space-y-2 text-xs">
+              <p className="font-semibold text-charcoal">Farmer's Statement:</p>
+              <p className="text-charcoal-muted leading-relaxed">"{selectedComplaint.desc}"</p>
+              {selectedComplaint.attachment && (
+                <div className="flex items-center gap-1.5 text-forest font-semibold pt-1">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Attachment: {selectedComplaint.attachment}</span>
+                </div>
+              )}
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Officer Resolution Note
+              <label className="block text-xs font-semibold text-charcoal mb-1">
+                Official Resolution / Clarification Note
               </label>
               <textarea
+                rows={3}
                 value={resolutionText}
                 onChange={(e) => setResolutionText(e.target.value)}
-                placeholder="Explain the resolution or fee audit findings..."
-                rows={3}
-                className="w-full p-3 bg-warm-bg rounded-2xl border border-warm-border text-xs focus:outline-none focus:ring-2 focus:ring-sage-500 resize-none"
+                placeholder="E.g., Verified fee deductions of ₹5,000 for PMFBY premium. Detailed statement dispatched to farmer."
+                className="w-full p-3 bg-cream border border-warm-border rounded-xl text-xs text-charcoal focus:outline-none focus:ring-2 focus:ring-olive"
               />
             </div>
 
             <div className="space-y-2 pt-2">
               <button
                 onClick={() => handleResolve(selectedComplaint.id)}
-                className="w-full py-3 rounded-2xl bg-[#2E7D32] hover:bg-green-800 text-white font-semibold text-xs shadow-soft flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-xl bg-olive hover:bg-forest text-white font-semibold text-xs shadow-soft flex items-center justify-center gap-2 transition-colors"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                <span>Mark as Resolved</span>
+                <span>Mark as Resolved & Notify Farmer</span>
               </button>
               <button
                 onClick={() => setSelectedComplaint(null)}
-                className="w-full py-2.5 rounded-2xl bg-gray-100 text-gray-700 text-xs font-semibold"
+                className="w-full py-2.5 rounded-xl bg-cream border border-warm-border text-charcoal font-semibold text-xs hover:bg-cream-surface"
               >
-                Cancel
+                Close
               </button>
             </div>
           </div>
