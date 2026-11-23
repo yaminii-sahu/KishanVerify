@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" role="img" aria-label="Clipboard with checklist for entitlements">
+  <defs>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E4EBD6" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#F7F5EC" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Soft circular backdrop halo -->
+  <circle cx="120" cy="120" r="95" fill="url(#halo)"/>
+
+  <!-- Wheat / Plant Leaves on left -->
+  <g transform="translate(60, 80) scale(0.9)">
+    <path d="M15 80 Q25 40 45 10" stroke="#7A9465" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="28" cy="40" rx="8" ry="4" transform="rotate(-30 28 40)" fill="#8DA778"/>
+    <ellipse cx="40" cy="22" rx="7" ry="3.5" transform="rotate(-40 40 22)" fill="#9FB58B"/>
+    <ellipse cx="24" cy="60" rx="9" ry="4.5" transform="rotate(-20 24 60)" fill="#7A9465"/>
+  </g>
+
+  <!-- Wheat / Plant Leaves on right -->
+  <g transform="translate(145, 90) scale(0.85)">
+    <path d="M10 70 Q0 30 -20 5" stroke="#7A9465" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="-8" cy="30" rx="7" ry="3.5" transform="rotate(30 -8 30)" fill="#8DA778"/>
+    <ellipse cx="-18" cy="15" rx="6" ry="3" transform="rotate(40 -18 15)" fill="#9FB58B"/>
+  </g>
+
+  <!-- Clipboard Board -->
+  <rect x="75" y="45" width="90" height="135" rx="12" fill="#5B7A47" stroke="#4A6538" stroke-width="2"/>
+
+  <!-- Paper on Clipboard -->
+  <rect x="83" y="58" width="74" height="114" rx="6" fill="#FDFCF8"/>
+
+  <!-- Top Clip -->
+  <rect x="100" y="38" width="40" height="16" rx="4" fill="#3D552E"/>
+  <circle cx="120" cy="46" r="4" fill="#FDFCF8"/>
+
+  <!-- Checklist Rows with Green Checks -->
+  <!-- Item 1 -->
+  <path d="M92 78 L97 83 L106 73" stroke="#5B7A47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="112" y1="78" x2="148" y2="78" stroke="#6B7565" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Item 2 -->
+  <path d="M92 102 L97 107 L106 97" stroke="#5B7A47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="112" y1="102" x2="148" y2="102" stroke="#6B7565" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Item 3 -->
+  <path d="M92 126 L97 131 L106 121" stroke="#5B7A47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="112" y1="126" x2="148" y2="126" stroke="#6B7565" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Item 4 (Line) -->
+  <path d="M92 150 L97 155 L106 145" stroke="#5B7A47" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="112" y1="150" x2="140" y2="150" stroke="#6B7565" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

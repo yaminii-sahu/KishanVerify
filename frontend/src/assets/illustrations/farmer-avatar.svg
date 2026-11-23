@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Farmer portrait avatar">
+  <!-- Outer Sage Background Circle -->
+  <circle cx="50" cy="50" r="50" fill="#E4EBD6"/>
+  <circle cx="50" cy="50" r="48" fill="#5B7A47" fill-opacity="0.15"/>
+
+  <!-- Farmer Portrait (Turban, Kurta, Mustache) -->
+  <g transform="translate(10, 10)">
+    <!-- White Kurta Shoulder Curve -->
+    <path d="M12 76 C20 62 30 55 40 55 C50 55 60 62 68 76 Z" fill="#FDFCF8" stroke="#E8E5DA" stroke-width="1.5"/>
+    <path d="M22 66 L20 80" stroke="#5B7A47" stroke-width="6" stroke-linecap="round"/>
+    <path d="M58 66 L60 80" stroke="#5B7A47" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Neck -->
+    <rect x="34" y="44" width="12" height="14" fill="#C88E62" rx="2"/>
+
+    <!-- Face -->
+    <ellipse cx="40" cy="34" rx="14" ry="16" fill="#DFA274"/>
+
+    <!-- Mustache -->
+    <path d="M33 41 Q40 38 47 41 Q40 43 33 41 Z" fill="#3D2918"/>
+    <!-- Eyes -->
+    <circle cx="34" cy="32" r="1.6" fill="#1F2A1B"/>
+    <circle cx="46" cy="32" r="1.6" fill="#1F2A1B"/>
+    <!-- Eyebrows -->
+    <path d="M31 29 Q34 27 37 29" stroke="#3D2918" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M43 29 Q46 27 49 29" stroke="#3D2918" stroke-width="1.2" stroke-linecap="round"/>
+
+    <!-- Turban / Pagri -->
+    <path d="M24 28 C22 14 31 4 40 4 C49 4 58 14 56 28 C54 32 48 34 40 34 C32 34 26 32 24 28 Z" fill="#FDFCF8" stroke="#E8E5DA" stroke-width="1.5"/>
+    <path d="M25 20 C32 14 48 14 55 20" stroke="#D2DFCC" stroke-width="2" stroke-linecap="round"/>
+    <path d="M27 25 C34 20 46 20 53 25" stroke="#D2DFCC" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>
