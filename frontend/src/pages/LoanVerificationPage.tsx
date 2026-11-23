@@ -8,15 +8,13 @@ import {
   FileText, 
   HelpCircle, 
   Calculator, 
-  Info,
-  Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  RefreshCw,
-  UploadCloud,
-  FileUp,
-  Loader2,
-  Check
+  Sparkles, 
+  ArrowRight, 
+  ShieldCheck, 
+  FileUp, 
+  Loader2, 
+  Check, 
+  Flag 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
@@ -46,7 +44,21 @@ export const LoanVerificationPage: React.FC = () => {
   const [autoFilledFields, setAutoFilledFields] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any | null>(null);
+  // Default sample result matching Image A & Image B for initial desktop presentation
+  const [result, setResult] = useState<any | null>({
+    is_flagged: true,
+    status_label: 'Discrepancy Detected',
+    explanation: 'The disbursed amount is less than the approved amount.',
+    approved_amount: 80000,
+    disbursed_amount: 70000,
+    deductions: 5000,
+    difference: 10000,
+    reasons: [
+      'Deductions for processing fees',
+      'Incomplete documentation',
+      'Bank policy variation'
+    ]
+  });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,13 +72,13 @@ export const LoanVerificationPage: React.FC = () => {
     const fileName = file.name.toLowerCase();
     const isValidType = validExtensions.some(ext => fileName.endsWith(ext));
     if (!isValidType) {
-      setOcrError('Only PDF, PNG, JPG, or JPEG files are supported. Please select a valid document.');
+      setOcrError('Only PDF, PNG, JPG, or JPEG files are supported.');
       return;
     }
 
     // Validate size: max 5 MB
     if (file.size > 5 * 1024 * 1024) {
-      setOcrError('File size exceeds the 5 MB limit. Please upload a smaller document.');
+      setOcrError('File size exceeds 5 MB limit.');
       return;
     }
 
@@ -111,13 +123,13 @@ export const LoanVerificationPage: React.FC = () => {
       setAutoFilledFields(filled);
 
       if (filled.length > 0) {
-        setOcrSuccessMsg(`Extracted ${filled.length} fields from "${file.name}" with ${(data.confidence * 100).toFixed(0)}% confidence. Please review the values below.`);
+        setOcrSuccessMsg(`Extracted ${filled.length} fields from "${file.name}". Please review extracted values.`);
       } else {
-        setOcrError('No legible loan amounts found in document. Please enter values manually below.');
+        setOcrError('No legible loan amounts found. Please enter values manually.');
       }
     } catch (err: any) {
       console.error('OCR Extraction error:', err);
-      setOcrError('Document extraction failed or could not be processed. You can enter the details manually below.');
+      setOcrError('Document extraction failed. You can enter details manually.');
     } finally {
       setIsOcrLoading(false);
       if (e.target) e.target.value = '';
@@ -148,7 +160,7 @@ export const LoanVerificationPage: React.FC = () => {
           particleCount: 80,
           spread: 60,
           origin: { y: 0.6 },
-          colors: ['#4E6E3D', '#698E59', '#FAF8F2'],
+          colors: ['#5B7A47', '#4A6538', '#E4EBD6'],
         });
       }
     } catch (err) {
@@ -162,76 +174,103 @@ export const LoanVerificationPage: React.FC = () => {
     setApprovedAmount(80000);
     setDisbursedAmount(80000);
     setDeductions(0);
-    setResult(null);
+    setResult({
+      is_flagged: false,
+      status_label: 'Loan Details Verified',
+      explanation: 'Disbursed amount matches the approved sanction limit exactly.',
+      approved_amount: 80000,
+      disbursed_amount: 80000,
+      deductions: 0,
+      difference: 0,
+      reasons: ['Full sanction disbursed to savings account', 'No unauthorized deductions']
+    });
   };
 
   const loadSampleDiscrepancy = () => {
     setApprovedAmount(80000);
     setDisbursedAmount(70000);
     setDeductions(5000);
-    setResult(null);
+    setResult({
+      is_flagged: true,
+      status_label: 'Discrepancy Detected',
+      explanation: 'The disbursed amount is less than the approved amount.',
+      approved_amount: 80000,
+      disbursed_amount: 70000,
+      deductions: 5000,
+      difference: 10000,
+      reasons: [
+        'Deductions for processing fees',
+        'Incomplete documentation',
+        'Bank policy variation'
+      ]
+    });
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      {/* Top Header bar with Sample toggles */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1 border-b border-warm-border/60">
+        <div className="hidden md:flex items-center gap-3">
           <button
             onClick={() => navigate('/farmer')}
-            className="w-10 h-10 rounded-2xl bg-white border border-warm-border flex items-center justify-center text-gray-700 hover:bg-sage-50 transition-colors shadow-soft"
+            className="w-9 h-9 rounded-full bg-cream-surface border border-warm-border flex items-center justify-center text-charcoal hover:bg-tint transition-colors shadow-soft"
+            aria-label="Back to dashboard"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-800" />
+            <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-              {language === 'hi' ? 'ऋण सत्यापन' : 'Loan Verification'}
+            <h1 className="text-xl font-bold text-charcoal tracking-tight">
+              {language === 'hi' ? 'ऋण सत्यापन (KCC)' : 'Loan Verification'}
             </h1>
-            <p className="text-xs text-gray-500">
-              Check if your loan details match the expected sanction amount
+            <p className="text-xs text-muted">
+              Check if your loan details match the expected amount.
             </p>
           </div>
         </div>
 
-        {/* Quick Sample toggles for judges */}
-        <div className="hidden sm:flex items-center gap-2">
+        {/* Quick Sample toggles for testing */}
+        <div className="flex items-center gap-2 self-end sm:self-center">
           <button
+            type="button"
             onClick={loadSampleDiscrepancy}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-kisan-lightred text-kisan-red border border-kisan-red/30 hover:bg-red-100 transition-colors"
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-status-discrepancy-bg text-status-discrepancy-text border border-status-discrepancy-text/30 hover:opacity-90 transition-all min-h-[36px]"
           >
-            Load ₹10k Discrepancy
+            Sample ₹10k Discrepancy
           </button>
           <button
+            type="button"
             onClick={loadSampleMatch}
-            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-sage-100 text-sage-800 border border-sage-300 hover:bg-sage-200 transition-colors"
+            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-status-eligible-bg text-status-eligible-text border border-status-eligible-text/30 hover:opacity-90 transition-all min-h-[36px]"
           >
-            Load Verified Match
+            Sample Verified Match
           </button>
         </div>
       </div>
 
-      {/* Grid: Form on left, Result on right on desktop */}
+      {/* ============================================================== */}
+      {/* TWO-COLUMN GRID (Desktop Image A) / STACKED (Phone Image B)    */}
+      {/* ============================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Form (7 cols on lg) */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-warm-border shadow-card space-y-4">
+        {/* Left Column: Enter Loan Details Form (7 cols on lg) */}
+        <div className="lg:col-span-7 bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-4">
           <div className="border-b border-warm-border pb-3 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-gray-900">
+              <h2 className="text-base font-bold text-charcoal">
                 Enter Loan Details
               </h2>
-              <p className="text-xs text-gray-500">
-                Inputs are verified deterministically without altering bank records
+              <p className="text-xs text-muted">
+                Deterministic calculations ensure accuracy without changing bank data.
               </p>
             </div>
-            <div className="w-8 h-8 rounded-xl bg-sage-100 text-sage-700 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-tint text-forest flex items-center justify-center">
               <Calculator className="w-4 h-4" />
             </div>
           </div>
 
-          {/* OCR Document Upload Section */}
-          <div className="p-4 rounded-2xl bg-sage-50/60 border border-sage-200/80 space-y-2.5">
+          {/* OCR Document Upload Button (Secondary Outlined) */}
+          <div className="p-3.5 sm:p-4 rounded-xl bg-cream border border-warm-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <input
               type="file"
               ref={fileInputRef}
@@ -240,225 +279,188 @@ export const LoanVerificationPage: React.FC = () => {
               className="hidden"
             />
             
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-1.5 text-xs font-bold text-sage-900">
-                  <Sparkles className="w-4 h-4 text-sage-700" />
-                  <span>Instant OCR Document Extraction</span>
-                </div>
-                <p className="text-[11px] text-sage-700 mt-0.5">
-                  Upload a Loan Sanction Letter or Bank Statement (.pdf, .png, .jpg, max 5 MB).
-                </p>
+            <div>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-charcoal">
+                <Sparkles className="w-3.5 h-3.5 text-forest" />
+                <span>Upload Sanction Letter (PDF/Image)</span>
               </div>
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isOcrLoading}
-                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-sage-700 hover:bg-sage-800 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-soft transition-all cursor-pointer whitespace-nowrap"
-              >
-                {isOcrLoading ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    Extracting data...
-                  </>
-                ) : (
-                  <>
-                    <FileUp className="w-3.5 h-3.5" />
-                    Upload Sanction Letter (PDF/Image)
-                  </>
-                )}
-              </button>
+              <p className="text-[11px] text-muted mt-0.5">
+                Auto-fill fields from sanction document (max 5 MB).
+              </p>
             </div>
 
-            {/* OCR Success Banner */}
-            {ocrSuccessMsg && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-xl text-xs flex items-center justify-between">
-                <span className="flex items-center gap-1.5 font-medium">
-                  <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                  {ocrSuccessMsg}
-                </span>
-                <span className="text-[10px] bg-emerald-200/70 text-emerald-900 px-2 py-0.5 rounded font-semibold ml-2 flex-shrink-0">
-                  Please review
-                </span>
-              </div>
-            )}
-
-            {/* OCR Error / Friendly Fallback Banner */}
-            {ocrError && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2 rounded-xl text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <span>{ocrError}</span>
-              </div>
-            )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isOcrLoading}
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2 bg-cream-surface hover:bg-tint text-charcoal border border-warm-border rounded-xl text-xs font-semibold shadow-soft transition-all min-h-[44px]"
+            >
+              {isOcrLoading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-forest" />
+                  <span>Extracting...</span>
+                </>
+              ) : (
+                <>
+                  <FileUp className="w-3.5 h-3.5 text-forest" />
+                  <span>Choose File</span>
+                </>
+              )}
+            </button>
           </div>
 
+          {/* OCR Success/Error Banner */}
+          {ocrSuccessMsg && (
+            <div className="bg-status-eligible-bg border border-status-eligible-text/20 text-status-eligible-text px-3 py-2 rounded-xl text-xs flex items-center justify-between">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                {ocrSuccessMsg}
+              </span>
+            </div>
+          )}
+          {ocrError && (
+            <div className="bg-status-review-bg border border-status-review-text/30 text-status-review-text px-3 py-2 rounded-xl text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{ocrError}</span>
+            </div>
+          )}
+
+          {/* Form Fields: Label Above Field */}
           <form onSubmit={handleVerify} className="space-y-4">
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Bank Name
-                  {autoFilledFields.includes('bankName') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
-                </label>
-                <select
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('bankName') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
-                >
-                  <option value="State Bank of India">State Bank of India (SBI)</option>
-                  <option value="Chhattisgarh Rajya Gramin Bank">Chhattisgarh Rajya Gramin Bank</option>
-                  <option value="Bank of Baroda">Bank of Baroda</option>
-                  <option value="Punjab National Bank">Punjab National Bank</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Loan Account Reference
-                  {autoFilledFields.includes('loanAccountRef') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
-                </label>
-                <input
-                  type="text"
-                  value={loanAccountRef}
-                  onChange={(e) => setLoanAccountRef(e.target.value)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-mono text-gray-800 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('loanAccountRef') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
-                  required
-                />
-              </div>
+            {/* Bank Name */}
+            <div>
+              <label className="block text-xs font-semibold text-charcoal mb-1.5">
+                Bank Name
+              </label>
+              <select
+                value={bankName}
+                onChange={(e) => setBankName(e.target.value)}
+                className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
+              >
+                <option value="State Bank of India">State Bank of India</option>
+                <option value="Chhattisgarh Rajya Gramin Bank">Chhattisgarh Rajya Gramin Bank</option>
+                <option value="Bank of Baroda">Bank of Baroda</option>
+                <option value="Punjab National Bank">Punjab National Bank</option>
+              </select>
             </div>
 
+            {/* Loan Account Reference */}
+            <div>
+              <label className="block text-xs font-semibold text-charcoal mb-1.5">
+                Loan Account Reference
+              </label>
+              <input
+                type="text"
+                value={loanAccountRef}
+                onChange={(e) => setLoanAccountRef(e.target.value)}
+                className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-mono text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
+                required
+              />
+            </div>
+
+            {/* Approved & Disbursed Amounts (2-cols) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Approved Amount (₹)
-                  {autoFilledFields.includes('approvedAmount') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   step="100"
-                  value={approvedAmount}
+                  value={approvedAmount || ''}
                   onChange={(e) => setApprovedAmount(parseFloat(e.target.value) || 0)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('approvedAmount') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Disbursed Amount (₹)
-                  {autoFilledFields.includes('disbursedAmount') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   step="100"
-                  value={disbursedAmount}
+                  value={disbursedAmount || ''}
                   onChange={(e) => setDisbursedAmount(parseFloat(e.target.value) || 0)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('disbursedAmount') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-bold text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
                   required
                 />
               </div>
             </div>
 
+            {/* Interest Rate & Deductions (2-cols) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Interest Rate (%)
-                  {autoFilledFields.includes('interestRate') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
                 </label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   step="0.1"
-                  value={interestRate}
+                  value={interestRate || ''}
                   onChange={(e) => setInterestRate(parseFloat(e.target.value) || 0)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('interestRate') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Deductions (₹)
-                  {autoFilledFields.includes('deductions') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
                 </label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   step="100"
-                  value={deductions}
+                  value={deductions || ''}
                   onChange={(e) => setDeductions(parseFloat(e.target.value) || 0)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('deductions') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
-                  placeholder="e.g. 5000"
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
+                  placeholder="5,000"
                 />
               </div>
             </div>
 
+            {/* Loan Date & Loan Type (2-cols) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Loan Date
-                  {autoFilledFields.includes('loanDate') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
                 </label>
                 <input
                   type="text"
                   value={loanDate}
                   onChange={(e) => setLoanDate(e.target.value)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('loanDate') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
+                  placeholder="12-03-2024"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-charcoal mb-1.5">
                   Loan Type
-                  {autoFilledFields.includes('loanType') && (
-                    <span className="text-[10px] text-sage-700 bg-sage-100 px-1.5 py-0.5 rounded ml-2 font-normal">Auto-filled</span>
-                  )}
                 </label>
                 <select
                   value={loanType}
                   onChange={(e) => setLoanType(e.target.value)}
-                  className={`w-full px-4 py-2.5 bg-warm-bg rounded-2xl border text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-sage-500 transition-colors ${
-                    autoFilledFields.includes('loanType') ? 'border-sage-400 bg-sage-50/30 ring-1 ring-sage-400' : 'border-warm-border'
-                  }`}
+                  className="w-full px-4 py-3 bg-cream rounded-xl border border-warm-border text-sm font-medium text-charcoal focus:outline-none focus:ring-2 focus:ring-olive transition-colors min-h-[48px]"
                 >
-                  <option value="Crop Loan">Crop Loan (KCC)</option>
-                  <option value="Term Loan">Agricultural Term Loan</option>
-                  <option value="Tractor Loan">Farm Mechanization Loan</option>
+                  <option value="Crop Loan">Crop Loan</option>
+                  <option value="Kisan Credit Card">Kisan Credit Card (KCC)</option>
+                  <option value="Agricultural Term Loan">Agricultural Term Loan</option>
                 </select>
               </div>
             </div>
 
+            {/* Primary Action Button (52px full-width) */}
             <div className="pt-2">
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-12 py-3 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all transform active:scale-98 disabled:opacity-60"
+                className="w-full h-[52px] py-3.5 px-6 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-60 cursor-pointer"
               >
                 {isLoading ? (
                   <span>Checking arithmetic...</span>
@@ -473,69 +475,72 @@ export const LoanVerificationPage: React.FC = () => {
           </form>
         </div>
 
-        {/* Right Result Pane (5 cols on lg) - Matches screenshot layout */}
+        {/* Right Column: Verification Result Panel (5 cols on lg - Image A & Image B) */}
         <div className="lg:col-span-5 space-y-4">
           {result ? (
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-warm-border shadow-card space-y-5 animate-in fade-in duration-300">
+            <div className="bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-5 animate-in fade-in duration-200">
               
-              {/* Alert Banner Card */}
+              {/* Alert Banner Card (Sampled Peach-Red #FCEAE4 / Red #B83227) */}
               {result.is_flagged ? (
-                <div className="p-4 rounded-2xl bg-kisan-lightred border border-kisan-red/25 flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-red-100 border border-red-300 text-kisan-red flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertCircle className="w-5 h-5 text-kisan-red" />
+                <div className="p-4 rounded-xl bg-status-discrepancy-bg border border-status-discrepancy-text/25 flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white text-status-discrepancy-text flex items-center justify-center shrink-0 mt-0.5 shadow-soft">
+                    <AlertCircle className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-kisan-red">
-                      {result.status_label}
+                    <h3 className="text-sm font-bold text-status-discrepancy-text">
+                      {result.status_label || 'Discrepancy Detected'}
                     </h3>
-                    <p className="text-xs text-red-800 mt-0.5 leading-relaxed">
-                      {result.explanation}
+                    <p className="text-xs text-charcoal/80 mt-0.5 leading-relaxed">
+                      {result.explanation || 'The disbursed amount is less than the approved amount.'}
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-2xl bg-[#EDF7ED] border border-[#C8E6C9] flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-green-100 border border-green-300 text-[#2E7D32] flex items-center justify-center shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-5 h-5 text-[#2E7D32]" />
+                <div className="p-4 rounded-xl bg-status-eligible-bg border border-status-eligible-text/25 flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white text-status-eligible-text flex items-center justify-center shrink-0 mt-0.5 shadow-soft">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#2E7D32]">
-                      Your loan details look good!
+                    <h3 className="text-sm font-bold text-status-eligible-text">
+                      Verified
                     </h3>
-                    <p className="text-xs text-green-800 mt-0.5 leading-relaxed">
-                      No major discrepancy found. Disbursed amount matches approved sanction limits.
+                    <p className="text-xs text-charcoal/80 mt-0.5 leading-relaxed">
+                      Disbursed amount matches approved limit.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Arithmetic Breakdown Table */}
+              {/* Table of Approved / Disbursed / Difference */}
               <div className="divide-y divide-warm-border border-y border-warm-border py-1">
                 <div className="flex items-center justify-between py-2.5 text-xs">
-                  <span className="text-gray-500">Approved Amount</span>
-                  <span className="font-bold text-gray-900 text-sm">
+                  <span className="text-muted font-medium">Approved Amount</span>
+                  <span className="font-bold text-charcoal text-sm">
                     ₹ {result.approved_amount.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between py-2.5 text-xs">
-                  <span className="text-gray-500">Disbursed Amount</span>
-                  <span className="font-bold text-gray-900 text-sm">
+                  <span className="text-muted font-medium">Disbursed Amount</span>
+                  <span className="font-bold text-charcoal text-sm">
                     ₹ {result.disbursed_amount.toLocaleString()}
                   </span>
                 </div>
                 {result.deductions > 0 && (
                   <div className="flex items-center justify-between py-2.5 text-xs">
-                    <span className="text-gray-500">Deductions (Fees/Insurance)</span>
-                    <span className="font-semibold text-gray-700">
+                    <span className="text-muted font-medium">Deductions</span>
+                    <span className="font-semibold text-charcoal">
                       ₹ {result.deductions.toLocaleString()}
                     </span>
                   </div>
                 )}
-                <div className="flex items-center justify-between py-3 text-xs">
-                  <span className="font-bold text-gray-900">Difference</span>
+                {/* Difference row highlighted in soft red if discrepancy */}
+                <div className={`flex items-center justify-between py-3 px-2 rounded-lg text-xs ${
+                  result.difference > 0 ? 'bg-status-discrepancy-bg/60' : ''
+                }`}>
+                  <span className="font-bold text-charcoal">Difference</span>
                   <span
                     className={`font-extrabold text-base ${
-                      result.difference > 0 ? 'text-kisan-red' : 'text-[#2E7D32]'
+                      result.difference > 0 ? 'text-status-discrepancy-text' : 'text-status-eligible-text'
                     }`}
                   >
                     ₹ {result.difference.toLocaleString()}
@@ -543,52 +548,52 @@ export const LoanVerificationPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Possible Reasons list (from Blueprint) */}
-              <div>
-                <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">
-                  Possible Reasons (Informational)
-                </h4>
-                <ul className="space-y-1.5 text-xs text-gray-600">
-                  {result.reasons.map((r: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-sage-600 mt-1.5 shrink-0" />
-                      <span>{r}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              {/* Possible Reasons List */}
+              {result.reasons && result.reasons.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-charcoal mb-2">
+                    Possible Reasons
+                  </h4>
+                  <ul className="space-y-1.5 text-xs text-muted">
+                    {result.reasons.map((r: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-forest mt-1.5 shrink-0" />
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-              {/* Action Buttons (Matches Mockup) */}
+              {/* Action Buttons: View Detailed Report & Raise Grievance (Image A & B) */}
               <div className="space-y-2.5 pt-2">
                 <button
+                  type="button"
                   onClick={() => navigate('/farmer/reports')}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all"
+                  className="w-full h-[48px] py-3 px-6 rounded-xl bg-forest hover:bg-forest-dark text-white font-bold text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98"
                 >
                   <FileText className="w-4 h-4" />
                   <span>View Detailed Report</span>
                 </button>
 
-                {result.is_flagged && (
-                  <button
-                    onClick={() => navigate('/farmer/grievance')}
-                    className="w-full py-3 px-6 rounded-2xl bg-white border border-warm-border hover:bg-warm-bg text-gray-800 font-semibold text-sm shadow-soft flex items-center justify-center gap-2 transition-all"
-                  >
-                    <HelpCircle className="w-4 h-4 text-kisan-red" />
-                    <span>Raise a Grievance</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => navigate('/farmer/grievance')}
+                  className="w-full h-[48px] py-3 px-6 rounded-xl bg-cream-surface border border-warm-border hover:bg-tint/40 text-charcoal font-semibold text-sm shadow-soft flex items-center justify-center gap-2 transition-all active:scale-98"
+                >
+                  <Flag className="w-4 h-4 text-status-discrepancy-text" />
+                  <span>Raise a Grievance</span>
+                </button>
               </div>
 
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-8 border border-dashed border-warm-border text-center flex flex-col items-center justify-center min-h-[360px] text-gray-400">
-              <div className="w-16 h-16 rounded-full bg-sage-50 text-sage-600 flex items-center justify-center mb-3">
-                <ShieldCheck className="w-8 h-8 stroke-[1.5]" />
-              </div>
-              <h3 className="text-sm font-bold text-gray-700 mb-1">
+            <div className="bg-cream-surface rounded-2xl p-8 border border-dashed border-warm-border text-center flex flex-col items-center justify-center min-h-[340px] text-muted">
+              <ShieldCheck className="w-12 h-12 text-forest/40 mb-3" />
+              <h3 className="text-sm font-bold text-charcoal mb-1">
                 Awaiting Verification
               </h3>
-              <p className="text-xs max-w-xs leading-relaxed text-gray-500">
+              <p className="text-xs max-w-xs leading-relaxed text-muted">
                 Click <strong>"Check for Discrepancies"</strong> to calculate approved vs disbursed difference.
               </p>
             </div>
