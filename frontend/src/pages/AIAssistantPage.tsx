@@ -8,14 +8,16 @@ import {
   Send, 
   Volume2, 
   VolumeX, 
-  User, 
-  Sparkles, 
   RotateCcw,
-  Info
+  Sparkles,
+  ExternalLink,
+  ShieldCheck,
+  Cpu,
+  ArrowRight
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { sendAiChatApi } from '../services/api';
+import { sendAiChatApi, fetchAiStatusApi, AiChatResponse } from '../services/api';
 import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 
 interface Message {
@@ -24,6 +26,11 @@ interface Message {
   text: string;
   time: string;
   chips?: string[];
+  mode?: 'live' | 'offline';
+  provider?: string;
+  actionLink?: string;
+  actionLabel?: string;
+  sources?: string[];
 }
 
 export const AIAssistantPage: React.FC = () => {
@@ -35,41 +42,69 @@ export const AIAssistantPage: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [aiStatus, setAiStatus] = useState<{
+    provider_configured: boolean;
+    mode: 'live' | 'offline';
+    provider: string;
+    model: string;
+  }>({
+    provider_configured: false,
+    mode: 'offline',
+    provider: 'gemini',
+    model: 'gemini-1.5-flash',
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Initial chat matching the design mockup in Screen 7 & Image A Screen 4
+  // Initial greeting
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: 'm-1',
-      sender: 'user',
-      text: 'Mera crop insurance ka paisa abhi tak nahin aaya, kya karu?',
-      time: '09:41 AM',
-    },
-    {
-      id: 'm-2',
+      id: 'm-init',
       sender: 'assistant',
-      text: 
-        `Aapka crop insurance claim abhi "Under Review" status mein hai. Kripya ye details check karein:\n\n` +
-        `• Farmer ID: ${farmer.farmerId}\n` +
-        `• Crop: ${farmer.crop}\n` +
-        `• Application No: CI20251234\n\n` +
-        `Agar aapko 15 din tak payment nahi milta, to aap apni najdeeki bank branch ya insurance company se sampark kar sakte hain. Aap grievance bhi file kar sakte hain.`,
-      time: '09:41 AM',
-      chips: ['Claim status', 'Required documents', 'Contact details'],
+      text: language === 'hi'
+        ? `नमस्ते ${farmer.name || 'किसान'} जी! मैं आपका किसानवेरीफाई एआई सहायक हूँ।\n\nआप अपनी योजनाओं, ऋण अंतर, एमएसपी भुगतान या फसल बीमा दावे के बारे में पूछ सकते हैं।`
+        : `Namaste ${farmer.name || 'Farmer'}! I am your KisanVerify transparency guide.\n\nAsk me anything about your eligible schemes, loan differences, MSP crop procurement, or crop insurance claims.`,
+      time: 'Just now',
+      chips: [
+        'Eligible schemes',
+        'Loans I can apply for',
+        'Loan difference',
+        'Claim status',
+        'MSP status',
+      ],
+      mode: 'offline',
+      provider: 'template-fallback',
+      sources: ['KisanVerify Citizen Guide'],
+      actionLink: '/farmer',
+      actionLabel: language === 'hi' ? 'डैशबोर्ड देखें' : 'View Dashboard',
     },
   ]);
 
+  // Load AI configuration status
+  useEffect(() => {
+    fetchAiStatusApi().then((status) => {
+      setAiStatus(status);
+    });
+  }, []);
+
   const quickChips = [
-    'Claim status',
-    'Required documents',
-    'Contact details',
+    language === 'hi' ? 'पात्र योजनाएं' : 'Eligible schemes',
+    language === 'hi' ? 'उपलब्ध ऋण' : 'Loans I can apply for',
+    language === 'hi' ? 'ऋण अंतर' : 'Loan difference',
+    language === 'hi' ? 'दावा स्थिति' : 'Claim status',
+    language === 'hi' ? 'एमएसपी स्थिति' : 'MSP status',
+    language === 'hi' ? 'आवश्यक दस्तावेज़' : 'Required documents',
+    language === 'hi' ? 'मंडी भाव' : 'Mandi prices',
+    language === 'hi' ? 'मौसम पूर्वानुमान' : 'Weather forecast',
+    language === 'hi' ? 'सहायता संपर्क' : 'Contact details',
   ];
 
   // Auto-scroll to bottom of chat
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (typeof messagesEndRef.current?.scrollIntoView === 'function') {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
@@ -168,54 +203,49 @@ export const AIAssistantPage: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
+    // Build history of recent turns for conversation context
+    const historyPayload = messages.slice(-8).map((m) => ({
+      role: m.sender === 'user' ? 'user' : 'assistant',
+      content: m.text,
+    }));
+
     try {
-      const response = await sendAiChatApi(textToSend, language, farmer.farmerId);
+      const response: AiChatResponse = await sendAiChatApi(
+        textToSend,
+        language,
+        farmer.farmerId,
+        historyPayload
+      );
 
       const botMsg: Message = {
         id: `a-${Date.now()}`,
         sender: 'assistant',
         text: response.reply,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        chips: ['Claim status', 'Required documents', 'Contact details'],
+        chips: response.suggested_chips || ['Eligible schemes', 'Loan difference', 'Claim status'],
+        mode: response.mode || (response.provider === 'gemini' ? 'live' : 'offline'),
+        provider: response.provider,
+        actionLink: response.action_link,
+        actionLabel: response.action_label,
+        sources: response.source_documents,
       };
 
       setMessages((prev) => [...prev, botMsg]);
-    } catch {
-      // Deterministic bilingual fallback
-      setTimeout(() => {
-        let reply = '';
-        const qLower = textToSend.toLowerCase();
-
-        if (qLower.includes('loan') || qLower.includes('karz') || qLower.includes('rin')) {
-          reply = 
-            `Aapke KCC Loan (SBI Patan) mein ₹10,000 ka difference hai:\n` +
-            `• Approved: ₹80,000\n` +
-            `• Disbursed: ₹70,000\n` +
-            `• Deductions: ₹5,000 (Processing Fee ₹2,000 + PMFBY Bima ₹3,000)\n\n` +
-            `Aap 'My Reports' se Detailed Reconciliation Report download karke bank branch mein verify kar sakte hain.`;
-        } else if (qLower.includes('msp') || qLower.includes('paddy') || qLower.includes('dhan')) {
-          reply = 
-            `Dhan MSP Khareedi (Patan Mandi):\n` +
-            `• Quantity: 50 Quintals @ ₹2,300/qtl\n` +
-            `• Expected: ₹1,15,000 | Received: ₹1,05,000 | Difference: ₹10,000\n\n` +
-            `Moisture discount ya partial tranche ke kaaran yeh antar ho sakta hai. Mandi J-Form check karein.`;
-        } else {
-          reply = 
-            `Aapke records mein 2 items review ke liye hain:\n` +
-            `1. Loan: ₹10,000 difference (Approved ₹80,000 vs Disbursed ₹70,000)\n` +
-            `2. Crop Insurance: ₹10,000 second tranche 'Under Review'\n\n` +
-            `Kisi bhi sujhav ya inquiry ke liye 'Raise a Grievance' par tap karein.`;
-        }
-
-        const botMsg: Message = {
-          id: `a-${Date.now()}`,
-          sender: 'assistant',
-          text: reply,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          chips: ['Claim status', 'Required documents', 'Contact details'],
-        };
-        setMessages((prev) => [...prev, botMsg]);
-      }, 300);
+    } catch (err) {
+      console.error('Failed to get AI response:', err);
+      // Fallback safeguard
+      const fallbackMsg: Message = {
+        id: `a-${Date.now()}`,
+        sender: 'assistant',
+        text: language === 'hi'
+          ? 'माफ़ कीजिए, सर्वर से संपर्क नहीं हो पाया। कृपया नीचे दिए गए विकल्पों में से चुनें या पुनः प्रयास करें।'
+          : "I'm sorry, I could not reach the server right now. Please select one of the options below or try again.",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        chips: ['Eligible schemes', 'Loan difference', 'Claim status'],
+        mode: 'offline',
+        provider: 'template-fallback',
+      };
+      setMessages((prev) => [...prev, fallbackMsg]);
     } finally {
       setIsTyping(false);
     }
@@ -225,7 +255,7 @@ export const AIAssistantPage: React.FC = () => {
     <div className="flex flex-col h-[calc(100dvh-135px)] md:h-[calc(100dvh-130px)] max-w-4xl mx-auto pb-20 md:pb-0">
       
       {/* Top Header */}
-      <div className="hidden md:flex items-center justify-between pb-3 border-b border-warm-border shrink-0">
+      <div className="flex items-center justify-between pb-3 border-b border-warm-border shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/farmer')}
@@ -237,9 +267,30 @@ export const AIAssistantPage: React.FC = () => {
           <div>
             <h1 className="text-xl font-bold text-charcoal tracking-tight flex items-center gap-2">
               <span>{language === 'hi' ? 'एआई सहायक' : 'AI Assistant'}</span>
+              
+              {/* Operational Mode Pill */}
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                aiStatus.mode === 'live' 
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                  : 'bg-sage-100 text-sage-800 border border-sage-200'
+              }`}>
+                {aiStatus.mode === 'live' ? (
+                  <>
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    <span>Live AI</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-3 h-3 text-sage-600" />
+                    <span>Offline Rule Engine</span>
+                  </>
+                )}
+              </span>
             </h1>
             <p className="text-xs text-muted">
-              Ask anything about your schemes, loans, MSP or crop insurance.
+              {language === 'hi' 
+                ? 'सरकारी नीतियों और अपने सत्यापित खातों पर कुछ भी पूछें'
+                : 'Ask anything about your schemes, loans, MSP or crop insurance'}
             </p>
           </div>
         </div>
@@ -248,16 +299,19 @@ export const AIAssistantPage: React.FC = () => {
           onClick={() => {
             setMessages([
               {
-                id: 'm-init',
+                id: 'm-reset',
                 sender: 'assistant',
-                text: 'Namaste! Main aapka KisanVerify AI sahayak hoon. Aap loan, MSP ya crop insurance ke baare mein pooch sakte hain.',
+                text: language === 'hi'
+                  ? 'नमस्ते! किसानवेरीफाई सहायक में आपका स्वागत है। आप योजनाओं, ऋण अंतर, एमएसपी या फसल बीमा के बारे में पूछ सकते हैं।'
+                  : 'Namaste! Welcome back to KisanVerify assistant. Ask me anything about your schemes, loans, MSP, or insurance claims.',
                 time: 'Just now',
-                chips: ['Claim status', 'Required documents', 'Contact details'],
+                chips: ['Eligible schemes', 'Loan difference', 'Claim status', 'MSP status'],
+                mode: 'offline',
               },
             ]);
           }}
           className="text-xs text-muted hover:text-charcoal flex items-center gap-1 min-h-[36px]"
-          title="Clear chat"
+          title="Reset chat"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Reset</span>
@@ -282,15 +336,64 @@ export const AIAssistantPage: React.FC = () => {
 
               {/* Message Bubble */}
               <div
-                className={`max-w-[85%] sm:max-w-md rounded-2xl p-4 sm:p-5 shadow-soft space-y-2 ${
+                className={`max-w-[85%] sm:max-w-md rounded-2xl p-4 sm:p-5 shadow-soft space-y-2.5 ${
                   isUser
                     ? 'bg-forest text-white rounded-br-sm'
                     : 'bg-cream-surface text-charcoal border border-warm-border rounded-bl-sm'
                 }`}
               >
+                {/* Assistant Answered-By Indicator */}
+                {!isUser && (
+                  <div className="flex items-center justify-between border-b border-warm-border/60 pb-1.5 text-[10px]">
+                    <span className="inline-flex items-center gap-1 font-medium text-muted">
+                      {msg.mode === 'live' ? (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Answered by: Live AI</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-sage-500" />
+                          <span>Answered by: Offline mode</span>
+                        </>
+                      )}
+                    </span>
+                    {msg.provider && (
+                      <span className="text-[9px] uppercase tracking-wider text-muted font-mono">
+                        {msg.provider}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <div className="whitespace-pre-line text-xs sm:text-sm leading-relaxed">
                   {msg.text}
                 </div>
+
+                {/* Direct Action Navigation Link if Available */}
+                {!isUser && msg.actionLink && (
+                  <div className="pt-1">
+                    <button
+                      onClick={() => navigate(msg.actionLink!)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-forest text-white text-xs font-semibold hover:bg-forest-dark transition-all shadow-soft active:scale-95"
+                    >
+                      <span>{msg.actionLabel || (language === 'hi' ? 'विवरण देखें' : 'View Details')}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Statutory Sources Attribution */}
+                {!isUser && msg.sources && msg.sources.length > 0 && (
+                  <div className="pt-1 flex flex-wrap items-center gap-1 text-[10px] text-muted">
+                    <span className="font-semibold text-charcoal/80">Source:</span>
+                    {msg.sources.map((src, i) => (
+                      <span key={i} className="bg-cream border border-warm-border px-1.5 py-0.5 rounded text-[10px]">
+                        {src}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Footer: Timestamp & Audio Speak Out */}
                 <div className={`flex items-center justify-between pt-1 text-[10px] ${isUser ? 'text-white/70' : 'text-muted'}`}>
@@ -332,30 +435,30 @@ export const AIAssistantPage: React.FC = () => {
         {isTyping && (
           <div className="flex items-center gap-2 text-muted text-xs p-2">
             <Bot className="w-4 h-4 text-forest animate-pulse" />
-            <span>KisanVerify Assistant is thinking...</span>
+            <span>KisanVerify Assistant is evaluating deterministic facts...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick Suggestion Chips (Image A & Image B) */}
+      {/* Quick Suggestion Chips */}
       <div className="py-2 flex items-center gap-2 overflow-x-auto scrollbar-none shrink-0">
         <span className="text-[11px] font-bold text-muted uppercase tracking-wider shrink-0">
-          Want to know more?
+          {language === 'hi' ? 'सुझाव:' : 'Quick options:'}
         </span>
         {quickChips.map((chip, idx) => (
           <button
             key={idx}
             onClick={() => handleSendMessage(chip)}
-            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-cream-surface border border-warm-border text-charcoal hover:bg-tint/50 transition-all shrink-0 shadow-soft min-h-[36px]"
+            className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-cream-surface border border-warm-border text-charcoal hover:bg-tint/60 hover:border-forest/40 transition-all shrink-0 shadow-soft min-h-[36px]"
           >
             {chip}
           </button>
         ))}
       </div>
 
-      {/* Input Bar with Circular Green Mic (Image A & Image B) */}
+      {/* Input Bar with Circular Green Mic */}
       <div className="pt-2 shrink-0">
         <form
           onSubmit={(e) => {
@@ -368,7 +471,7 @@ export const AIAssistantPage: React.FC = () => {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={isListening ? 'Listening to speech...' : 'Type or speak a question...'}
+            placeholder={isListening ? 'Listening to speech...' : (language === 'hi' ? 'यहाँ अपना प्रश्न लिखें या बोलें...' : 'Type or speak a question...')}
             className="flex-1 bg-transparent px-3 py-2 text-xs sm:text-sm font-medium text-charcoal placeholder-muted focus:outline-none"
           />
 

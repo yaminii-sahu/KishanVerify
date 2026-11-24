@@ -2306,12 +2306,280 @@ export async function fetchVerificationRecordByRefApi(recordRef: string) {
   return null;
 }
 
-export async function sendAiChatApi(message: string, language: string = 'hi', farmerId: string = 'FV12345') {
-  return await apiClient.post<any>('/ai/chat', {
-    message,
-    language,
-    farmer_id: farmerId,
-  });
+export interface AiChatPayload {
+  message: string;
+  language?: string;
+  farmer_id?: string;
+  history?: Array<{ role: string; content: string }>;
+  context_hint?: Record<string, any>;
+}
+
+export interface AiChatResponse {
+  reply: string;
+  reply_language: string;
+  provider: string;
+  mode: 'live' | 'offline';
+  intent: string;
+  suggested_chips: string[];
+  source_documents: string[];
+  action_link?: string;
+  action_label?: string;
+  verified_facts?: string[];
+}
+
+export async function fetchAiStatusApi(): Promise<{
+  provider_configured: boolean;
+  mode: 'live' | 'offline';
+  provider: string;
+  model: string;
+}> {
+  try {
+    return await apiClient.get<any>('/ai/status');
+  } catch {
+    return {
+      provider_configured: false,
+      mode: 'offline',
+      provider: 'gemini',
+      model: 'gemini-1.5-flash',
+    };
+  }
+}
+
+export function getFallbackAiChatResponse(
+  message: string,
+  language: string = 'hi',
+  farmerId: string = 'FV12345',
+  history: Array<{ role: string; content: string }> = []
+): AiChatResponse {
+  const isHi = language === 'hi' || language === 'hindi' || language === 'hinglish';
+  const q = (message || '').toLowerCase().trim();
+
+  // Intent checks
+  if (/^(hlo|hello|hi|hey|helo|namaste|namaskar|pranam)[\s\.\!\?]*$/.test(q) || q === 'hi' || q === 'hello') {
+    return {
+      reply: isHi
+        ? 'नमस्ते रमेश कुमार जी! किसानवेरीफाई में आपका स्वागत है। आज मैं आपकी योजनाओं, ऋण, एमएसपी भुगतान या फसल बीमा में क्या सहायता कर सकता हूँ?'
+        : 'Namaste Ramesh Kumar! Welcome to KisanVerify. How can I assist you today with your schemes, loans, MSP payments, or crop insurance claims?',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'greeting',
+      suggested_chips: ['Eligible schemes', 'Loan difference', 'Claim status', 'MSP status'],
+      source_documents: ['KisanVerify Citizen Guide'],
+      action_link: '/farmer',
+      action_label: isHi ? 'डैशबोर्ड' : 'Dashboard',
+    };
+  }
+
+  if (q.includes('scheme') || q.includes('yojana') || q.includes('eligib') || q.includes('patra')) {
+    return {
+      reply: isHi
+        ? 'आपकी 3.0 एकड़ भूमि और धान की फसल (पाटन, दुर्ग) के आधार पर आप इन योजनाओं के संभावित पात्र हैं:\n\n• पीएम-किसान (PM-KISAN): ₹6,000 प्रति वर्ष (डीबीटी किश्तें)\n• फसल बीमा (PMFBY): ₹50,000/एकड़ तक जोखिम कवर\n• किसान क्रेडिट कार्ड (KCC): 4% रियायती ब्याज दर पर फसल ऋण\n\nनोट: यह सूचनात्मक है; अंतिम स्वीकृति बैंक व कृषि विभाग के सत्यापन पर निर्भर करती है।'
+        : 'Based on your 3.0 acres operational land and paddy crop in Patan, Durg, you may be eligible for:\n\n• PM-KISAN: ₹6,000 / year via DBT installments\n• PMFBY: Up to ₹50,000/acre crop risk insurance\n• Kisan Credit Card (KCC): Production credit at 4% net interest\n\nNote: Eligibility results are informational. Final approval rests with the department upon document verification.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'scheme_eligibility',
+      suggested_chips: ['Required documents', 'Loans I can apply for', 'Claim status', 'MSP status'],
+      source_documents: ['myScheme.gov.in', 'Ministry of Agriculture Circular (2024)'],
+      action_link: '/farmer/schemes',
+      action_label: isHi ? 'योजनाएं देखें' : 'View Schemes',
+    };
+  }
+
+  if (q.includes('apply for loan') || q.includes('loans i can apply') || q.includes('naya loan') || q.includes('new loan')) {
+    return {
+      reply: isHi
+        ? 'उपलब्ध कृषि ऋण विकल्प (पाटन, दुर्ग):\n\n• किसान क्रेडिट कार्ड (KCC): ₹3,00,000 तक सीमा 4% प्रभावी ब्याज दर पर।\n• कृषि सावधि ऋण: बोरवेल व कृषि उपकरणों हेतु दीर्घकालिक ऋण।\n• पशुपालन KCC: डेयरी गतिविधियों हेतु ₹2,00,000 तक सीमा।\n\nआवश्यक दस्तावेज़: आधार कार्ड, खसरा बी-1, बैंक पासबुक और नो-ड्यूज़ प्रमाणपत्र।'
+        : 'Available agricultural loan options:\n\n• Kisan Credit Card (KCC): Production credit up to ₹3,00,000 at 4% net interest.\n• Agri Term Loan: Medium/long term credit for borewell and farm machinery.\n• Animal Husbandry KCC: Working limit up to ₹2,00,000 for dairy.\n\nRequired docs: Aadhaar, Land record (B-1/Khasra), Bank Passbook, No-Dues certificate.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'loan_apply',
+      suggested_chips: ['Required documents', 'Loan difference', 'Eligible schemes', 'Contact details'],
+      source_documents: ['RBI Priority Sector Lending Master Circular', 'JanSamarth Portal'],
+      action_link: '/farmer/loan-verify',
+      action_label: isHi ? 'ऋण देखें' : 'Explore Loans',
+    };
+  }
+
+  if (q.includes('loan') || q.includes('karz') || q.includes('rin') || q.includes('kcc')) {
+    return {
+      reply: isHi
+        ? 'आपके KCC ऋण खाते (एसबीआई पाटन) का सत्यापन:\n\n• स्वीकृत ऋण सीमा: ₹80,000\n• बैंक द्वारा वितरित: ₹70,000\n• अंतर: ₹10,000 (समीक्षा आवश्यक)\n• दर्ज कटौतियां: ₹5,000 (प्रोसेसिंग शुल्क ₹2,000 + फसल बीमा ₹3,000)\n• अव्याख्यायित शेष: ₹5,000\n\nयह किसी दोषारोपण का संकेत नहीं है। बैंक विवरण से सत्यापन के लिए ऑडिट रिपोर्ट देखें।'
+        : 'Your KCC loan record (SBI Patan) verification:\n\n• Approved Limit: ₹80,000\n• Disbursed into Account: ₹70,000\n• Flagged Difference: ₹10,000 (May need review)\n• Recorded Deductions: ₹5,000 (Processing fee ₹2,000 + PMFBY Insurance ₹3,000)\n• Unexplained Balance: ₹5,000\n\nA difference flag does not imply wrongdoing. Download your detailed audit report to verify with your SBI branch.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'loan_status',
+      suggested_chips: ['Required documents', 'MSP status', 'Claim status', 'Raise a grievance'],
+      source_documents: ['SBI Sanction Letter (15 Jan 2024)', 'Bank Account Statement'],
+      action_link: '/farmer/loan-verify',
+      action_label: isHi ? 'ऋण विवरण' : 'Loan Details',
+    };
+  }
+
+  if (q.includes('msp') || q.includes('dhan') || q.includes('paddy') || q.includes('procurement') || q.includes('mandi payment')) {
+    return {
+      reply: isHi
+        ? 'धान एमएसपी उपार्जन भुगतान ऑडिट (पाटन मंडी):\n\n• बेची गई मात्रा: 50 क्विंटल @ ₹2,300/क्विंटल\n• अपेक्षित भुगतान: ₹1,15,000 | प्राप्त राशि: ₹1,05,000\n• अंतर: ₹10,000\n• व्याख्यायित समायोजन: ₹6,525 (हमाली ₹625 + नमी FAQ मानक ₹1,150 + बारदाना ₹750 + पैक्स ऋण ₹4,000)\n• अव्याख्यायित शेष: ₹3,475\n\nअपनी जे-फॉर्म रसीद में नमी और तौल पर्ची की जांच करें।'
+        : 'MSP grain procurement audit (Patan Mandi):\n\n• Delivered Quantity: 50 quintals @ ₹2,300/qtl\n• Gross Expected: ₹1,15,000 | Received: ₹1,05,000\n• Difference: ₹10,000\n• Explained Adjustments: ₹6,525 (Hamali ₹625 + FAQ Moisture cut ₹1,150 + Bardana ₹750 + PACS loan ₹4,000)\n• Unexplained: ₹3,475\n\nCross-check your weighbridge tare slip and J-Form with the Mandi Samiti.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'msp_status',
+      suggested_chips: ['Loan difference', 'Claim status', 'Mandi prices', 'Raise a grievance'],
+      source_documents: ['CACP Kharif Price Policy 2024-25', 'Patan Mandi J-Form Record'],
+      action_link: '/farmer/msp-verify',
+      action_label: isHi ? 'एमएसपी ऑडिट' : 'MSP Audit',
+    };
+  }
+
+  if (q.includes('insurance') || q.includes('bima') || q.includes('claim') || q.includes('pmfby') || q.includes('nuqsaan')) {
+    return {
+      reply: isHi
+        ? 'फसल बीमा (PMFBY) दावा स्थिति (संदर्भ: INS-2024-7711):\n\n• फसल: धान (खरीफ 2024), पाटन, दुर्ग\n• निर्धारित दावा: ₹30,000 | प्राप्त राशि: ₹20,000\n• लंबित शेष: ₹10,000\n• स्थिति: समीक्षाधीन (Under Review - 24 दिन व्यतीत)\n\nकारण: फसल कटाई प्रयोग (CCE) उपज निर्धारण और राज्य सब्सिडी अंश की द्वितीय किश्त प्रशासनिक प्रक्रिया में है।'
+        : 'PMFBY crop insurance claim status (Ref: INS-2024-7711):\n\n• Crop: Paddy (Kharif 2024), Patan, Durg\n• Assessed Claim: ₹30,000 | Received: ₹20,000\n• Pending Balance: ₹10,000\n• Status: Under Review (24 days elapsed)\n\nReason: Crop Cutting Experiment (CCE) block reconciliation and second state subsidy tranche are in administrative processing.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'insurance_claim_status',
+      suggested_chips: ['Required documents', 'Loan difference', 'MSP status', 'Raise a grievance'],
+      source_documents: ['PMFBY Operational Guidelines', 'State Insurance Directorate Record'],
+      action_link: '/farmer/claim-verify',
+      action_label: isHi ? 'दावा ट्रैक करें' : 'Track Claim',
+    };
+  }
+
+  if (q.includes('document') || q.includes('kagaz') || q.includes('dastavej') || q.includes('checklist')) {
+    return {
+      reply: isHi
+        ? 'कृषि योजनाओं, KCC और बीमा हेतु मुख्य दस्तावेज़:\n\n1. आधार कार्ड (बैंक डीबीटी से लिंक)\n2. भूमि अभिलेख (बी-1 / खसरा प्रति)\n3. पटवारी गिरदावरी प्रमाण पत्र\n4. बैंक पासबुक का मुख्य पृष्ठ (IFSC सहित)\n5. मंडी जे-फॉर्म रसीद\n\nवॉल्ट स्थिति: आपका आधार और खसरा अभिलेख पहले से सत्यापित हैं।'
+        : 'Essential documents for agricultural schemes, KCC, and insurance:\n\n1. Aadhaar Card (seeded for DBT)\n2. Land Ownership Record (B-1 / Khasra copy)\n3. Patwari Girdawari Certificate\n4. Bank Passbook front page (with IFSC)\n5. Mandi J-Form procurement slip\n\nVault Status: Your Aadhaar and Land records are already verified.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'required_documents',
+      suggested_chips: ['Eligible schemes', 'Loans I can apply for', 'Loan difference', 'Contact details'],
+      source_documents: ['Department of Agriculture Document Checklist'],
+      action_link: '/farmer/documents',
+      action_label: isHi ? 'दस्तावेज़ वॉल्ट' : 'Document Vault',
+    };
+  }
+
+  if (q.includes('mandi price') || q.includes('mandi bhav') || q.includes('bhav') || q.includes('market price')) {
+    return {
+      reply: isHi
+        ? 'पाटन मंडी (दुर्ग) ताज़ा फसल भाव:\n\n• धान सामान्य: ₹2,280 / क्विंटल (एमएसपी बेंचमार्क: ₹2,300)\n• धान ग्रेड ए: ₹2,320 / क्विंटल\n\nस्रोत: एगमार्कनेट एवं छत्तीसगढ़ राज्य कृषि विपणन बोर्ड।'
+        : 'Patan Mandi (Durg) live commodity prices:\n\n• Paddy Common: ₹2,280 / quintal (MSP Benchmark: ₹2,300)\n• Paddy Grade A: ₹2,320 / quintal\n\nSource: Agmarknet & Chhattisgarh Mandi Board.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'mandi_price',
+      suggested_chips: ['MSP status', 'Weather forecast', 'Nearby office', 'Eligible schemes'],
+      source_documents: ['Agmarknet Daily Market Bulletin'],
+      action_link: '/farmer/mandi',
+      action_label: isHi ? 'मंडी भाव देखें' : 'View Mandi Prices',
+    };
+  }
+
+  if (q.includes('weather') || q.includes('mausam') || q.includes('barish') || q.includes('rain')) {
+    return {
+      reply: isHi
+        ? 'पाटन (दुर्ग) मौसम पूर्वानुमान व कृषि सलाह:\n\n• स्थिति: आंशिक बादल | तापमान: 24°C से 34°C\n• वर्षा संभावना: 10%\n\nकृषि सलाह: खेत तैयारी और खाद छिड़काव के लिए अनुकूल समय है। तेज हवा होने पर कीटनाशक छिड़काव रोकें।'
+        : 'Patan (Durg) weather & agro-advisory:\n\n• Condition: Partly Cloudy | Temp: 24°C to 34°C\n• Rain Chance: 10%\n\nAgro-Advisory: Weather is suitable for field preparation and fertilizer top-dressing. Avoid spraying if winds exceed 15 km/h.',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'weather',
+      suggested_chips: ['Mandi prices', 'MSP status', 'Claim status', 'Nearby office'],
+      source_documents: ['IMD Agro-Meteorological Bulletin'],
+      action_link: '/farmer/weather',
+      action_label: isHi ? 'मौसम देखें' : 'View Weather',
+    };
+  }
+
+  if (q.includes('office') || q.includes('kendra') || q.includes('kvk') || q.includes('najdeeki')) {
+    return {
+      reply: isHi
+        ? 'पाटन (दुर्ग) के निकटतम कृषि कार्यालय:\n\n1. एसबीआई पाटन कृषि शाखा: 2.5 किमी\n2. पाटन कृषि उपज मंडी समिति: 3.0 किमी\n3. उप संचालक कृषि कार्यालय, दुर्ग: 14 किमी\n4. कृषि विज्ञान केंद्र (KVK), अंजोरा: 18 किमी'
+        : 'Nearest agricultural extension offices near Patan (Durg):\n\n1. SBI Patan Branch: 2.5 km\n2. Patan Krishi Upaj Mandi: 3.0 km\n3. Deputy Director Agriculture, Durg: 14 km\n4. Krishi Vigyan Kendra (KVK Durg), Anjora: 18 km',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'nearby_office',
+      suggested_chips: ['Contact details', 'Loan difference', 'MSP status', 'Raise a grievance'],
+      source_documents: ['District Agriculture Directory'],
+      action_link: '/farmer/offices',
+      action_label: isHi ? 'कार्यालय देखें' : 'View Offices',
+    };
+  }
+
+  if (q.includes('grievance') || q.includes('shikayat') || q.includes('complaint')) {
+    return {
+      reply: isHi
+        ? 'शिकायत दर्ज करने के माध्यम:\n\n1. किसानवेरीफाई: नीचे दिए गए लिंक से 1-क्लिक में साक्ष्य रिपोर्ट सहित शिकायत दर्ज करें।\n2. राष्ट्रीय पोर्टल CPGRAMS: pgportal.gov.in\n3. छत्तीसगढ़ जनदर्शन / सीएम हेल्पलाइन: 1100\n4. पीएम-किसान हेल्पलाइन: 155261'
+        : 'How to register a grievance:\n\n1. KisanVerify: Tap the button below to generate a pre-filled evidence report for discrepancies.\n2. Central CPGRAMS: pgportal.gov.in\n3. Chhattisgarh CM Helpline: 1100\n4. PM-KISAN Desk: 155261',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'grievance',
+      suggested_chips: ['Contact details', 'Loan difference', 'Claim status', 'MSP status'],
+      source_documents: ['CPGRAMS Grievance Charter'],
+      action_link: '/farmer/grievance',
+      action_label: isHi ? 'शिकायत दर्ज करें' : 'Raise Grievance',
+    };
+  }
+
+  if (q.includes('contact') || q.includes('helpline') || q.includes('sampark') || q.includes('phone')) {
+    return {
+      reply: isHi
+        ? 'दुर्ग क्षेत्र के मुख्य सहायता हेल्पलाइन नंबर:\n\n• एसबीआई पाटन शाखा: 1800-425-3800\n• पीएम-किसान हेल्पलाइन: 155261\n• फसल बीमा (PMFBY) टोल-फ्री: 1800-180-1551\n• मंडी उपार्जन सहायता: 1967\n• राष्ट्रीय किसान कॉल सेंटर: 1800-180-1551'
+        : 'Key official helplines for Durg / Chhattisgarh:\n\n• SBI Patan Branch: 1800-425-3800\n• PM-KISAN Helpline: 155261\n• Crop Insurance (PMFBY): 1800-180-1551\n• Mandi Procurement Helpline: 1967\n• Kisan Call Center: 1800-180-1551',
+      reply_language: language,
+      provider: 'template-fallback',
+      mode: 'offline',
+      intent: 'contact_help',
+      suggested_chips: ['Nearby office', 'Loan difference', 'Claim status', 'Raise a grievance'],
+      source_documents: ['Lead Bank Agriculture Directory'],
+      action_link: '/farmer/contact',
+      action_label: isHi ? 'संपर्क देखें' : 'View Contacts',
+    };
+  }
+
+  // Unknown fallback
+  return {
+    reply: isHi
+      ? 'माफ़ कीजिए, मैं आपका प्रश्न समझ नहीं पाया। आप मुझसे पूछ सकते हैं:\n\n1. "मुझे कौन सी योजना मिल सकती है?"\n2. "मेरे ऋण में ₹10,000 का अंतर क्यों है?"\n3. "फसल बीमा के लिए कौन से दस्तावेज़ चाहिए?"\n\nया नीचे दिए गए मुख्य विकल्पों में से चुनें:'
+      : "I'm sorry, I couldn't understand your question. You can ask me:\n\n1. 'Which schemes am I eligible for?'\n2. 'Why is there a ₹10,000 difference in my loan?'\n3. 'What documents do I need for crop insurance?'\n\nOr select an option below:",
+    reply_language: language,
+    provider: 'template-fallback',
+    mode: 'offline',
+    intent: 'unknown',
+    suggested_chips: ['Eligible schemes', 'Loan difference', 'Claim status', 'Required documents'],
+    source_documents: ['KisanVerify Help Desk'],
+    action_link: '/farmer',
+    action_label: isHi ? 'सेवाएं देखें' : 'Explore Services',
+  };
+}
+
+export async function sendAiChatApi(
+  message: string,
+  language: string = 'hi',
+  farmerId: string = 'FV12345',
+  history: Array<{ role: string; content: string }> = []
+): Promise<AiChatResponse> {
+  try {
+    return await apiClient.post<AiChatResponse>('/ai/chat', {
+      message,
+      language,
+      farmer_id: farmerId,
+      history,
+    });
+  } catch (err) {
+    console.warn('[AI] Backend chat failed, falling back to deterministic intent engine', err);
+    return getFallbackAiChatResponse(message, language, farmerId, history);
+  }
 }
 
 export async function fileGrievanceApi(payload: {

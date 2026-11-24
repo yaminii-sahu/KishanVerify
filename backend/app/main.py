@@ -36,6 +36,15 @@ async def lifespan(app: FastAPI):
         seed_database()
     except Exception as e:
         print(f"Startup DB auto-init warning: {e}")
+
+    # Startup log stating whether AI provider is configured (without printing secrets)
+    import os
+    gemini_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")
+    if gemini_key and len(gemini_key.strip()) > 10:
+        print(f"[AI Service Startup] LLM provider '{settings.LLM_PROVIDER}' configured with model '{settings.LLM_MODEL}' (Mode: LIVE)")
+    else:
+        print("[AI Service Startup] No GEMINI_API_KEY detected. AI Assistant initialized with deterministic rule engine (Mode: OFFLINE)")
+
     yield
 
 app = FastAPI(
