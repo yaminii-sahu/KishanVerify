@@ -94,6 +94,13 @@ async function handleResponse<T>(res: Response): Promise<T> {
   throw new ApiError(errorMessage, res.status, errorData);
 }
 
+function getActiveLang(): string {
+  if (typeof localStorage !== 'undefined') {
+    return localStorage.getItem('kv_lang') || 'en';
+  }
+  return 'en';
+}
+
 function normalizeUrl(endpoint: string): string {
   if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
     return endpoint;
@@ -101,13 +108,17 @@ function normalizeUrl(endpoint: string): string {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   
   // If endpoint already starts with /api/v1 or /api, avoid duplication
-  if (cleanEndpoint.startsWith('/api/v1')) {
-    return cleanEndpoint;
+  let base = cleanEndpoint;
+  if (!cleanEndpoint.startsWith('/api/v1') && !cleanEndpoint.startsWith('/api/')) {
+    base = `${BASE_API_URL}${cleanEndpoint}`;
   }
-  if (cleanEndpoint.startsWith('/api/')) {
-    return cleanEndpoint;
+
+  // Attach lang query parameter if not already present
+  if (!base.includes('lang=')) {
+    const sep = base.includes('?') ? '&' : '?';
+    return `${base}${sep}lang=${encodeURIComponent(getActiveLang())}`;
   }
-  return `${BASE_API_URL}${cleanEndpoint}`;
+  return base;
 }
 
 export const apiClient = {
@@ -118,6 +129,7 @@ export const apiClient = {
         method: 'GET',
         headers: {
           Accept: 'application/json',
+          'Accept-Language': getActiveLang(),
           ...headers,
         },
       });
@@ -138,6 +150,7 @@ export const apiClient = {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          'Accept-Language': getActiveLang(),
           ...headers,
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -159,6 +172,7 @@ export const apiClient = {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          'Accept-Language': getActiveLang(),
           ...headers,
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -180,6 +194,7 @@ export const apiClient = {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          'Accept-Language': getActiveLang(),
           ...headers,
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,

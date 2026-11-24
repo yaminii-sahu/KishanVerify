@@ -20,12 +20,18 @@ import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { DraftLanguageBanner } from '../components/DraftLanguageBanner';
+import { LanguagePickerModal } from '../components/LanguagePickerModal';
+import { SUPPORTED_LANGUAGES } from '../lib/languages';
+import { Globe } from 'lucide-react';
 
 export const AdminLayout: React.FC = () => {
   const { user, switchRole } = useAuth();
   const { language, toggleLanguage } = useLanguage();
   const navigate = useNavigate();
   const [selectedDistrict, setSelectedDistrict] = useState('Durg');
+  const [langModalOpen, setLangModalOpen] = useState(false);
+
+  const activeLang = SUPPORTED_LANGUAGES.find((l) => l.code === language) || SUPPORTED_LANGUAGES[0];
 
   const navItems = [
     { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -142,6 +148,16 @@ export const AdminLayout: React.FC = () => {
               </select>
             </div>
 
+            {/* Language Selector */}
+            <button
+              onClick={() => setLangModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white border border-warm-border text-charcoal hover:bg-tint/50 transition-colors shadow-soft"
+              aria-label="Select Language"
+            >
+              <Globe className="w-3.5 h-3.5 text-olive" />
+              <span>{activeLang.nativeName}</span>
+            </button>
+
             {/* Quick link back to Farmer */}
             <button
               onClick={() => {
@@ -174,6 +190,11 @@ export const AdminLayout: React.FC = () => {
 
         <Footer hasBottomTabBar={false} />
       </div>
+
+      <LanguagePickerModal
+        isOpen={langModalOpen}
+        onClose={() => setLangModalOpen(false)}
+      />
     </div>
   );
 };

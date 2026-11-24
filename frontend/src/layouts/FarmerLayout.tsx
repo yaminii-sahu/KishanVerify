@@ -28,6 +28,8 @@ import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
 import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 import { Footer } from '../components/Footer';
 import { DraftLanguageBanner } from '../components/DraftLanguageBanner';
+import { LanguagePickerModal } from '../components/LanguagePickerModal';
+import { SUPPORTED_LANGUAGES } from '../lib/languages';
 
 export const FarmerLayout: React.FC = () => {
   const { language, toggleLanguage, t } = useLanguage();
@@ -36,6 +38,9 @@ export const FarmerLayout: React.FC = () => {
   const navigate = useNavigate();
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [langModalOpen, setLangModalOpen] = useState(false);
+
+  const activeLang = SUPPORTED_LANGUAGES.find((l) => l.code === language) || SUPPORTED_LANGUAGES[0];
 
   // Desktop & Tablet Sidebar items (Image A)
   const navItems = [
@@ -173,12 +178,12 @@ export const FarmerLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             {/* Language Switcher */}
             <button
-              onClick={toggleLanguage}
+              onClick={() => setLangModalOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-cream-surface border border-warm-border text-charcoal hover:bg-tint/50 transition-colors shadow-soft min-h-[38px]"
-              aria-label="Switch Language"
+              aria-label="Select Language"
             >
               <Globe className="w-3.5 h-3.5 text-olive" />
-              <span>{language === 'en' ? 'हिंदी' : 'English'}</span>
+              <span>{activeLang.nativeName}</span>
             </button>
 
             {/* Notification Bell */}
@@ -245,11 +250,12 @@ export const FarmerLayout: React.FC = () => {
               <Logo variant="mono-white" showTagline={false} size="sm" />
               <div className="flex items-center gap-2">
                 <button
-                  onClick={toggleLanguage}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors"
-                  aria-label="Toggle language"
+                  onClick={() => setLangModalOpen(true)}
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-white/15 text-white hover:bg-white/25 transition-colors flex items-center gap-1"
+                  aria-label="Select language"
                 >
-                  {language === 'en' ? 'हिंदी' : 'EN'}
+                  <Globe className="w-3 h-3 text-white/80" />
+                  <span>{activeLang.nativeName}</span>
                 </button>
                 <button
                   onClick={() => setNotificationOpen(!notificationOpen)}
@@ -284,10 +290,12 @@ export const FarmerLayout: React.FC = () => {
 
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={toggleLanguage}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-cream-surface border border-warm-border text-charcoal"
+                  onClick={() => setLangModalOpen(true)}
+                  className="px-2.5 py-1 text-[11px] font-bold rounded-full bg-cream-surface border border-warm-border text-charcoal flex items-center gap-1"
+                  aria-label="Select language"
                 >
-                  {language === 'en' ? 'हि' : 'EN'}
+                  <Globe className="w-3 h-3 text-olive" />
+                  <span>{activeLang.code.toUpperCase()}</span>
                 </button>
               </div>
             </div>
@@ -338,6 +346,12 @@ export const FarmerLayout: React.FC = () => {
           );
         })}
       </nav>
+
+      {/* Language Picker Modal */}
+      <LanguagePickerModal
+        isOpen={langModalOpen}
+        onClose={() => setLangModalOpen(false)}
+      />
     </div>
   );
 };

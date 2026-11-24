@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { SUPPORTED_LANGUAGES } from '../lib/languages';
+import { LanguagePickerModal } from '../components/LanguagePickerModal';
 import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 
 export const ProfilePage: React.FC = () => {
@@ -36,7 +38,10 @@ export const ProfilePage: React.FC = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const activeLang = SUPPORTED_LANGUAGES.find((l) => l.code === language) || SUPPORTED_LANGUAGES[0];
 
   const handleToggleAutoRead = () => {
     const nextVal = !autoReadAudio;
@@ -173,18 +178,18 @@ export const ProfilePage: React.FC = () => {
 
         {/* 2. Language */}
         <button
-          onClick={toggleLanguage}
+          onClick={() => setShowLanguageModal(true)}
           className="w-full p-4 flex items-center justify-between text-left hover:bg-tint/30 transition-colors min-h-[52px]"
         >
           <div className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-tint text-forest flex items-center justify-center shrink-0">
               <Globe className="w-4 h-4" />
             </div>
-            <span className="text-sm font-bold text-charcoal">Language</span>
+            <span className="text-sm font-bold text-charcoal">Language / भाषा</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold text-muted">
-              {language === 'en' ? 'English' : 'हिंदी'}
+            <span className="text-xs font-semibold text-forest">
+              {activeLang.nativeName} ({activeLang.englishName})
             </span>
             <ChevronRight className="w-4 h-4 text-muted" />
           </div>
@@ -449,6 +454,12 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Language Picker Modal */}
+      <LanguagePickerModal
+        isOpen={showLanguageModal}
+        onClose={() => setShowLanguageModal(false)}
+      />
 
     </div>
   );

@@ -1,17 +1,36 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/Logo';
 import { useAuth } from '../context/AuthContext';
-import { User, ShieldCheck, ArrowRight } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { SUPPORTED_LANGUAGES } from '../lib/languages';
+import { LanguagePickerModal } from '../components/LanguagePickerModal';
+import { User, ShieldCheck, ArrowRight, Globe } from 'lucide-react';
 
 export const SplashPage: React.FC = () => {
   const navigate = useNavigate();
   const { switchRole } = useAuth();
+  const { language } = useLanguage();
+  const [langModalOpen, setLangModalOpen] = useState(false);
+
+  const activeLang = SUPPORTED_LANGUAGES.find((l) => l.code === language) || SUPPORTED_LANGUAGES[0];
 
   return (
-    <div className="min-h-[100dvh] bg-cream flex flex-col justify-between items-center px-4 py-8 max-w-md mx-auto text-center">
+    <div className="min-h-[100dvh] bg-cream flex flex-col justify-between items-center px-4 py-6 max-w-md mx-auto text-center relative">
+      {/* Top Header Bar with Language Picker */}
+      <div className="w-full flex justify-end pt-2 pb-1">
+        <button
+          onClick={() => setLangModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-cream-surface border border-warm-border text-charcoal hover:bg-tint/60 text-xs font-semibold shadow-soft transition-colors"
+          aria-label="Select Language"
+        >
+          <Globe className="w-3.5 h-3.5 text-forest" />
+          <span>{activeLang.nativeName}</span>
+        </button>
+      </div>
+
       {/* Top Centered Logo & Tagline */}
-      <div className="flex-1 flex flex-col items-center justify-center py-8">
+      <div className="flex-1 flex flex-col items-center justify-center py-6">
         <Logo variant="tile" size="xl" showTagline={true} stacked={true} />
       </div>
 
@@ -52,6 +71,11 @@ export const SplashPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <LanguagePickerModal
+        isOpen={langModalOpen}
+        onClose={() => setLangModalOpen(false)}
+      />
     </div>
   );
 };
