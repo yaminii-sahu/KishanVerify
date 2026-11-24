@@ -23,6 +23,10 @@ if (typeof window !== 'undefined') {
       disconnect() {}
     };
   }
+
+  if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
+    Element.prototype.scrollIntoView = () => {};
+  }
 }
 
 if (typeof global !== 'undefined' && !(global as any).ResizeObserver) {
