@@ -27,6 +27,7 @@ import { useAuth } from '../context/AuthContext';
 import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
 import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 import { Footer } from '../components/Footer';
+import { DraftLanguageBanner } from '../components/DraftLanguageBanner';
 
 export const FarmerLayout: React.FC = () => {
   const { language, toggleLanguage, t } = useLanguage();
@@ -150,6 +151,7 @@ export const FarmerLayout: React.FC = () => {
       {/* MAIN VIEWPORT (Content + Headers + Mobile Nav)                 */}
       {/* ============================================================== */}
       <div className="flex-1 flex flex-col min-w-0">
+        <DraftLanguageBanner />
         
         {/* ============================================================ */}
         {/* DESKTOP TOP HEADER (Namaste Greeting & Controls - Image A)   */}

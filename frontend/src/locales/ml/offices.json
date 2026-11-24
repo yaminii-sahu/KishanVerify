@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  },
+  "title": "Nearby Agricultural & Bank Offices",
+  "subtitle": "Locate official Block Agriculture Offices, Mandi Samitis, KVKs, and Lead Bank Branches.",
+  "distance_km": "{{km}} km away",
+  "get_directions": "Get Directions",
+  "call_office": "Call Office",
+  "office_hours": "Working Hours",
+  "officer_in_charge": "Nodal Officer"
+}

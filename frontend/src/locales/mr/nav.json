@@ -1,0 +1,24 @@
+{
+  "home": "मुख्यपृष्ठ",
+  "schemes": "माझ्या योजना",
+  "loan": "माझे कर्ज",
+  "msp": "हमीभाव (MSP) देयके",
+  "insurance": "पीक विमा",
+  "assistant": "एआय सहाय्यक",
+  "grievances": "तक्रारी",
+  "reports": "माझे अहवाल",
+  "documents": "माझी कागदपत्रे",
+  "mandi": "बाजारभाव",
+  "weather": "हवामान आणि सल्ला",
+  "offices": "जवळची कार्यालये",
+  "contact": "संपर्क केंद्र",
+  "more": "इतर सेवा",
+  "profile": "प्रोफाइल",
+  "dashboard": "बँक / प्रशासक डॅशबोर्ड",
+  "logout": "लॉग आउट",
+  "call_support": "कॉल सहाय्य",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

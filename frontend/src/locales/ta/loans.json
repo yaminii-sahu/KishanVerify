@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  },
+  "title": "Kisan Credit Card (KCC) Loan Verification",
+  "subtitle": "Audit your loan sanction vs. disbursement and transparently verify institutional deductions.",
+  "approved_amount": "Sanctioned / Approved Limit",
+  "disbursed_amount": "Disbursed to Account",
+  "difference": "Total Difference",
+  "unexplained_amount": "Unexplained Difference",
+  "timeline_title": "Loan Event Timeline",
+  "deductions_title": "Itemized Loan Deductions",
+  "sanctioned_vs_actual": "Sanctioned vs. Actual Payout",
+  "basis_of_check": "Basis of this Verification",
+  "audit_note": "Audit Note: Deductions outside statutory circulars may need bank branch verification.",
+  "raise_grievance_btn": "Raise Grievance for Difference",
+  "listen_summary": "Listen to Spoken Summary"
+}

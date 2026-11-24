@@ -1,0 +1,42 @@
+{
+  "app_name": "किसानव्हेरीफाय",
+  "tagline": "प्रत्येक रुपया. प्रत्येक लाभ. पडताळणीकृत.",
+  "demo_badge": "डेमो डेटा",
+  "status": {
+    "verified": "पडताळणीकृत",
+    "needs_review": "पुनरावलोकन आवश्यक",
+    "under_review": "प्रक्रिया सुरू आहे",
+    "discrepancy": "तफावत आढळली",
+    "eligible": "पात्र",
+    "possibly_eligible": "संभाव्य पात्र",
+    "pending": "प्रलंबित",
+    "resolved": "निवारण झाले"
+  },
+  "actions": {
+    "view_details": "तपशील पहा",
+    "verify": "तपासा",
+    "verify_details": "तपशील पडताळा",
+    "download_report": "अहवाल डाउनलोड करा (PDF)",
+    "listen": "ऐका",
+    "raise_grievance": "तक्रार नोंदवा",
+    "submit": "सादर करा",
+    "cancel": "रद्द करा",
+    "confirm": "निश्चित करा",
+    "close": "बंद करा",
+    "reset": "रीसेट करा",
+    "back": "मागे",
+    "filter": "फिल्टर",
+    "search": "शोधा",
+    "retry": "पुन्हा प्रयत्न करा"
+  },
+  "neutral_phrasing": {
+    "may_need_review": "पुनरावलोकन आवश्यक असू शकते",
+    "difference_note": "तफावत ही बँकेत पडताळणीची सूचना आहे, कोणत्याही गैरव्यवहाराचा पुरावा नाही.",
+    "indicative_notice": "निकाल सूचक आहेत. हे मंजुरीची हमी देत नाहीत."
+  },
+  "draft_warning": "मराठी भाषांतर मशीन-निर्मित मसुदा आहे. कृपया आपल्या बँकेशी खात्री करा.",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

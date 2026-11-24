@@ -1,0 +1,19 @@
+{
+  "title": "किसान क्रेडिट कार्ड (KCC) कर्ज पडताळणी",
+  "subtitle": "मंजूर कर्ज आणि जमा रकमेची पडताळणी करा आणि कपाती तपासा.",
+  "approved_amount": "मंजूर कर्ज मर्यादा",
+  "disbursed_amount": "खात्यात जमा रक्कम",
+  "difference": "एकूण तफावत",
+  "unexplained_amount": "अस्पष्ट तफावत",
+  "timeline_title": "कर्ज घटनाक्रम (टाइमलाइन)",
+  "deductions_title": "तपशीलवार कर्ज कपात",
+  "sanctioned_vs_actual": "मंजूर विरूद्ध मिळालेली रक्कम",
+  "basis_of_check": "या पडताळणीचा आधार",
+  "audit_note": "परिपत्रकाव्यतिरिक्त कपातीसाठी बँकेत खात्री करा.",
+  "raise_grievance_btn": "तफावतीसाठी तक्रार नोंदवा",
+  "listen_summary": "ऑडिओ सारांश ऐका",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

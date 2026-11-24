@@ -1,0 +1,13 @@
+{
+  "title": "माझे कागदपत्र व्हॉल्ट",
+  "subtitle": "आधार, ७/१२ उतारा, बँक पासबुक सुरक्षितपणे साठवा आणि पडताळा.",
+  "upload_document": "कागदपत्र अपलोड करा",
+  "verified_status": "अधिकृत पडताळणीकृत",
+  "pending_status": "पडताळणी सुरू आहे",
+  "extracted_data": "ओसीआर द्वारे वाचलेला डेटा",
+  "view_in_vault": "व्हॉल्ट उघडा",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

@@ -76,8 +76,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const lookupKey = hasNamespace ? key : `common:${key}`;
 
     const res = i18nTranslate(lookupKey, options);
-    if (res !== lookupKey) {
-      return res;
+    if (res && res !== lookupKey) {
+      return String(res);
     }
 
     // Direct namespace fallback check
@@ -85,10 +85,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (parts.length === 2) {
       const nsGuess = `${parts[0]}:${parts[1]}`;
       const resNs = i18nTranslate(nsGuess, options);
-      if (resNs !== nsGuess) return resNs;
+      if (resNs && resNs !== nsGuess) return String(resNs);
     }
 
-    return i18nTranslate(key, { ...options, defaultValue: key });
+    return String(i18nTranslate(key, { ...options, defaultValue: key }) || key);
   };
 
   const formatCurrency = (amount: number | null | undefined): string => {

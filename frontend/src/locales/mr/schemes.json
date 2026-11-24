@@ -1,0 +1,15 @@
+{
+  "title": "शासकीय योजना आणि पात्रता तपासणी",
+  "subtitle": "जमीन आणि पिकानुसार आपल्यासाठी पात्र शासकीय योजना शोधा.",
+  "eligible_count": "{{count}} पात्र योजना",
+  "eligible_count_plural": "{{count}} पात्र योजना",
+  "check_eligibility": "पात्रता तपासा",
+  "view_official_guidelines": "अधिकृत मार्गदर्शक तत्त्वे पहा",
+  "deadline": "अंतिम मुदत",
+  "required_documents": "आवश्यक कागदपत्रे",
+  "benefits_summary": "आर्थिक लाभ सारांश",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "title": "माझे पडताळणी अहवाल",
+  "subtitle": "बँक व्यवस्थापकाकडे सादर करण्यासाठी अधिकृत शिक्क्यासह PDF अहवाल डाउनलोड करा.",
+  "download_pdf": "शिक्का असलेला PDF डाउनलोड करा",
+  "report_reference": "अहवाल संदर्भ",
+  "generated_date": "दिनांक",
+  "report_type": "अहवाल प्रकार",
+  "discrepancy_amount": "नोंदवलेली तफावत",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

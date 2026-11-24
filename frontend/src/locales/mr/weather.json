@@ -1,0 +1,13 @@
+{
+  "title": "कृषी हवामान अंदाज आणि सल्ला",
+  "subtitle": "हवामान विभागाचा ५ दिवसांचा अंदाज आणि शेतीविषयक सल्ला.",
+  "temperature": "तापमान",
+  "rainfall": "अपेक्षित पाऊस",
+  "humidity": "हवेतील आर्द्रता",
+  "wind_speed": "वाऱ्याचा वेग",
+  "advisory_title": "शेतीकामासाठी कृषी सल्ला",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

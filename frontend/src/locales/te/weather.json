@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  },
+  "title": "Agro-Weather Forecast & Advisories",
+  "subtitle": "Localized 5-day weather forecasts and crop stage advisory issued by IMD Gramin Krishi Mausam Sewa.",
+  "temperature": "Temperature",
+  "rainfall": "Expected Rainfall",
+  "humidity": "Relative Humidity",
+  "wind_speed": "Wind Speed",
+  "advisory_title": "Agromet Advisory for Field Operations"
+}

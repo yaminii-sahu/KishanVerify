@@ -1,0 +1,13 @@
+{
+  "title": "बाजारभाव आणि दैनिक आवक",
+  "subtitle": "विविध बाजारांमधील सरासरी भाव, आवक आणि हमीभाव तुलना.",
+  "modal_price": "सरासरी भाव",
+  "msp_benchmark": "शासकीय हमीभाव",
+  "arrival_volume": "दैनिक आवक",
+  "price_trend": "भाव कल",
+  "source_agmarknet": "डेटा स्रोत: ॲगमार्कनेट",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

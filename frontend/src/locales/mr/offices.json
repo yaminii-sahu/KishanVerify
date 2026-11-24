@@ -1,0 +1,13 @@
+{
+  "title": "जवळची कृषी आणि बँक कार्यालये",
+  "subtitle": "तालुका कृषी कार्यालय, कृषी उत्पन्न बाजार समिती आणि बँक शाखा.",
+  "distance_km": "{{km}} किमी अंतर",
+  "get_directions": "दिशा दाखवा",
+  "call_office": "कार्यालयाला कॉल करा",
+  "office_hours": "कामाची वेळ",
+  "officer_in_charge": "नोडल अधिकारी",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

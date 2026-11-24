@@ -1,0 +1,20 @@
+{
+  "title": "हमीभाव (MSP) आणि पीक खरेदी देयक पडताळणी",
+  "subtitle": "वजन पावती आणि पोर्टल नोंदीनुसार हमीभाव देयकाचा ताळमेळ घाला.",
+  "expected_payout": "हमीभावानुसार अपेक्षित देयक",
+  "actual_payout": "खात्यात मिळालेले देयक",
+  "difference": "एकूण तफावत",
+  "unexplained_amount": "अस्पष्ट तफावत",
+  "weighbridge_quantity": "वजनकाटा पावती वजन",
+  "portal_quantity": "पोर्टलवरील वजन",
+  "msp_benchmark": "शासकीय हमीभाव दर",
+  "modal_market_price": "बाजारभाव",
+  "timeline_title": "खरेदी ते देयक टाइमलाइन",
+  "quantity_cross_check": "नोंदींमध्ये वजन तपासणी",
+  "itemized_deductions": "तपशीलवार बाजार कपाती",
+  "raise_grievance": "बाजार समितीकडे तक्रार करा",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

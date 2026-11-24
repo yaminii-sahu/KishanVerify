@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  },
+  "home": "Home",
+  "schemes": "My Schemes",
+  "loan": "My Loan",
+  "msp": "MSP Payments",
+  "insurance": "Crop Insurance",
+  "assistant": "AI Assistant",
+  "grievances": "Grievances",
+  "reports": "My Reports",
+  "documents": "My Documents",
+  "mandi": "Mandi Prices",
+  "weather": "Weather Alerts",
+  "offices": "Nearby Offices",
+  "contact": "Contact Us",
+  "more": "More Services",
+  "profile": "Profile",
+  "dashboard": "Bank / Admin Dashboard",
+  "logout": "Logout",
+  "call_support": "Call Support"
+}

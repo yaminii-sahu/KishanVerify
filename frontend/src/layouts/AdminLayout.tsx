@@ -19,6 +19,7 @@ import { Footer } from '../components/Footer';
 import tractorFieldImg from '../assets/illustrations/tractor-field.svg';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { DraftLanguageBanner } from '../components/DraftLanguageBanner';
 
 export const AdminLayout: React.FC = () => {
   const { user, switchRole } = useAuth();
@@ -109,6 +110,7 @@ export const AdminLayout: React.FC = () => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
+        <DraftLanguageBanner />
         {/* Top Header */}
         <header className="sticky top-0 z-30 bg-warm-bg/95 backdrop-blur-md border-b border-warm-border px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">

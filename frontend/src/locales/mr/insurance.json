@@ -1,0 +1,19 @@
+{
+  "title": "पंतप्रधान पीक विमा योजना (PMFBY) दावा पडताळणी",
+  "subtitle": "नुकसान पाहणी, मंजूर दावा आणि दुसऱ्या हप्त्याची स्थिती तपासा.",
+  "sum_insured": "विमा संरक्षित रक्कम",
+  "farmer_premium": "शेतकऱ्याने भरलेला विमा हप्ता",
+  "assessed_loss": "निश्चित नुकसान टक्केवारी",
+  "claim_assessed": "एकूण मंजूर दावा",
+  "claim_received": "मिळालेली दावा रक्कम",
+  "pending_balance": "प्रलंबित हप्ता",
+  "timeline_title": "दावा प्रक्रिया टाइमलाइन",
+  "basis_of_check": "या पडताळणीचा आधार",
+  "reasons_coverage": "कारणे आणि संरक्षणाची व्याप्ती",
+  "download_claim_report": "दावा अहवाल (PDF) डाउनलोड करा",
+  "prefill_grievance": "विमा तक्रार अर्ज भरा",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

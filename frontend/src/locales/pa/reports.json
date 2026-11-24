@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  },
+  "title": "My Verification & Audit Reports",
+  "subtitle": "Download stamped, publication-grade PDF discrepancy reports for submission to bank managers or ombudsmen.",
+  "download_pdf": "Download Stamped PDF",
+  "report_reference": "Report Ref",
+  "generated_date": "Generated Date",
+  "report_type": "Report Category",
+  "discrepancy_amount": "Difference Noted"
+}

@@ -1,0 +1,16 @@
+{
+  "title": "तक्रार निवारण आणि केस ट्रॅकर",
+  "subtitle": "नोंदवलेल्या तक्रारींची प्रगती आणि निवारण स्थिती ट्रॅक करा.",
+  "tab_file": "नवीन तक्रार नोंदवा",
+  "tab_tracker": "केस ट्रॅकर",
+  "record_reference": "नोंद संदर्भ क्रमांक",
+  "issue_summary": "समस्येचा सारांश",
+  "status_step_submitted": "तक्रार नोंदवली",
+  "status_step_nodal": "नोडल अधिकाऱ्याकडे पाठवले",
+  "status_step_hearing": "बँक स्तरावर सुनावणी",
+  "status_step_resolved": "निवारण झाले / रक्कम दुरुस्ती",
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  }
+}

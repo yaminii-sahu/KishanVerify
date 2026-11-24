@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "review_status": "machine_draft",
+    "reviewed_by": null
+  },
+  "title": "Government Schemes & Eligibility Checker",
+  "subtitle": "Discover central and state agricultural welfare schemes matching your landholding and crop profile.",
+  "eligible_count": "{{count}} Eligible Scheme",
+  "eligible_count_plural": "{{count}} Eligible Schemes",
+  "check_eligibility": "Check My Eligibility",
+  "view_official_guidelines": "View Official Guidelines",
+  "deadline": "Application Deadline",
+  "required_documents": "Documents Required",
+  "benefits_summary": "Financial Benefits"
+}
