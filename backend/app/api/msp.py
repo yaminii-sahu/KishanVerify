@@ -19,6 +19,7 @@ from app.services.verification_engine import (
     cross_check_msp_quantities,
     MSPQuantityCrossCheckOutput,
 )
+from app.i18n import get_locale, localize_msp_reason, localize_stage, MSP_REASONS
 
 router = APIRouter(prefix="/msp", tags=["MSP Records & Procurement"])
 
@@ -30,6 +31,7 @@ class MSPTimelineEvent(BaseModel):
     quantity: Optional[float] = None
     description_en: str
     description_hi: str
+    description_localized: Optional[str] = None
     source: str
     data_origin: str
     is_missing_placeholder: bool = False
@@ -59,10 +61,13 @@ class MSPTimelineResponse(BaseModel):
     delay_days: int
     delay_notice_en: Optional[str] = None
     delay_notice_hi: Optional[str] = None
+    delay_notice_localized: Optional[str] = None
     current_stage: str
     current_stage_hi: str
+    current_stage_localized: Optional[str] = None
     events: List[MSPTimelineEvent]
     missing_events_count: int
+    locale: str = "en"
 
 class AdjustmentRuleResponse(BaseModel):
     id: int
@@ -90,7 +95,7 @@ class QuantityCheckRequest(BaseModel):
     portal_ref: Optional[str] = "CG-KRY-****891"
     unit_input: Optional[str] = "quintal"
 
-def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) -> MSPTimelineResponse:
+def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14, locale: str = "en") -> MSPTimelineResponse:
     events = (
         db.query(MSPEvent)
         .filter_by(record_id=msp.id)
@@ -144,8 +149,11 @@ def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) 
             f"बकाया अंतर या रोकी गई कटौतियों की अपने मंडी सचिव या खाद्य व नागरिक आपूर्ति कार्यालय से समीक्षा की जा सकती है।"
         )
 
+    delay_notice_localized = delay_notice_hi if locale == "hi" else delay_notice_en
+
     timeline_events: List[MSPTimelineEvent] = []
     for ev in events:
+        desc_loc = ev.description_hi if locale == "hi" else ev.description_en
         timeline_events.append(
             MSPTimelineEvent(
                 id=ev.id,
@@ -155,6 +163,7 @@ def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) 
                 quantity=ev.quantity,
                 description_en=ev.description_en,
                 description_hi=ev.description_hi,
+                description_localized=desc_loc,
                 source=ev.source,
                 data_origin=ev.data_origin,
                 is_missing_placeholder=False,
@@ -166,6 +175,8 @@ def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) 
     missing_count = 0
     if msp.difference > 0 or msp.status in ["Under Review", "Needs Review", "Possible Discrepancy"]:
         missing_count += 1
+        desc_en = f"Final reconciliation and release of remaining ₹{msp.difference:,.2f} pending itemized audit."
+        desc_hi = f"शेष ₹{msp.difference:,.2f} का अंतिम समायोजन एवं डीबीटी भुगतान ऑडिट पश्चात लंबित।"
         timeline_events.append(
             MSPTimelineEvent(
                 id=None,
@@ -173,8 +184,9 @@ def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) 
                 date="Date Pending",
                 amount=msp.difference,
                 quantity=None,
-                description_en=f"Final reconciliation and release of remaining ₹{msp.difference:,.2f} pending itemized audit.",
-                description_hi=f"शेष ₹{msp.difference:,.2f} का अंतिम समायोजन एवं डीबीटी भुगतान ऑडिट पश्चात लंबित।",
+                description_en=desc_en,
+                description_hi=desc_hi,
+                description_localized=desc_hi if locale == "hi" else desc_en,
                 source="e-Uparjan State Procurement Settlement Portal",
                 data_origin="official",
                 is_missing_placeholder=True,
@@ -194,6 +206,7 @@ def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) 
         if msp.difference > 0
         else "उपार्जन भुगतान पूर्णतः अंतरित"
     )
+    current_stage_localized = current_stage_hi if locale == "hi" else current_stage
 
     return MSPTimelineResponse(
         record_id=msp.id,
@@ -219,10 +232,13 @@ def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) 
         delay_days=delay_days,
         delay_notice_en=delay_notice_en,
         delay_notice_hi=delay_notice_hi,
+        delay_notice_localized=delay_notice_localized,
         current_stage=current_stage,
         current_stage_hi=current_stage_hi,
+        current_stage_localized=current_stage_localized,
         events=timeline_events,
         missing_events_count=missing_count,
+        locale=locale,
     )
 
 @router.get("/rules", response_model=List[AdjustmentRuleResponse])
@@ -272,15 +288,29 @@ def check_quantities_endpoint(req: QuantityCheckRequest):
         unit_input=req.unit_input or "quintal",
     )
 
+@router.get("/reasons")
+def list_msp_reasons(locale: str = Depends(get_locale)):
+    """
+    List all MSP procurement adjustment and payment reason explanations localized.
+    """
+    return [
+        {
+            "code": code,
+            "text": localize_msp_reason(code, locale),
+        }
+        for code in MSP_REASONS.keys()
+    ]
+
 @router.get("/{record_id_or_ref}/timeline", response_model=MSPTimelineResponse)
 def get_msp_timeline(
     record_id_or_ref: str,
     threshold_days: int = Query(14, ge=1, le=180),
+    locale: str = Depends(get_locale),
     db: Session = Depends(get_db)
 ):
     """
     Returns deterministic procurement-to-payment timeline events,
-    current stage, and statutory delay indicators.
+    current stage, statutory delay indicators, and localized strings.
     """
     msp = None
     if record_id_or_ref.isdigit():
@@ -295,7 +325,7 @@ def get_msp_timeline(
     if not msp:
         raise HTTPException(status_code=404, detail="MSP procurement record not found")
 
-    return compute_msp_timeline(msp, db, threshold_days=threshold_days)
+    return compute_msp_timeline(msp, db, threshold_days=threshold_days, locale=locale)
 
 @router.get("/{record_id_or_ref}")
 def get_msp_record_detail(

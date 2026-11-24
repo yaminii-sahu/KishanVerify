@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.models import InsuranceRecord, ClaimEvent, Farmer
+from app.i18n import get_locale, localize_claim_reason, localize_stage, CLAIM_REASONS
 
 router = APIRouter(prefix="/claims", tags=["Crop Insurance Claims & Timeline"])
 
@@ -25,6 +26,7 @@ class ClaimTimelineEvent(BaseModel):
     amount: Optional[float] = None
     description_en: str
     description_hi: str
+    description_localized: Optional[str] = None
     source: str
     data_origin: str
     is_missing_placeholder: bool = False
@@ -50,12 +52,15 @@ class ClaimTimelineResponse(BaseModel):
     is_delayed: bool
     delay_notice_en: Optional[str] = None
     delay_notice_hi: Optional[str] = None
+    delay_notice_localized: Optional[str] = None
     current_stage: str
     current_stage_hi: str
+    current_stage_localized: Optional[str] = None
     events: List[ClaimTimelineEvent]
     missing_events_count: int
+    locale: str = "en"
 
-def compute_claim_timeline(claim: InsuranceRecord, db: Session, threshold_days: int = 21) -> ClaimTimelineResponse:
+def compute_claim_timeline(claim: InsuranceRecord, db: Session, threshold_days: int = 21, locale: str = "en") -> ClaimTimelineResponse:
     events = (
         db.query(ClaimEvent)
         .filter_by(claim_id=claim.id)
@@ -86,8 +91,11 @@ def compute_claim_timeline(claim: InsuranceRecord, db: Session, threshold_days: 
             f"इस दावे की अपने जिला कृषि कार्यालय या बीमा प्रतिनिधि के साथ समीक्षा की जानी चाहिए।"
         )
 
+    delay_notice_localized = delay_notice_hi if locale == "hi" else delay_notice_en
+
     timeline_events: List[ClaimTimelineEvent] = []
     for ev in events:
+        desc_loc = ev.description_hi if locale == "hi" else ev.description_en
         timeline_events.append(
             ClaimTimelineEvent(
                 id=ev.id,
@@ -96,6 +104,7 @@ def compute_claim_timeline(claim: InsuranceRecord, db: Session, threshold_days: 
                 amount=ev.amount,
                 description_en=ev.description_en,
                 description_hi=ev.description_hi,
+                description_localized=desc_loc,
                 source=ev.source,
                 data_origin=ev.data_origin,
                 is_missing_placeholder=False,
@@ -107,14 +116,17 @@ def compute_claim_timeline(claim: InsuranceRecord, db: Session, threshold_days: 
     missing_count = 0
     if claim.difference > 0 or claim.claim_status in ["Under Review", "Needs Review"]:
         missing_count += 1
+        desc_en = f"Secondary tranche credit advice for remaining ₹{claim.difference:,.2f} pending administrative release."
+        desc_hi = f"शेष ₹{claim.difference:,.2f} के लिए द्वितीय किश्त डीबीटी सूचना लंबित।"
         timeline_events.append(
             ClaimTimelineEvent(
                 id=None,
                 event_type="amount_credited",
                 date="Date Pending",
                 amount=claim.difference,
-                description_en=f"Secondary tranche credit advice for remaining ₹{claim.difference:,.2f} pending administrative release.",
-                description_hi=f"शेष ₹{claim.difference:,.2f} के लिए द्वितीय किश्त डीबीटी सूचना लंबित।",
+                description_en=desc_en,
+                description_hi=desc_hi,
+                description_localized=desc_hi if locale == "hi" else desc_en,
                 source="PMFBY State Clearing Portal",
                 data_origin="official",
                 is_missing_placeholder=True,
@@ -134,6 +146,7 @@ def compute_claim_timeline(claim: InsuranceRecord, db: Session, threshold_days: 
         if claim.difference > 0
         else "दावा पूर्णतः निस्तारित"
     )
+    current_stage_localized = current_stage_hi if locale == "hi" else current_stage
 
     return ClaimTimelineResponse(
         claim_id=claim.id,
@@ -155,21 +168,39 @@ def compute_claim_timeline(claim: InsuranceRecord, db: Session, threshold_days: 
         is_delayed=is_delayed,
         delay_notice_en=delay_notice_en,
         delay_notice_hi=delay_notice_hi,
+        delay_notice_localized=delay_notice_localized,
         current_stage=current_stage,
         current_stage_hi=current_stage_hi,
+        current_stage_localized=current_stage_localized,
         events=timeline_events,
         missing_events_count=missing_count,
+        locale=locale,
     )
+
+@router.get("/reasons")
+def list_claim_reasons(locale: str = Depends(get_locale)):
+    """
+    List all PMFBY claim reason codes localized in the requested language.
+    """
+    return [localize_claim_reason(code, locale) for code in CLAIM_REASONS.keys()]
+
+@router.get("/reasons/{code}")
+def get_claim_reason_detail(code: str, locale: str = Depends(get_locale)):
+    """
+    Get detailed localized explanation and corrective action for a specific PMFBY reason code.
+    """
+    return localize_claim_reason(code, locale)
 
 @router.get("/{claim_identifier}/timeline", response_model=ClaimTimelineResponse)
 def get_claim_timeline(
     claim_identifier: str,
     threshold_days: int = Query(21, description="Threshold days before flagging stage delay"),
+    locale: str = Depends(get_locale),
     db: Session = Depends(get_db),
 ):
     """
     Retrieve chronological timeline of insurance claim events with running progress,
-    current stage indicators, and delay detection.
+    current stage indicators, delay detection, and localized text.
     """
     claim = None
     if claim_identifier.isdigit():
@@ -178,13 +209,12 @@ def get_claim_timeline(
         claim = db.query(InsuranceRecord).filter_by(insurance_ref=claim_identifier).first()
 
     if not claim:
-        # Fallback to default demo claim if not found
         claim = db.query(InsuranceRecord).first()
 
     if not claim:
         raise HTTPException(status_code=404, detail="Crop insurance claim record not found")
 
-    return compute_claim_timeline(claim, db, threshold_days=threshold_days)
+    return compute_claim_timeline(claim, db, threshold_days=threshold_days, locale=locale)
 
 @router.get("/farmer/{farmer_id}")
 def list_farmer_claims(farmer_id: str, db: Session = Depends(get_db)):

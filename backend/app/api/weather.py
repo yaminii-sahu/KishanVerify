@@ -1,9 +1,10 @@
 import os
 import time
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from pydantic import BaseModel
 import httpx
+from app.i18n import get_locale, localize_weather_advisory
 
 router = APIRouter(prefix="/weather", tags=["Weather Forecasts & Agro-Advisories"])
 
@@ -243,6 +244,16 @@ def get_seeded_weather_fallback(lat: float, lon: float, district: str, state: st
         "disclaimer": "KisanVerify agricultural advisories are deterministic decision-support suggestions for farmers. Always verify with India Meteorological Department (mausam.imd.gov.in) for statutory disaster alerts.",
     }
 
+def enrich_advisories_with_locale(advisories: List[Dict[str, Any]], locale: str) -> List[Dict[str, Any]]:
+    enriched = []
+    for adv in advisories:
+        adv_copy = dict(adv)
+        loc = localize_weather_advisory(adv.get("id", ""), locale)
+        adv_copy["title_localized"] = loc["title"] or adv.get("title", "")
+        adv_copy["action_localized"] = loc["action"] or adv.get("action", "")
+        enriched.append(adv_copy)
+    return enriched
+
 @router.get("")
 @router.get("/")
 def get_weather(
@@ -250,6 +261,7 @@ def get_weather(
     lon: float = Query(DEFAULT_LON, description="Longitude"),
     district: str = Query("Durg", description="District name"),
     state: str = Query("Chhattisgarh", description="State name"),
+    locale: str = Depends(get_locale),
 ):
     """
     Returns live Open-Meteo forecast or cached seed fallback, coupled with deterministic agricultural advisories.
@@ -258,7 +270,10 @@ def get_weather(
     now = time.time()
 
     if cache_key in _weather_cache and (now - _weather_cache[cache_key]["timestamp"] < CACHE_TTL):
-        return _weather_cache[cache_key]["data"]
+        cached = dict(_weather_cache[cache_key]["data"])
+        cached["advisories"] = enrich_advisories_with_locale(cached.get("advisories", []), locale)
+        cached["locale"] = locale
+        return cached
 
     # Try live Open-Meteo API (free, no API key required)
     open_meteo_url = "https://api.open-meteo.com/v1/forecast"
@@ -353,11 +368,17 @@ def get_weather(
                     "disclaimer": "KisanVerify agricultural advisories are deterministic decision-support suggestions for farmers. Always verify with India Meteorological Department (mausam.imd.gov.in) for statutory disaster alerts.",
                 }
 
+                result["locale"] = locale
                 _weather_cache[cache_key] = {"data": result, "timestamp": now}
-                return result
+                result_copy = dict(result)
+                result_copy["advisories"] = enrich_advisories_with_locale(result.get("advisories", []), locale)
+                return result_copy
     except Exception as e:
         print(f"Open-Meteo live API notice: {e}, using seeded agro-advisory fallback")
 
     fallback_data = get_seeded_weather_fallback(lat, lon, district, state)
+    fallback_data["locale"] = locale
     _weather_cache[cache_key] = {"data": fallback_data, "timestamp": now}
-    return fallback_data
+    fallback_copy = dict(fallback_data)
+    fallback_copy["advisories"] = enrich_advisories_with_locale(fallback_data.get("advisories", []), locale)
+    return fallback_copy

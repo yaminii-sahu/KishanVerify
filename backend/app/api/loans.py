@@ -12,6 +12,7 @@ from app.services.loan_eligibility import (
     DocumentCheckItem,
 )
 from app.services.verification_engine import verify_loan
+from app.i18n import get_locale, localize_loan_reason, LOAN_REASONS
 
 router = APIRouter(prefix="/loans", tags=["Loans & Loan Products"])
 
@@ -62,6 +63,7 @@ class LoanItemResponse(BaseModel):
     verification_status: str # "Verified", "Needs Review", "Not Verified"
     reason_codes: List[str]
     reasons: List[str]
+    reasons_localized: Optional[List[str]] = None
     loan_date: str
     last_verified_at: Optional[str] = None
     sanction_doc_name: Optional[str] = None
@@ -289,10 +291,24 @@ def get_loan_product_detail(
         eligibility=elig,
     )
 
+@router.get("/reasons")
+def list_loan_reasons(locale: str = Depends(get_locale)):
+    """
+    List all loan discrepancy and statutory rule reasons localized.
+    """
+    return [
+        {
+            "code": code,
+            "text": localize_loan_reason(code, locale),
+        }
+        for code in LOAN_REASONS.keys()
+    ]
+
 @router.get("/me", response_model=MyLoansResponse)
 def get_my_loans(
     farmer_id: Optional[str] = Query("FV12345", description="Current logged in farmer ID"),
     status: Optional[str] = Query(None, description="Filter by status: Verified, Needs Review, Not Verified"),
+    locale: str = Depends(get_locale),
     db: Session = Depends(get_db)
 ):
     """
@@ -317,6 +333,9 @@ def get_my_loans(
             if eff_status.lower() != status.strip().lower():
                 continue
 
+        raw_reasons = l.reasons or []
+        localized_reasons = [localize_loan_reason(r, locale) for r in raw_reasons]
+
         loan_items.append(
             LoanItemResponse(
                 id=l.id,
@@ -332,7 +351,8 @@ def get_my_loans(
                 status=l.status or eff_status,
                 verification_status=eff_status,
                 reason_codes=l.reason_codes or [],
-                reasons=l.reasons or [],
+                reasons=raw_reasons,
+                reasons_localized=localized_reasons,
                 loan_date=l.loan_date or "N/A",
                 last_verified_at=l.last_verified_at,
                 sanction_doc_name=l.sanction_doc_name,

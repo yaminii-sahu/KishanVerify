@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.models import Office
+from app.i18n import get_locale, localize_office_type
 
 router = APIRouter(prefix="/offices", tags=["Offices"])
 
@@ -28,6 +29,7 @@ class OfficeSchema(BaseModel):
     name: str
     name_hi: Optional[str] = None
     office_type: str
+    office_type_localized: Optional[str] = None
     category_label: Optional[str] = None
     address: str
     district: str
@@ -61,6 +63,7 @@ def get_nearby_offices(
     office_type: Optional[str] = Query(None, description="Filter by office type (KVK, APMC, DDA, Soil Lab, CSC, Bank)"),
     radius_km: Optional[float] = Query(100.0, description="Max radius in km"),
     limit: int = Query(30, ge=1, le=100),
+    locale: str = Depends(get_locale),
     db: Session = Depends(get_db),
 ):
     query = db.query(Office)
@@ -95,6 +98,7 @@ def get_nearby_offices(
             name=office.name,
             name_hi=office.name_hi,
             office_type=office.office_type,
+            office_type_localized=localize_office_type(office.office_type, locale),
             category_label=office.category_label,
             address=office.address,
             district=office.district,
