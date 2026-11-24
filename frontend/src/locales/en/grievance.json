@@ -1,0 +1,13 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "title": "Grievance Redressal & Case Tracker",
+  "subtitle": "Track your formal representations and dispute resolution progress with lead banks and nodal departments.",
+  "tab_file": "File New Grievance",
+  "tab_tracker": "Case Tracker",
+  "record_reference": "Record Reference Number",
+  "issue_summary": "Issue Summary",
+  "status_step_submitted": "Grievance Registered",
+  "status_step_nodal": "Assigned to Nodal Officer",
+  "status_step_hearing": "Bank Hearing / Inspection",
+  "status_step_resolved": "Resolved / Credit Rectified"
+}

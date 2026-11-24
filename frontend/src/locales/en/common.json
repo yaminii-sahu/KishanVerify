@@ -1,0 +1,39 @@
+{
+  "_meta": { "review_status": "reviewed", "reviewed_by": "KisanVerify Core Team" },
+  "app_name": "KisanVerify",
+  "tagline": "Every rupee. Every benefit. Verified.",
+  "demo_badge": "Demo Data",
+  "status": {
+    "verified": "Verified",
+    "needs_review": "Needs Review",
+    "under_review": "Under Review",
+    "discrepancy": "Discrepancy Detected",
+    "eligible": "Eligible",
+    "possibly_eligible": "Possibly Eligible",
+    "pending": "Pending",
+    "resolved": "Resolved"
+  },
+  "actions": {
+    "view_details": "View Details",
+    "verify": "Verify",
+    "verify_details": "Verify Details",
+    "download_report": "Download Report (PDF)",
+    "listen": "Listen",
+    "raise_grievance": "Raise a Grievance",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "reset": "Reset",
+    "back": "Back",
+    "filter": "Filter",
+    "search": "Search",
+    "retry": "Try Again"
+  },
+  "neutral_phrasing": {
+    "may_need_review": "may need review",
+    "difference_note": "A difference flag is an invitation for transparent review, not proof of wrongdoing.",
+    "indicative_notice": "Results are indicative and represent potential eligibility. They do not constitute a guarantee of approval."
+  },
+  "draft_warning": "Translation may contain errors. Please verify with your bank branch or the official portal."
+}

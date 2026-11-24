@@ -1,0 +1,12 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "title": "सरकारी योजनाएं एवं पात्रता जांच",
+  "subtitle": "अपनी भूमि, श्रेणी और फसल विवरण के आधार पर पात्र केंद्रीय व राज्य कृषि कल्याण योजनाएं खोजें।",
+  "eligible_count": "{{count}} पात्र योजना",
+  "eligible_count_plural": "{{count}} पात्र योजनाएं",
+  "check_eligibility": "अपनी पात्रता जांचें",
+  "view_official_guidelines": "आधिकारिक दिशानिर्देश देखें",
+  "deadline": "आवेदन की अंतिम तिथि",
+  "required_documents": "आवश्यक दस्तावेज़",
+  "benefits_summary": "वित्तीय लाभ सारांश"
+}

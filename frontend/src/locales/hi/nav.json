@@ -1,0 +1,21 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "home": "होम",
+  "schemes": "मेरी योजनाएं",
+  "loan": "मेरा ऋण",
+  "msp": "एमएसपी भुगतान",
+  "insurance": "फसल बीमा",
+  "assistant": "एआई सहायक",
+  "grievances": "शिकायतें",
+  "reports": "मेरी रिपोर्ट्स",
+  "documents": "मेरे दस्तावेज़",
+  "mandi": "मंडी भाव",
+  "weather": "मौसम और सलाह",
+  "offices": "निकटतम कार्यालय",
+  "contact": "संपर्क केंद्र",
+  "more": "अन्य सेवाएं",
+  "profile": "प्रोफ़ाइल",
+  "dashboard": "बैंक / एडमिन डैशबोर्ड",
+  "logout": "लॉग आउट",
+  "call_support": "कॉल सहायता"
+}

@@ -1,6 +1,19 @@
 export type Role = 'farmer' | 'admin' | 'guest';
 
-export type Language = 'en' | 'hi';
+export type SupportedLanguage = 
+  | 'en' 
+  | 'hi' 
+  | 'mr' 
+  | 'gu' 
+  | 'pa' 
+  | 'bn' 
+  | 'or' 
+  | 'ta' 
+  | 'te' 
+  | 'kn' 
+  | 'ml';
+
+export type Language = SupportedLanguage | string;
 
 export interface User {
   id: string;

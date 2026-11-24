@@ -1,0 +1,39 @@
+{
+  "_meta": { "review_status": "reviewed", "reviewed_by": "KisanVerify Core Team" },
+  "app_name": "किसानवेरीफाई",
+  "tagline": "हर रुपया। हर लाभ। सत्यापित।",
+  "demo_badge": "डेमो डेटा",
+  "status": {
+    "verified": "सत्यापित",
+    "needs_review": "समीक्षा आवश्यक",
+    "under_review": "प्रक्रियाधीन",
+    "discrepancy": "अंतर पाया गया",
+    "eligible": "पात्र",
+    "possibly_eligible": "संभावित पात्र",
+    "pending": "लंबित",
+    "resolved": "समाधानित"
+  },
+  "actions": {
+    "view_details": "विवरण देखें",
+    "verify": "जांचें",
+    "verify_details": "विवरण सत्यापित करें",
+    "download_report": "रिपोर्ट डाउनलोड करें (PDF)",
+    "listen": "सुनें",
+    "raise_grievance": "शिकायत दर्ज करें",
+    "submit": "जमा करें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "close": "बंद करें",
+    "reset": "रीसेट",
+    "back": "वापस",
+    "filter": "फ़िल्टर",
+    "search": "खोजें",
+    "retry": "पुनः प्रयास करें"
+  },
+  "neutral_phrasing": {
+    "may_need_review": "समीक्षा की जा सकती है",
+    "difference_note": "अंतर का संकेत पारदर्शी बैंक समीक्षा का आमंत्रण है, किसी गड़बड़ी का प्रमाण नहीं।",
+    "indicative_notice": "परिणाम सांकेतिक हैं और संभावित पात्रता दर्शाते हैं। ये स्वीकृति की कानूनी गारंटी नहीं हैं।"
+  },
+  "draft_warning": "यह अनुवाद मशीन-निर्मित हो सकता है। कृपया अपने बैंक अथवा आधिकारिक पोर्टल से पुष्टि करें।"
+}

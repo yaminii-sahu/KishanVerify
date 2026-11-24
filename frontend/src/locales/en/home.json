@@ -1,0 +1,15 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "greeting": "Namaste, {{name}} 👋",
+  "summary_sub": "Here's your agricultural benefit summary",
+  "hero_title": "Know your benefits. Verify your money.",
+  "hero_sub": "Check your loans, subsidies, MSP and insurance in one place.",
+  "ask_voice": "Ask in your language",
+  "tap_mic": "Tap the mic and speak",
+  "call_support_cta": "Call Support",
+  "attention_banner_one": "{{count}} Record Needs Attention",
+  "attention_banner_other": "{{count}} Records Need Attention",
+  "attention_sub": "There are differences flagged for institutional review in your records.",
+  "daily_agri_services": "Daily Agri Services",
+  "core_guarantee": "Core Guarantee: All financial math is calculated deterministically. A discrepancy flag is an invitation for transparent bank review, not proof of wrongdoing."
+}

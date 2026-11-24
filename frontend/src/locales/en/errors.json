@@ -1,0 +1,9 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "network_error": "Connection issue. Retrying with verified offline data...",
+  "session_expired": "Your session has expired. Please log in again.",
+  "not_found": "The requested record could not be found.",
+  "rate_limit_exceeded": "Rate limit reached. Please wait a few moments before trying again.",
+  "mic_permission_denied": "Microphone permission was denied. Please allow microphone access in your browser settings.",
+  "audio_unsupported": "Audio is not available in this language yet. A text transcript is provided below."
+}

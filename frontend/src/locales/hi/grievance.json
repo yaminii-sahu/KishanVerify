@@ -1,0 +1,13 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "title": "शिकायत निवारण एवं केस ट्रैकर",
+  "subtitle": "अग्रणी बैंक और नोडल विभागों में दर्ज शिकायतों की प्रगति और समाधान की स्थिति ट्रैक करें।",
+  "tab_file": "नई शिकायत दर्ज करें",
+  "tab_tracker": "केस ट्रैकर",
+  "record_reference": "रिकॉर्ड संदर्भ संख्या",
+  "issue_summary": "समस्या का विवरण",
+  "status_step_submitted": "शिकायत दर्ज",
+  "status_step_nodal": "नोडल अधिकारी को प्रेषित",
+  "status_step_hearing": "बैंक स्तर पर समीक्षा/सुनवाई",
+  "status_step_resolved": "समाधानित / राशि सुधार"
+}

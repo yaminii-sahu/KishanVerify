@@ -1,0 +1,17 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "title": "MSP & Crop Procurement Payment Verification",
+  "subtitle": "Verify government Minimum Support Price grain payments against delivery receipts.",
+  "expected_payout": "Expected Payment at Official MSP",
+  "actual_payout": "Actual Payment Received",
+  "difference": "Total Difference",
+  "unexplained_amount": "Unexplained Difference",
+  "weighbridge_quantity": "Weighbridge Quantity",
+  "portal_quantity": "Portal Recorded Quantity",
+  "msp_benchmark": "Official MSP Rate",
+  "modal_market_price": "Mandi Modal Price",
+  "timeline_title": "Procurement to Payment Timeline",
+  "quantity_cross_check": "Quantity Check Across Records",
+  "itemized_deductions": "Itemized Mandi Deductions",
+  "raise_grievance": "File Representation to Mandi Samiti"
+}

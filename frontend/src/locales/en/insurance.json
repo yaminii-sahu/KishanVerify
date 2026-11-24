@@ -1,0 +1,16 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "title": "PMFBY Crop Insurance Claim Verification",
+  "subtitle": "Track loss survey assessments, approved claims, and second installment tranches.",
+  "sum_insured": "Sum Insured (Coverage)",
+  "farmer_premium": "Farmer Premium Paid",
+  "assessed_loss": "Assessed Loss Percentage",
+  "claim_assessed": "Assessed Claim Entitlement",
+  "claim_received": "Claim Amount Received",
+  "pending_balance": "Pending Tranche Under Review",
+  "timeline_title": "Claim Processing Timeline",
+  "basis_of_check": "Basis of this Verification",
+  "reasons_coverage": "Reason Codes & Coverage Scope",
+  "download_claim_report": "Download Claim Audit PDF",
+  "prefill_grievance": "Prefill PMFBY Grievance"
+}

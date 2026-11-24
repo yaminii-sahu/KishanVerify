@@ -1,0 +1,10 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "title": "My Document Vault",
+  "subtitle": "Securely store and verify Aadhaar, Land Records (Khasra B-1), Bank Passbook, and Girdawari.",
+  "upload_document": "Upload Document",
+  "verified_status": "Officially Verified",
+  "pending_status": "Pending Verification",
+  "extracted_data": "Extracted OCR Data",
+  "view_in_vault": "Open Vault"
+}

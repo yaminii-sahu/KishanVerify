@@ -1,0 +1,10 @@
+{
+  "_meta": { "review_status": "reviewed" },
+  "title": "Mandi Prices & Live Arrivals",
+  "subtitle": "Daily modal prices, arrival volumes, and official MSP benchmark comparisons across mandis.",
+  "modal_price": "Modal Price",
+  "msp_benchmark": "Official MSP Benchmark",
+  "arrival_volume": "Daily Arrivals",
+  "price_trend": "Price Trend",
+  "source_agmarknet": "Data source: Agmarknet (Ministry of Agriculture & Farmers Welfare)"
+}
