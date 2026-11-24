@@ -127,18 +127,66 @@ class MSPRecord(Base):
     record_ref = Column(String(50), unique=True, index=True, nullable=False)
     farmer_id = Column(Integer, ForeignKey("farmers.id"), nullable=False)
     crop = Column(String(50), nullable=False)
+    variety_grade = Column(String(50), default="Common")
+    season = Column(String(50), default="Kharif 2024-25")
+    year = Column(String(20), default="2024")
+    state = Column(String(100), default="Chhattisgarh")
+    procurement_center = Column(String(100), default="Patan Krishi Upaj Mandi")
+    farmer_reg_id_masked = Column(String(50), default="CG-KRY-****891")
+    receipt_no_masked = Column(String(50), default="REC-PTN-****441")
     quantity_quintals = Column(Float, nullable=False)
-    msp_rate = Column(Float, nullable=False) # Rate per quintal e.g. 2300
+    weight_slip_quantity = Column(Float, nullable=True)
+    recorded_quantity = Column(Float, nullable=True)
+    msp_rate = Column(Float, nullable=False)  # Statutory rate per quintal e.g. 2300
+    state_bonus_per_quintal = Column(Float, default=0.0)
     expected_payment = Column(Float, nullable=False)
     actual_payment = Column(Float, nullable=False)
     difference = Column(Float, default=0.0)
-    status = Column(String(50), default="Verified") # "Verified", "Needs Review", "Possible Discrepancy"
-    procurement_center = Column(String(100), default="Patan Mandi")
+    status = Column(String(50), default="Needs Review")  # "Verified", "Needs Review", "Possible Discrepancy"
     payment_date = Column(String(50), nullable=False)
     reasons = Column(JSON, default=list)
+    adjustments = Column(JSON, default=list)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     farmer = relationship("Farmer", back_populates="msp_records")
+    events = relationship("MSPEvent", back_populates="msp_record", cascade="all, delete-orphan", order_by="MSPEvent.date")
+
+class MSPEvent(Base):
+    __tablename__ = "msp_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    record_id = Column(Integer, ForeignKey("msp_records.id"), nullable=False)
+    event_type = Column(String(50), nullable=False)  # registered, produce_delivered, quality_checked, weighed, procurement_recorded, payment_initiated, payment_credited, payment_failed, query_raised, note
+    date = Column(String(50), nullable=False)
+    amount = Column(Float, nullable=True)
+    quantity = Column(Float, nullable=True)
+    description_en = Column(String(255), nullable=False)
+    description_hi = Column(String(255), nullable=False)
+    source = Column(String(100), default="APMC Mandi e-NAM Portal")
+    data_origin = Column(String(50), default="official")  # official, procurement_record, user_entered, demo
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    msp_record = relationship("MSPRecord", back_populates="events")
+
+class AdjustmentRule(Base):
+    __tablename__ = "adjustment_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    rule_code = Column(String(50), unique=True, index=True, nullable=False)
+    name = Column(String(100), nullable=False)
+    name_hi = Column(String(100), nullable=False)
+    category = Column(String(50), nullable=False)  # mandi_fee, commission, hamali, transport, bardana, quality_cut, loan_recovery
+    fee_type = Column(String(20), default="fixed")  # fixed (₹/qtl) or percentage (%)
+    rate_or_value = Column(Float, nullable=False)
+    state = Column(String(50), default="Chhattisgarh")
+    mandi_name = Column(String(100), default="All Mandis")
+    authority = Column(String(100), default="State Agricultural Marketing Board (Mandi Board)")
+    source_document = Column(String(150), default="APMC Mandi By-Laws & Fee Schedule 2024")
+    official_url = Column(String(200), default="https://agriportal.cg.nic.in")
+    last_verified_on = Column(String(50), default="2025-04-10")
+    status = Column(String(50), default="verified")  # verified | demo
+    data_origin = Column(String(50), default="official")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class InsuranceRecord(Base):
     __tablename__ = "insurance_records"

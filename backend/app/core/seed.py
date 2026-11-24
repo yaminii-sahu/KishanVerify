@@ -25,6 +25,8 @@ from app.models.models import (
     LoanProduct,
     LoanEvent,
     ClaimEvent,
+    MSPEvent,
+    AdjustmentRule,
 )
 from app.services.storage import get_storage_backend
 
@@ -310,6 +312,32 @@ def ensure_sqlite_columns():
                     conn.execute(text("ALTER TABLE insurance_records ADD COLUMN last_status_date VARCHAR(50) DEFAULT '2024-11-05'"))
                 conn.commit()
 
+            # 4. Check msp_records table columns
+            msp_res = conn.execute(text("PRAGMA table_info(msp_records)")).fetchall()
+            msp_cols = [r[1] for r in msp_res]
+            if msp_cols:
+                if "variety_grade" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN variety_grade VARCHAR(50) DEFAULT 'Common'"))
+                if "season" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN season VARCHAR(50) DEFAULT 'Kharif 2024-25'"))
+                if "year" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN year VARCHAR(20) DEFAULT '2024'"))
+                if "state" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN state VARCHAR(100) DEFAULT 'Chhattisgarh'"))
+                if "farmer_reg_id_masked" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN farmer_reg_id_masked VARCHAR(50) DEFAULT 'CG-KRY-****891'"))
+                if "receipt_no_masked" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN receipt_no_masked VARCHAR(50) DEFAULT 'REC-PTN-****441'"))
+                if "weight_slip_quantity" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN weight_slip_quantity FLOAT DEFAULT 50.0"))
+                if "recorded_quantity" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN recorded_quantity FLOAT DEFAULT 50.0"))
+                if "state_bonus_per_quintal" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN state_bonus_per_quintal FLOAT DEFAULT 0.0"))
+                if "adjustments" not in msp_cols:
+                    conn.execute(text("ALTER TABLE msp_records ADD COLUMN adjustments JSON DEFAULT '[]'"))
+                conn.commit()
+
         Base.metadata.tables["schemes"].create(bind=engine, checkfirst=True)
         if "loan_products" in Base.metadata.tables:
             Base.metadata.tables["loan_products"].create(bind=engine, checkfirst=True)
@@ -317,6 +345,10 @@ def ensure_sqlite_columns():
             Base.metadata.tables["loan_events"].create(bind=engine, checkfirst=True)
         if "claim_events" in Base.metadata.tables:
             Base.metadata.tables["claim_events"].create(bind=engine, checkfirst=True)
+        if "msp_events" in Base.metadata.tables:
+            Base.metadata.tables["msp_events"].create(bind=engine, checkfirst=True)
+        if "adjustment_rules" in Base.metadata.tables:
+            Base.metadata.tables["adjustment_rules"].create(bind=engine, checkfirst=True)
     except Exception as e:
         print(f"Table columns check notice: {e}")
 
@@ -921,6 +953,243 @@ def seed_demo_claim_events(db):
         db.add_all(events)
         db.commit()
 
+def get_all_seed_adjustment_rules():
+    return [
+        AdjustmentRule(
+            rule_code="CG-MANDI-CESS-2024",
+            name="Mandi Fee (Mandi Shulk)",
+            name_hi="मंडी शुल्क",
+            category="mandi_fee",
+            fee_type="percentage",
+            rate_or_value=0.5,
+            state="Chhattisgarh",
+            mandi_name="All Mandis",
+            authority="Chhattisgarh State Agricultural Marketing Board (Mandi Board)",
+            source_document="Chhattisgarh Krishi Upaj Mandi Adhiniyam 1972 (Section 19)",
+            official_url="https://agriportal.cg.nic.in",
+            last_verified_on="2025-04-10",
+            status="verified",
+            data_origin="official",
+        ),
+        AdjustmentRule(
+            rule_code="CG-HAMALI-2024",
+            name="Handling / Loading Charges (Hamali)",
+            name_hi="हम्माली / उतराई शुल्क",
+            category="hamali",
+            fee_type="fixed",
+            rate_or_value=12.50,
+            state="Chhattisgarh",
+            mandi_name="Patan Krishi Upaj Mandi",
+            authority="APMC Mandi By-Laws",
+            source_document="Directorate of Agricultural Marketing Mandi Circular 2024",
+            official_url="https://agriportal.cg.nic.in",
+            last_verified_on="2025-04-10",
+            status="verified",
+            data_origin="official",
+        ),
+        AdjustmentRule(
+            rule_code="CG-MOISTURE-CUT-2024",
+            name="Moisture Content Quality Cut",
+            name_hi="नमी कटौती समायोजन",
+            category="quality_cut",
+            fee_type="fixed",
+            rate_or_value=23.00,
+            state="Chhattisgarh",
+            mandi_name="All Mandis",
+            authority="Food Corporation of India (FCI) / CACP",
+            source_document="Uniform Specifications for FAQ Kharif Foodgrains",
+            official_url="https://fci.gov.in",
+            last_verified_on="2025-04-10",
+            status="verified",
+            data_origin="official",
+        ),
+        AdjustmentRule(
+            rule_code="CG-BARDANA-SECURITY",
+            name="Gunny Bag Retention / Bardana",
+            name_hi="बारदाना कटौती",
+            category="bardana",
+            fee_type="fixed",
+            rate_or_value=15.00,
+            state="Chhattisgarh",
+            mandi_name="All Mandis",
+            authority="State Civil Supplies Corporation",
+            source_document="Paddy Procurement Policy Guidelines",
+            official_url="https://agriportal.cg.nic.in",
+            last_verified_on="2025-04-10",
+            status="verified",
+            data_origin="official",
+        ),
+    ]
+
+def seed_demo_msp_events(db):
+    msp1 = db.query(MSPRecord).filter_by(record_ref="MSP-2024-4411").first()
+    if msp1 and db.query(MSPEvent).filter_by(record_id=msp1.id).count() == 0:
+        events1 = [
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="registered",
+                date="2024-03-10",
+                amount=None,
+                quantity=None,
+                description_en="Farmer registered for Kharif Paddy procurement on CG e-Uparjan portal with biometric KYC.",
+                description_hi="बायोमेट्रिक ई-केवाईसी के साथ छत्तीसगढ़ ई-उपार्जन पोर्टल पर खरीफ धान उपार्जन हेतु किसान पंजीयन दर्ज।",
+                source="Chhattisgarh e-Uparjan Food Portal",
+                data_origin="official",
+            ),
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="produce_delivered",
+                date="2024-03-22",
+                amount=None,
+                quantity=50.0,
+                description_en="50.00 quintals of Paddy (Common) delivered at Patan Krishi Upaj Mandi procurement centre.",
+                description_hi="पाटन कृषि उपज मंडी उपार्जन केंद्र पर 50.00 क्विंटल धान (सामान्य) की आवक दर्ज।",
+                source="Mandi Entry Gate Pass",
+                data_origin="procurement_record",
+            ),
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="quality_checked",
+                date="2024-03-22",
+                amount=None,
+                quantity=50.0,
+                description_en="Quality analysis: Moisture 16.5% (FAQ standard limit 17.0%), Foreign matter 1.2%. FAQ grade certified.",
+                description_hi="गुणवत्ता विश्लेषण: नमी 16.5% (एफएक्यू मानक सीमा 17.0%), बाह्य अशुद्धि 1.2%। एफएक्यू श्रेणी प्रमाणित।",
+                source="Mandi Quality Inspection Slip",
+                data_origin="procurement_record",
+            ),
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="weighed",
+                date="2024-03-22",
+                amount=None,
+                quantity=50.0,
+                description_en="Electronic weighbridge slip REC-PTN-****441 issued. Gross quantity: 50.00 quintals.",
+                description_hi="इलेक्ट्रॉनिक तौल पर्ची REC-PTN-****441 जारी। कुल वजन: 50.00 क्विंटल।",
+                source="Weighbridge Electronic Scale Slip",
+                data_origin="procurement_record",
+            ),
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="procurement_recorded",
+                date="2024-03-24",
+                amount=115000.0,
+                quantity=50.0,
+                description_en="Procurement purchase confirmed at notified statutory MSP ₹2,300/qtl. Total gross value: ₹1,15,000.",
+                description_hi="अधिसूचित न्यूनतम समर्थन मूल्य ₹2,300/क्विंटल की दर से खरीद दर्ज। कुल सकल देय राशि: ₹1,15,000।",
+                source="Department of Food & Civil Supplies, CG",
+                data_origin="official",
+            ),
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="payment_initiated",
+                date="2024-03-29",
+                amount=105000.0,
+                quantity=None,
+                description_en="DBT payment scroll initiated via PFMS. Adjustments & deductions withheld: ₹10,000.",
+                description_hi="पीएफएमएस के माध्यम से डीबीटी भुगतान स्क्रॉल प्रेषित। कटौतियां एवं शुल्क रोका गया: ₹10,000।",
+                source="Public Financial Management System (PFMS)",
+                data_origin="official",
+            ),
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="payment_credited",
+                date="2024-04-05",
+                amount=105000.0,
+                quantity=None,
+                description_en="Net payment of ₹1,05,000 credited to farmer SBI Account *1234 via DBT.",
+                description_hi="डीबीटी के माध्यम से किसान के एसबीआई खाते *1234 में ₹1,05,000 की राशि अंतरित।",
+                source="Bank DBT Credit Scroll",
+                data_origin="bank_document",
+            ),
+            MSPEvent(
+                record_id=msp1.id,
+                event_type="note",
+                date="2024-04-12",
+                amount=10000.0,
+                quantity=None,
+                description_en="Farmer raised check on ₹10,000 difference; review pending for itemized deductions breakdown.",
+                description_hi="किसान द्वारा ₹10,000 के अंतर की जांच दर्ज कराई गई। मदवार कटौतियों (हम्माली, उपकर, समिति वसूली) का मिलान आवश्यक।",
+                source="KisanVerify Audit Log",
+                data_origin="user_entered",
+            ),
+        ]
+        db.add_all(events1)
+
+    msp2 = db.query(MSPRecord).filter_by(record_ref="MSP-2024-4820").first()
+    if msp2 and db.query(MSPEvent).filter_by(record_id=msp2.id).count() == 0:
+        events2 = [
+            MSPEvent(
+                record_id=msp2.id,
+                event_type="registered",
+                date="2024-03-12",
+                amount=None,
+                quantity=None,
+                description_en="Farmer registered on CG e-Uparjan portal.",
+                description_hi="छत्तीसगढ़ ई-उपार्जन पोर्टल पर किसान पंजीयन दर्ज।",
+                source="Chhattisgarh e-Uparjan Food Portal",
+                data_origin="official",
+            ),
+            MSPEvent(
+                record_id=msp2.id,
+                event_type="produce_delivered",
+                date="2024-03-25",
+                amount=None,
+                quantity=50.0,
+                description_en="50.00 quintals of Paddy (Grade A) delivered at Durg Mandi Samiti.",
+                description_hi="दुर्ग मंडी समिति में 50.00 क्विंटल धान (ग्रेड ए) की आवक दर्ज।",
+                source="Mandi Entry Gate Pass",
+                data_origin="procurement_record",
+            ),
+            MSPEvent(
+                record_id=msp2.id,
+                event_type="quality_checked",
+                date="2024-03-25",
+                amount=None,
+                quantity=50.0,
+                description_en="Quality certified: FAQ Grade A standard met.",
+                description_hi="गुणवत्ता प्रमाणित: एफएक्यू ग्रेड ए मानक पूर्ण।",
+                source="Mandi Quality Inspection Slip",
+                data_origin="procurement_record",
+            ),
+            MSPEvent(
+                record_id=msp2.id,
+                event_type="weighed",
+                date="2024-03-25",
+                amount=None,
+                quantity=50.0,
+                description_en="Electronic weighbridge slip issued for 50.00 quintals.",
+                description_hi="50.00 क्विंटल के लिए इलेक्ट्रॉनिक तौल पर्ची जारी।",
+                source="Weighbridge Electronic Scale Slip",
+                data_origin="procurement_record",
+            ),
+            MSPEvent(
+                record_id=msp2.id,
+                event_type="procurement_recorded",
+                date="2024-03-26",
+                amount=115000.0,
+                quantity=50.0,
+                description_en="Procurement recorded at ₹2,300/qtl. Total: ₹1,15,000.",
+                description_hi="₹2,300/क्विंटल पर खरीद दर्ज। कुल राशि: ₹1,15,000।",
+                source="Department of Food & Civil Supplies, CG",
+                data_origin="official",
+            ),
+            MSPEvent(
+                record_id=msp2.id,
+                event_type="payment_credited",
+                date="2024-04-14",
+                amount=115000.0,
+                quantity=None,
+                description_en="Full payment of ₹1,15,000 credited to bank account via DBT.",
+                description_hi="डीबीटी के माध्यम से बैंक खाते में ₹1,15,000 का पूर्ण भुगतान अंतरित।",
+                source="Bank DBT Credit Scroll",
+                data_origin="bank_document",
+            ),
+        ]
+        db.add_all(events2)
+
+    db.commit()
+
 def get_all_seed_offices():
     return [
         Office(
@@ -1345,7 +1614,12 @@ def seed_database():
                 print("Seeding loan products...")
                 db.add_all(get_all_seed_loan_products())
                 db.commit()
+            if db.query(AdjustmentRule).count() == 0:
+                print("Seeding adjustment rules...")
+                db.add_all(get_all_seed_adjustment_rules())
+                db.commit()
             enrich_farmer_loans(db, farmer_exists)
+            seed_demo_msp_events(db)
             print("Database already seeded with demo data.")
             return
 
@@ -1748,9 +2022,13 @@ def seed_database():
         # 12. Loan Products Catalog
         db.add_all(get_all_seed_loan_products())
 
+        # 13. Adjustment Rules
+        db.add_all(get_all_seed_adjustment_rules())
+
         db.commit()
         seed_demo_loan_events(db)
         seed_demo_claim_events(db)
+        seed_demo_msp_events(db)
         print("Demo database seeded successfully with all synthetic records!")
     except Exception as e:
         db.rollback()

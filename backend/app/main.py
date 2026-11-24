@@ -25,6 +25,7 @@ from app.api.contact import router as contact_router
 from app.api.tts import router as tts_router
 from app.api.loans import router as loans_router
 from app.api.claims import router as claims_router
+from app.api.msp import router as msp_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -72,6 +73,7 @@ app.include_router(contact_router, prefix=settings.API_V1_STR)
 app.include_router(tts_router, prefix=settings.API_V1_STR)
 app.include_router(loans_router, prefix=settings.API_V1_STR)
 app.include_router(claims_router, prefix=settings.API_V1_STR)
+app.include_router(msp_router, prefix=settings.API_V1_STR)
 
 @app.get("/health")
 def health_check():
