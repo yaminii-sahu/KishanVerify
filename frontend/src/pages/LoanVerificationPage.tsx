@@ -24,14 +24,28 @@ import { useAuth } from '../context/AuthContext';
 import { verifyLoanApi, extractLoanOcrApi, fetchDocumentsApi, fetchVerificationRecordByRefApi, DocumentItem } from '../services/api';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
+import { LoanProductsTab } from '../components/LoanProductsTab';
+import { MyLoansTab } from '../components/MyLoansTab';
 
 export const LoanVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
   const { farmer } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const routeParams = useParams();
   const recordId = searchParams.get('recordId') || searchParams.get('record_ref') || routeParams.id;
+
+  // Active Tab state: 'my-loans' | 'apply'
+  const initialTab = searchParams.get('tab') === 'apply' ? 'apply' : 'my-loans';
+  const [activeTab, setActiveTab] = useState<'my-loans' | 'apply'>(initialTab);
+  const [isCheckingNew, setIsCheckingNew] = useState<boolean>(Boolean(recordId));
+
+  useEffect(() => {
+    if (recordId) {
+      setIsCheckingNew(true);
+      setActiveTab('my-loans');
+    }
+  }, [recordId]);
 
   // Form Inputs
   const [bankName, setBankName] = useState('State Bank of India');
@@ -357,9 +371,9 @@ export const LoanVerificationPage: React.FC = () => {
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       
-      {/* Top Header bar with Sample toggles */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1 border-b border-warm-border/60">
-        <div className="hidden md:flex items-center gap-3">
+      {/* Top Header bar with Navigation and Tab Switcher */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-warm-border/60">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/farmer')}
             className="w-9 h-9 rounded-full bg-cream-surface border border-warm-border flex items-center justify-center text-charcoal hover:bg-tint transition-colors shadow-soft"
@@ -369,37 +383,104 @@ export const LoanVerificationPage: React.FC = () => {
           </button>
           <div>
             <h1 className="text-xl font-bold text-charcoal tracking-tight">
-              {language === 'hi' ? 'ऋण सत्यापन (KCC)' : 'Loan Verification'}
+              {language === 'hi' ? 'कृषि ऋण एवं पात्रता' : 'Agricultural Loans & Eligibility'}
             </h1>
             <p className="text-xs text-muted">
-              Check if your loan details match the expected amount.
+              {language === 'hi'
+                ? 'अपने मौजूदा ऋण सत्यापित करें या अपनी पात्रता अनुसार नए ऋण देखें।'
+                : 'Verify your existing loans or explore loans you may be eligible to apply for.'}
             </p>
           </div>
         </div>
 
-        {/* Quick Sample toggles for testing */}
-        <div className="flex items-center gap-2 self-end sm:self-center">
-          <button
-            type="button"
-            onClick={loadSampleDiscrepancy}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-status-discrepancy-bg text-status-discrepancy-text border border-status-discrepancy-text/30 hover:opacity-90 transition-all min-h-[36px]"
-          >
-            Sample ₹10k Discrepancy
-          </button>
-          <button
-            type="button"
-            onClick={loadSampleMatch}
-            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-status-eligible-bg text-status-eligible-text border border-status-eligible-text/30 hover:opacity-90 transition-all min-h-[36px]"
-          >
-            Sample Verified Match
-          </button>
-        </div>
+        {/* Quick Sample toggles (visible when checking a single loan) */}
+        {(isCheckingNew || recordId) && (
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            <button
+              type="button"
+              onClick={loadSampleDiscrepancy}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-status-discrepancy-bg text-status-discrepancy-text border border-status-discrepancy-text/30 hover:opacity-90 transition-all min-h-[36px]"
+            >
+              Sample ₹10k Discrepancy
+            </button>
+            <button
+              type="button"
+              onClick={loadSampleMatch}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold bg-status-eligible-bg text-status-eligible-text border border-status-eligible-text/30 hover:opacity-90 transition-all min-h-[36px]"
+            >
+              Sample Verified Match
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* ============================================================== */}
-      {/* TWO-COLUMN GRID (Desktop Image A) / STACKED (Phone Image B)    */}
-      {/* ============================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Main Tab Segmented Control */}
+      {!isCheckingNew && !recordId && (
+        <div className="flex p-1 bg-warm-bg rounded-xl border border-warm-border max-w-lg w-full">
+          <button
+            onClick={() => {
+              setActiveTab('my-loans');
+              setSearchParams({});
+            }}
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'my-loans'
+                ? 'bg-cream-surface text-forest shadow-soft'
+                : 'text-muted hover:text-charcoal'
+            }`}
+          >
+            <Landmark className="w-4 h-4" />
+            <span>{language === 'hi' ? 'मेरे ऋण (My Loans)' : 'My Loans'}</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('apply');
+              setSearchParams({ tab: 'apply' });
+            }}
+            className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+              activeTab === 'apply'
+                ? 'bg-cream-surface text-forest shadow-soft'
+                : 'text-muted hover:text-charcoal'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{language === 'hi' ? 'आवेदन हेतु ऋण (Eligible Loans)' : 'Loans I Can Apply For'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* TAB CONTENT: Loans I Can Apply For */}
+      {activeTab === 'apply' && !isCheckingNew && !recordId && (
+        <LoanProductsTab />
+      )}
+
+      {/* TAB CONTENT: My Loans Listing */}
+      {activeTab === 'my-loans' && !isCheckingNew && !recordId && (
+        <MyLoansTab onCheckNewLoan={() => setIsCheckingNew(true)} />
+      )}
+
+      {/* TAB CONTENT: Single Loan Check & OCR Form */}
+      {activeTab === 'my-loans' && (isCheckingNew || recordId) && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-warm-border/60">
+            <button
+              onClick={() => {
+                setIsCheckingNew(false);
+                setSearchParams({});
+              }}
+              className="text-xs font-bold text-forest hover:underline flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{language === 'hi' ? '← मेरे ऋण सूची पर वापस जाएं' : '← Back to My Loans'}</span>
+            </button>
+            <span className="text-xs font-semibold text-muted">
+              {language === 'hi' ? 'नया ऋण सत्यापन / संस्वीकृति पत्र' : 'Check a New Loan / Sanction Letter'}
+            </span>
+          </div>
+
+          {/* ============================================================== */}
+          {/* TWO-COLUMN GRID (Desktop Image A) / STACKED (Phone Image B)    */}
+          {/* ============================================================== */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Column: Enter Loan Details Form (7 cols on lg) */}
         <div className="lg:col-span-7 bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-4">
@@ -788,6 +869,8 @@ export const LoanVerificationPage: React.FC = () => {
         </div>
 
       </div>
+      </div>
+      )}
 
       {/* Vault Document Picker Modal */}
       {isVaultModalOpen && (

@@ -1081,6 +1081,765 @@ export async function verifyLoanApi(payload: {
   };
 }
 
+export interface DocumentCheckItem {
+  document_name: string;
+  document_name_hi?: string;
+  is_available: boolean;
+  doc_uuid?: string;
+}
+
+export interface LoanEligibilityResult {
+  product_code: string;
+  product_name: string;
+  product_name_hi?: string;
+  eligibility_status: 'Likely eligible' | 'Possibly eligible (more info needed)' | 'Not eligible';
+  eligibility_label: string;
+  eligibility_label_hi: string;
+  status_badge_color: 'green' | 'amber' | 'gray';
+  matched_rules: string[];
+  matched_rules_hi: string[];
+  unmet_rules: string[];
+  unmet_rules_hi: string[];
+  required_documents: DocumentCheckItem[];
+  missing_documents: string[];
+  missing_documents_hi: string[];
+  disclaimer_en: string;
+  disclaimer_hi: string;
+  indicative_rate: string;
+  indicative_limit: string;
+  official_url?: string;
+  source_name: string;
+  source_document: string;
+  last_verified_on: string;
+  status: string;
+}
+
+export interface LoanProductItem {
+  id: number;
+  product_code: string;
+  name: string;
+  name_hi?: string;
+  level: string;
+  state?: string;
+  lender_type: string;
+  purpose: string;
+  purpose_hi?: string;
+  description: string;
+  description_hi?: string;
+  max_amount_rule: string;
+  interest_rate_rule: string;
+  tenure: string;
+  collateral_rule: string;
+  required_documents: string[];
+  eligibility_rules: Record<string, any>;
+  official_url?: string;
+  source_name: string;
+  source_document: string;
+  last_verified_on: string;
+  status: string;
+  eligibility: LoanEligibilityResult;
+}
+
+export interface LoanProductListResponse {
+  count: number;
+  likely_eligible_count: number;
+  possibly_eligible_count: number;
+  not_eligible_count: number;
+  products: LoanProductItem[];
+}
+
+export interface MyLoanItem {
+  id: number;
+  loan_ref: string;
+  bank_name: string;
+  loan_type: string;
+  approved_amount: number;
+  disbursed_amount: number;
+  interest_rate: number;
+  deductions: number;
+  repayments: number;
+  difference: number;
+  status: string;
+  verification_status: 'Verified' | 'Needs Review' | 'Not Verified';
+  reason_codes: string[];
+  reasons: string[];
+  loan_date: string;
+  last_verified_at?: string;
+  sanction_doc_name?: string;
+  basis_of_check: any[];
+}
+
+export interface MyLoansResponse {
+  farmer_id: string;
+  farmer_name: string;
+  total_count: number;
+  verified_count: number;
+  needs_review_count: number;
+  not_verified_count: number;
+  loans: MyLoanItem[];
+}
+
+export async function fetchLoanProductsApi(
+  farmerId: string = 'FV12345',
+  filters?: { level?: string; state?: string; purpose?: string; status?: string }
+): Promise<LoanProductListResponse> {
+  try {
+    const params = new URLSearchParams();
+    params.set('farmer_id', farmerId);
+    if (filters?.level && filters.level !== 'all') params.set('level', filters.level);
+    if (filters?.state && filters.state !== 'all') params.set('state', filters.state);
+    if (filters?.purpose && filters.purpose !== 'all') params.set('purpose', filters.purpose);
+    if (filters?.status && filters.status !== 'all') params.set('status', filters.status);
+    return await apiClient.get<LoanProductListResponse>(`/loans/products?${params.toString()}`);
+  } catch (err) {
+    console.warn('Backend offline, returning deterministic fallback loan products', err);
+  }
+
+  // Fallback 8 official products
+  const fallbackProducts: LoanProductItem[] = [
+    {
+      id: 1,
+      product_code: 'KCC-CROP-LOAN',
+      name: 'Kisan Credit Card (KCC) Crop Loan',
+      name_hi: 'किसान क्रेडिट कार्ड (केसीसी) फसल ऋण',
+      level: 'Central',
+      state: undefined,
+      lender_type: 'Commercial Bank / RRB / Cooperative',
+      purpose: 'Crop Production',
+      purpose_hi: 'फसल उत्पादन एवं कार्यशील पूंजी',
+      description: 'Revolving short-term credit facility for cultivation expenses, harvesting, and farm asset maintenance at 4% effective interest with timely repayment.',
+      description_hi: 'समय पर पुनर्भुगतान करने पर 4% की प्रभावी ब्याज दर पर फसल बुआई, कटाई एवं कृषि परिसंपत्ति रखरखाव हेतु रियायती अल्पावधि साख सीमा।',
+      max_amount_rule: 'Up to ₹3,00,000 (collateral-free up to ₹1,60,000)',
+      interest_rate_rule: '7.0% p.a. standard (Effective 4.0% with prompt repayment incentive)',
+      tenure: '1 Year (Revolving for 5 Years)',
+      collateral_rule: 'No collateral / hypothecation up to ₹1.60 Lakh',
+      required_documents: ['Aadhaar Card', 'Land Ownership Record (7/12 / Khasra / B-1)', 'Bank Passbook', 'Sowing Certificate (Girdawari)'],
+      eligibility_rules: { min_land_acres: 0.5, farmer_categories: ['Marginal Farmer', 'Small Farmer', 'Large Farmer'] },
+      official_url: 'https://agricoop.nic.in',
+      source_name: 'Ministry of Agriculture & Farmers Welfare, GoI / RBI',
+      source_document: 'Master Circular – Kisan Credit Card (KCC) Scheme (FIDD.CO.FSD.BC.No.12/05.05.010/2018-19)',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'KCC-CROP-LOAN',
+        product_name: 'Kisan Credit Card (KCC) Crop Loan',
+        product_name_hi: 'किसान क्रेडिट कार्ड (केसीसी) फसल ऋण',
+        eligibility_status: 'Likely eligible',
+        eligibility_label: 'Likely eligible',
+        eligibility_label_hi: 'संभावित पात्र',
+        status_badge_color: 'green',
+        matched_rules: [
+          'National scheme open across all Indian states and Union Territories.',
+          'Landholding (3.0 acres) satisfies the minimum 0.5 acre threshold.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'अखिल भारतीय राष्ट्रीय योजना सभी राज्यों के किसानों के लिए खुली है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 0.5 एकड़ की शर्त पूरी करती है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Land Ownership Record (7/12 / Khasra / B-1)', document_name_hi: 'भूमि स्वामित्व अभिलेख (खसरा / बी-1)', is_available: true },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+          { document_name: 'Sowing Certificate (Girdawari)', document_name_hi: 'फसल बोआई प्रमाण पत्र (गिरदावरी)', is_available: true },
+        ],
+        missing_documents: [],
+        missing_documents_hi: [],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: '7.0% p.a. standard (Effective 4.0% with prompt repayment incentive)',
+        indicative_limit: 'Up to ₹3,00,000 (collateral-free up to ₹1,60,000)',
+        official_url: 'https://agricoop.nic.in',
+        source_name: 'Ministry of Agriculture & Farmers Welfare, GoI / RBI',
+        source_document: 'Master Circular – Kisan Credit Card (KCC) Scheme (FIDD.CO.FSD.BC.No.12/05.05.010/2018-19)',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+    {
+      id: 2,
+      product_code: 'AGRI-TERM-TRACTOR',
+      name: 'Agricultural Term Loan - Farm Mechanization (Tractor & Implements)',
+      name_hi: 'कृषि मियादी ऋण - फार्म मशीनीकरण (ट्रैक्टर एवं उपकरण)',
+      level: 'Central',
+      state: undefined,
+      lender_type: 'Commercial Bank',
+      purpose: 'Farm Mechanization',
+      purpose_hi: 'ट्रैक्टर एवं उन्नत कृषि यंत्र',
+      description: 'Term loan for purchasing new tractors, power tillers, rotavators, and harvesters under SMAM mechanization guidelines.',
+      description_hi: 'खेती की उत्पादकता बढ़ाने हेतु नए ट्रैक्टर, पावर टिलर एवं आधुनिक कृषि यंत्रों की खरीद के लिए दीर्घकालिक मियादी ऋण।',
+      max_amount_rule: 'Up to ₹10,00,000 or 85% of asset invoice',
+      interest_rate_rule: '8.50% - 9.75% p.a. (Bank base rate linked)',
+      tenure: '5 to 7 Years (Half-yearly EMIs after harvest)',
+      collateral_rule: 'Hypothecation of purchased tractor/implement + Land mortgage for > ₹5 Lakh',
+      required_documents: ['Aadhaar Card', 'Land Record (Khasra / B-1)', 'Dealer Proforma Invoice / Quotation', 'Bank Passbook'],
+      eligibility_rules: { min_land_acres: 2.0, farmer_categories: ['Small Farmer', 'Large Farmer'] },
+      official_url: 'https://farmech.dac.gov.in',
+      source_name: 'Department of Agriculture & Farmers Welfare (DA&FW)',
+      source_document: 'Sub-Mission on Agricultural Mechanization (SMAM) Operational Guidelines',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'AGRI-TERM-TRACTOR',
+        product_name: 'Agricultural Term Loan - Farm Mechanization (Tractor & Implements)',
+        product_name_hi: 'कृषि मियादी ऋण - फार्म मशीनीकरण (ट्रैक्टर एवं उपकरण)',
+        eligibility_status: 'Possibly eligible (more info needed)',
+        eligibility_label: 'Possibly eligible (more info needed)',
+        eligibility_label_hi: 'संभावित पात्र (दस्तावेज अपेक्षित)',
+        status_badge_color: 'amber',
+        matched_rules: [
+          'National scheme open across all Indian states and Union Territories.',
+          'Landholding (3.0 acres) satisfies the minimum 2.0 acre threshold.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'अखिल भारतीय राष्ट्रीय योजना सभी राज्यों के किसानों के लिए खुली है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 2.0 एकड़ की शर्त पूरी करती है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Land Record (Khasra / B-1)', document_name_hi: 'भूमि अभिलेख (खसरा / बी-1)', is_available: true },
+          { document_name: 'Dealer Proforma Invoice / Quotation', document_name_hi: 'डीलर कोटेशन / प्रोफार्मा इनवॉइस', is_available: false },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+        ],
+        missing_documents: ['Dealer Proforma Invoice / Quotation'],
+        missing_documents_hi: ['डीलर कोटेशन / प्रोफार्मा इनवॉइस'],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: '8.50% - 9.75% p.a. (Bank base rate linked)',
+        indicative_limit: 'Up to ₹10,00,000 or 85% of asset invoice',
+        official_url: 'https://farmech.dac.gov.in',
+        source_name: 'Department of Agriculture & Farmers Welfare (DA&FW)',
+        source_document: 'Sub-Mission on Agricultural Mechanization (SMAM) Operational Guidelines',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+    {
+      id: 3,
+      product_code: 'AIF-POST-HARVEST',
+      name: 'Agriculture Infrastructure Fund (AIF) Term Loan',
+      name_hi: 'कृषि अवसंरचना कोष (एआईएफ) मियादी ऋण',
+      level: 'Central',
+      state: undefined,
+      lender_type: 'Commercial Bank / Cooperative',
+      purpose: 'Post-Harvest Infrastructure',
+      purpose_hi: 'गोदाम, कोल्ड स्टोरेज एवं प्राथमिक प्रसंस्करण',
+      description: 'Medium-to-long term debt financing for post-harvest management infrastructure and community farming assets with 3% interest subvention and CGTMSE guarantee.',
+      description_hi: 'कटाई उपरांत फसल प्रबंधन, भंडारण, गोदाम एवं प्राथमिक प्रसंस्करण इकाइयों के निर्माण हेतु 3% ब्याज अनुदान सहित दीर्घकालिक वित्तपोषण।',
+      max_amount_rule: 'Up to ₹2,00,00,000 eligible for 3% interest subvention',
+      interest_rate_rule: 'Effective rate capped at Bank Base Rate + 1% minus 3% subvention (~6.0% p.a.)',
+      tenure: 'Up to 7 Years (Including moratorium up to 2 years)',
+      collateral_rule: 'CGTMSE credit guarantee coverage up to ₹2 Crore',
+      required_documents: ['Aadhaar Card', 'Land Record (Khasra / B-1)', 'Detailed Project Report (DPR)', 'Bank Passbook'],
+      eligibility_rules: { min_land_acres: 1.0, farmer_categories: ['Small Farmer', 'Large Farmer'] },
+      official_url: 'https://agriinfra.dac.gov.in',
+      source_name: 'Ministry of Agriculture & Farmers Welfare, GoI',
+      source_document: 'Central Sector Scheme of Financing Facility under Agriculture Infrastructure Fund',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'AIF-POST-HARVEST',
+        product_name: 'Agriculture Infrastructure Fund (AIF) Term Loan',
+        product_name_hi: 'कृषि अवसंरचना कोष (एआईएफ) मियादी ऋण',
+        eligibility_status: 'Possibly eligible (more info needed)',
+        eligibility_label: 'Possibly eligible (more info needed)',
+        eligibility_label_hi: 'संभावित पात्र (दस्तावेज अपेक्षित)',
+        status_badge_color: 'amber',
+        matched_rules: [
+          'National scheme open across all Indian states and Union Territories.',
+          'Landholding (3.0 acres) satisfies the minimum 1.0 acre threshold.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'अखिल भारतीय राष्ट्रीय योजना सभी राज्यों के किसानों के लिए खुली है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 1.0 एकड़ की शर्त पूरी करती है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Land Record (Khasra / B-1)', document_name_hi: 'भूमि अभिलेख (खसरा / बी-1)', is_available: true },
+          { document_name: 'Detailed Project Report (DPR)', document_name_hi: 'विस्तृत परियोजना रिपोर्ट (डीपीआर)', is_available: false },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+        ],
+        missing_documents: ['Detailed Project Report (DPR)'],
+        missing_documents_hi: ['विस्तृत परियोजना रिपोर्ट (डीपीआर)'],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: 'Effective ~6.0% p.a. (with 3% subvention)',
+        indicative_limit: 'Up to ₹2,00,00,000 eligible for 3% interest subvention',
+        official_url: 'https://agriinfra.dac.gov.in',
+        source_name: 'Ministry of Agriculture & Farmers Welfare, GoI',
+        source_document: 'Central Sector Scheme of Financing Facility under Agriculture Infrastructure Fund',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+    {
+      id: 4,
+      product_code: 'KCC-DAIRY-ANIMAL',
+      name: 'KCC for Animal Husbandry & Dairy Farming',
+      name_hi: 'पशुपालन एवं डेयरी किसान क्रेडिट कार्ड',
+      level: 'Central',
+      state: undefined,
+      lender_type: 'Commercial Bank / Cooperative',
+      purpose: 'Dairy & Animal Husbandry',
+      purpose_hi: 'दुधारू पशु आहार, स्वास्थ्य एवं रख-रखाव',
+      description: 'Working capital cash credit for dairy farmers, buffalo/cow rearers to meet feeding, veterinary, and operating expenses.',
+      description_hi: 'दुग्ध उत्पादकों व पशुपालकों को पशु आहार, चिकित्सा एवं दैनिक कार्यशील पूंजी की पूर्ति हेतु रियायती केसीसी सुविधा।',
+      max_amount_rule: 'Up to ₹2,00,000 (collateral-free limit)',
+      interest_rate_rule: '7.0% p.a. standard (Effective 4.0% with prompt repayment incentive)',
+      tenure: '1 Year (Revolving facility)',
+      collateral_rule: 'Collateral-free up to ₹1.60 Lakh (or ₹2.0 Lakh with tie-up)',
+      required_documents: ['Aadhaar Card', 'Animal Health Certificate / Ear Tagging Record', 'Bank Passbook'],
+      eligibility_rules: { min_land_acres: 0.0, farmer_categories: ['Marginal Farmer', 'Small Farmer', 'Large Farmer'] },
+      official_url: 'https://dahd.nic.in',
+      source_name: 'Department of Animal Husbandry & Dairying (DAHD), GoI / RBI',
+      source_document: 'RBI Circular FIDD.CO.FSD.BC.12/05.05.010/2018-19: Extension of KCC facility to Animal Husbandry Farmers and Fisheries',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'KCC-DAIRY-ANIMAL',
+        product_name: 'KCC for Animal Husbandry & Dairy Farming',
+        product_name_hi: 'पशुपालन एवं डेयरी किसान क्रेडिट कार्ड',
+        eligibility_status: 'Possibly eligible (more info needed)',
+        eligibility_label: 'Possibly eligible (more info needed)',
+        eligibility_label_hi: 'संभावित पात्र (दस्तावेज अपेक्षित)',
+        status_badge_color: 'amber',
+        matched_rules: [
+          'National scheme open across all Indian states and Union Territories.',
+          'Landholding (3.0 acres) satisfies the minimum 0.0 acre threshold.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'अखिल भारतीय राष्ट्रीय योजना सभी राज्यों के किसानों के लिए खुली है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 0.0 एकड़ की शर्त पूरी करती है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Animal Health Certificate / Ear Tagging Record', document_name_hi: 'पशु स्वास्थ्य प्रमाण पत्र / टैगिंग विवरण', is_available: false },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+        ],
+        missing_documents: ['Animal Health Certificate / Ear Tagging Record'],
+        missing_documents_hi: ['पशु स्वास्थ्य प्रमाण पत्र / टैगिंग विवरण'],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: '7.0% p.a. (Effective 4.0% with prompt repayment)',
+        indicative_limit: 'Up to ₹2,00,000 (collateral-free limit)',
+        official_url: 'https://dahd.nic.in',
+        source_name: 'Department of Animal Husbandry & Dairying (DAHD), GoI / RBI',
+        source_document: 'RBI Circular FIDD.CO.FSD.BC.12/05.05.010/2018-19: Extension of KCC facility to Animal Husbandry Farmers and Fisheries',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+    {
+      id: 5,
+      product_code: 'KCC-FISHERIES',
+      name: 'KCC for Fisheries and Aquaculture',
+      name_hi: 'मत्स्य पालन किसान क्रेडिट कार्ड',
+      level: 'Central',
+      state: undefined,
+      lender_type: 'Commercial Bank / Cooperative',
+      purpose: 'Fisheries',
+      purpose_hi: 'मत्स्य बीज, दाना एवं तालाब रख-रखाव',
+      description: 'Short-term credit for inland fisheries, fish seed purchase, feed, maintenance, and harvesting expenses.',
+      description_hi: 'मत्स्य पालकों को बीज, चारा, जल शोधन एवं तालाब संचालन के दैनिक खर्चों हेतु रियायती कार्यशील पूंजी साख।',
+      max_amount_rule: 'Up to ₹2,00,000 (collateral-free)',
+      interest_rate_rule: '7.0% p.a. standard (Effective 4.0% with prompt repayment incentive)',
+      tenure: '1 Year (Revolving facility)',
+      collateral_rule: 'Collateral-free up to ₹1.60 Lakh',
+      required_documents: ['Aadhaar Card', 'Water Body Title / Lease Agreement', 'Bank Passbook'],
+      eligibility_rules: { min_land_acres: 0.0, farmer_categories: ['Marginal Farmer', 'Small Farmer', 'Large Farmer'] },
+      official_url: 'https://dof.gov.in',
+      source_name: 'Department of Fisheries, Ministry of Fisheries, Animal Husbandry & Dairying, GoI',
+      source_document: 'KCC Guidelines for Fisheries and Aquaculture Beneficiaries',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'KCC-FISHERIES',
+        product_name: 'KCC for Fisheries and Aquaculture',
+        product_name_hi: 'मत्स्य पालन किसान क्रेडिट कार्ड',
+        eligibility_status: 'Possibly eligible (more info needed)',
+        eligibility_label: 'Possibly eligible (more info needed)',
+        eligibility_label_hi: 'संभावित पात्र (दस्तावेज अपेक्षित)',
+        status_badge_color: 'amber',
+        matched_rules: [
+          'National scheme open across all Indian states and Union Territories.',
+          'Landholding (3.0 acres) satisfies the minimum 0.0 acre threshold.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'अखिल भारतीय राष्ट्रीय योजना सभी राज्यों के किसानों के लिए खुली है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 0.0 एकड़ की शर्त पूरी करती है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Water Body Title / Lease Agreement', document_name_hi: 'जलाशय पट्टा / जल निकाय समझौता', is_available: false },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+        ],
+        missing_documents: ['Water Body Title / Lease Agreement'],
+        missing_documents_hi: ['जलाशय पट्टा / जल निकाय समझौता'],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: '7.0% p.a. standard (Effective 4.0%)',
+        indicative_limit: 'Up to ₹2,00,000 (collateral-free)',
+        official_url: 'https://dof.gov.in',
+        source_name: 'Department of Fisheries, GoI',
+        source_document: 'KCC Guidelines for Fisheries and Aquaculture Beneficiaries',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+    {
+      id: 6,
+      product_code: 'PM-KUSUM-SOLAR',
+      name: 'PM-KUSUM Component-B Standalone Solar Agri Pump Loan',
+      name_hi: 'पीएम-कुसुम कंपोनेंट-बी सोलर कृषि पंप ऋण',
+      level: 'Central',
+      state: undefined,
+      lender_type: 'Commercial Bank / Regional Rural Bank',
+      purpose: 'Irrigation & Solar',
+      purpose_hi: 'सौर ऊर्जा संचालित सिंचाई पंप',
+      description: 'Subsidized term loan financing for the remaining farmer contribution (up to 30%) towards standalone 3HP to 7.5HP solar agricultural pumps.',
+      description_hi: 'सौर सिंचाई पंप स्थापना हेतु कृषक अंशदान (30% तक) के लिए बैंक ऋण सुविधा, शेष 60% केंद्र व राज्य सरकार द्वारा अनुदानित।',
+      max_amount_rule: 'Up to ₹2,50,000 (covering up to 30% farmer share)',
+      interest_rate_rule: '8.00% - 9.00% p.a.',
+      tenure: '5 to 7 Years',
+      collateral_rule: 'Hypothecation of solar pump system',
+      required_documents: ['Aadhaar Card', 'Land Record (Khasra / B-1)', 'Bank Passbook'],
+      eligibility_rules: { min_land_acres: 1.0, farmer_categories: ['Marginal Farmer', 'Small Farmer', 'Large Farmer'] },
+      official_url: 'https://pmkusum.mnre.gov.in',
+      source_name: 'Ministry of New and Renewable Energy (MNRE), GoI',
+      source_document: 'PM-KUSUM Scheme Guidelines for Component-B',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'PM-KUSUM-SOLAR',
+        product_name: 'PM-KUSUM Component-B Standalone Solar Agri Pump Loan',
+        product_name_hi: 'पीएम-कुसुम कंपोनेंट-बी सोलर कृषि पंप ऋण',
+        eligibility_status: 'Likely eligible',
+        eligibility_label: 'Likely eligible',
+        eligibility_label_hi: 'संभावित पात्र',
+        status_badge_color: 'green',
+        matched_rules: [
+          'National scheme open across all Indian states and Union Territories.',
+          'Landholding (3.0 acres) satisfies the minimum 1.0 acre threshold.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'अखिल भारतीय राष्ट्रीय योजना सभी राज्यों के किसानों के लिए खुली है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 1.0 एकड़ की शर्त पूरी करती है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Land Record (Khasra / B-1)', document_name_hi: 'भूमि अभिलेख (खसरा / बी-1)', is_available: true },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+        ],
+        missing_documents: [],
+        missing_documents_hi: [],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: '8.00% - 9.00% p.a.',
+        indicative_limit: 'Up to ₹2,50,000 (covering up to 30% farmer share)',
+        official_url: 'https://pmkusum.mnre.gov.in',
+        source_name: 'Ministry of New and Renewable Energy (MNRE), GoI',
+        source_document: 'PM-KUSUM Scheme Guidelines for Component-B',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+    {
+      id: 7,
+      product_code: 'CG-SHAKAMBHARI-IRRIGATION',
+      name: 'Shakambhari Yojana Well & Pump Set Subsidy & Loan (Chhattisgarh)',
+      name_hi: 'शाकंभरी योजना कूप एवं पंप अनुदान व ऋण (छत्तीसगढ़)',
+      level: 'State',
+      state: 'Chhattisgarh',
+      lender_type: 'Cooperative / Commercial Bank',
+      purpose: 'Irrigation & Solar',
+      purpose_hi: 'कूप निर्माण एवं सिंचाई पंप',
+      description: 'Specialized irrigation support for small and marginal farmers in Chhattisgarh with up to 75% subsidy on pump sets and 50% on open wells with bank co-financing.',
+      description_hi: 'छत्तीसगढ़ के लघु एवं सीमांत किसानों के लिए कूप निर्माण (50% अनुदान) एवं पंप स्थापना (75% अनुदान) हेतु विशेष सहायता व बैंक सह-ऋण।',
+      max_amount_rule: 'Up to ₹1,50,000 (Project unit cost)',
+      interest_rate_rule: '7.50% - 8.50% p.a. (Post state subsidy)',
+      tenure: '5 Years',
+      collateral_rule: 'Hypothecation of pump machinery',
+      required_documents: ['Aadhaar Card', 'Land Record (Khasra / B-1)', 'Small/Marginal Farmer Certificate', 'Bank Passbook'],
+      eligibility_rules: { min_land_acres: 0.5, max_land_acres: 5.0, farmer_categories: ['Marginal Farmer', 'Small Farmer'] },
+      official_url: 'https://agriportal.cg.nic.in',
+      source_name: 'Department of Agriculture, Govt of Chhattisgarh',
+      source_document: 'Directorate of Agriculture Shakambhari Scheme Guidelines',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'CG-SHAKAMBHARI-IRRIGATION',
+        product_name: 'Shakambhari Yojana Well & Pump Set Subsidy & Loan (Chhattisgarh)',
+        product_name_hi: 'शाकंभरी योजना कूप एवं पंप अनुदान व ऋण (छत्तीसगढ़)',
+        eligibility_status: 'Possibly eligible (more info needed)',
+        eligibility_label: 'Possibly eligible (more info needed)',
+        eligibility_label_hi: 'संभावित पात्र (दस्तावेज अपेक्षित)',
+        status_badge_color: 'amber',
+        matched_rules: [
+          'State residency matches Chhattisgarh state scheme criteria.',
+          'Landholding (3.0 acres) satisfies the minimum 0.5 acre threshold.',
+          'Landholding (3.0 acres) is within the maximum limit of 5.0 acres.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'राज्य निवास छत्तीसगढ़ राज्य योजना के मानदंडों से मेल खाता है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 0.5 एकड़ की शर्त पूरी करती है।',
+          'भूमि धारिता (3.0 एकड़) अधिकतम 5.0 एकड़ की सीमा के भीतर है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Land Record (Khasra / B-1)', document_name_hi: 'भूमि अभिलेख (खसरा / बी-1)', is_available: true },
+          { document_name: 'Small/Marginal Farmer Certificate', document_name_hi: 'लघु/सीमांत कृषक प्रमाण पत्र', is_available: false },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+        ],
+        missing_documents: ['Small/Marginal Farmer Certificate'],
+        missing_documents_hi: ['लघु/सीमांत कृषक प्रमाण पत्र'],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: '7.50% - 8.50% p.a. (Post state subsidy)',
+        indicative_limit: 'Up to ₹1,50,000 (Project unit cost)',
+        official_url: 'https://agriportal.cg.nic.in',
+        source_name: 'Department of Agriculture, Govt of Chhattisgarh',
+        source_document: 'Directorate of Agriculture Shakambhari Scheme Guidelines',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+    {
+      id: 8,
+      product_code: 'CG-KISAN-SAMRIDHI',
+      name: 'Kisan Samridhi Nalkoop Tube-Well Loan & Subsidy (Chhattisgarh)',
+      name_hi: 'किसान समृद्धि नलकूप योजना ऋण एवं अनुदान (छत्तीसगढ़)',
+      level: 'State',
+      state: 'Chhattisgarh',
+      lender_type: 'Cooperative / Commercial Bank',
+      purpose: 'Irrigation & Solar',
+      purpose_hi: 'नलकूप खनन एवं विद्युतीकरण',
+      description: 'Tube well boring and pump energization loan with state capital subsidies for non-command agricultural lands in Chhattisgarh.',
+      description_hi: 'असिंचित कृषि क्षेत्रों में नलकूप खनन एवं पंप स्थापना हेतु शासकीय अनुदान एवं रियायती ऋण सहायता।',
+      max_amount_rule: 'Up to ₹1,80,000',
+      interest_rate_rule: '8.00% p.a.',
+      tenure: '5 to 7 Years',
+      collateral_rule: 'Hypothecation of equipment + Land mortgage',
+      required_documents: ['Aadhaar Card', 'Land Record (Khasra / B-1)', 'Gram Panchayat NOC', 'Bank Passbook'],
+      eligibility_rules: { min_land_acres: 1.5, max_land_acres: 15.0, farmer_categories: ['Small Farmer', 'Large Farmer'] },
+      official_url: 'https://agriportal.cg.nic.in',
+      source_name: 'Department of Agriculture, Govt of Chhattisgarh',
+      source_document: 'Kisan Samridhi Yojana Implementation Circular',
+      last_verified_on: '2025-04-10',
+      status: 'verified',
+      eligibility: {
+        product_code: 'CG-KISAN-SAMRIDHI',
+        product_name: 'Kisan Samridhi Nalkoop Tube-Well Loan & Subsidy (Chhattisgarh)',
+        product_name_hi: 'किसान समृद्धि नलकूप योजना ऋण एवं अनुदान (छत्तीसगढ़)',
+        eligibility_status: 'Possibly eligible (more info needed)',
+        eligibility_label: 'Possibly eligible (more info needed)',
+        eligibility_label_hi: 'संभावित पात्र (दस्तावेज अपेक्षित)',
+        status_badge_color: 'amber',
+        matched_rules: [
+          'State residency matches Chhattisgarh state scheme criteria.',
+          'Landholding (3.0 acres) satisfies the minimum 1.5 acre threshold.',
+          'Landholding (3.0 acres) is within the maximum limit of 15.0 acres.',
+          'Farmer category (Small Farmer) is eligible.',
+        ],
+        matched_rules_hi: [
+          'राज्य निवास छत्तीसगढ़ राज्य योजना के मानदंडों से मेल खाता है।',
+          'भूमि धारिता (3.0 एकड़) न्यूनतम 1.5 एकड़ की शर्त पूरी करती है।',
+          'भूमि धारिता (3.0 एकड़) अधिकतम 15.0 एकड़ की सीमा के भीतर है।',
+          'किसान श्रेणी (लघु किसान) इस योजना के अंतर्गत पात्र है।',
+        ],
+        unmet_rules: [],
+        unmet_rules_hi: [],
+        required_documents: [
+          { document_name: 'Aadhaar Card', document_name_hi: 'आधार कार्ड', is_available: true },
+          { document_name: 'Land Record (Khasra / B-1)', document_name_hi: 'भूमि अभिलेख (खसरा / बी-1)', is_available: true },
+          { document_name: 'Gram Panchayat NOC', document_name_hi: 'ग्राम पंचायत अनापत्ति प्रमाण पत्र (NOC)', is_available: false },
+          { document_name: 'Bank Passbook', document_name_hi: 'बैंक पासबुक', is_available: true },
+        ],
+        missing_documents: ['Gram Panchayat NOC'],
+        missing_documents_hi: ['ग्राम पंचायत अनापत्ति प्रमाण पत्र (NOC)'],
+        disclaimer_en: 'Indicative eligibility based on recorded criteria. Final sanction and credit limits depend on bank underwriting and land verification.',
+        disclaimer_hi: 'यह पात्रता केवल सांकेतिक है। ऋण स्वीकृति एवं वास्तविक ऋण सीमा बैंक सत्यापन एवं नियमों पर निर्भर है।',
+        indicative_rate: '8.00% p.a.',
+        indicative_limit: 'Up to ₹1,80,000',
+        official_url: 'https://agriportal.cg.nic.in',
+        source_name: 'Department of Agriculture, Govt of Chhattisgarh',
+        source_document: 'Kisan Samridhi Yojana Implementation Circular',
+        last_verified_on: '2025-04-10',
+        status: 'verified',
+      },
+    },
+  ];
+
+  return {
+    count: fallbackProducts.length,
+    likely_eligible_count: 2,
+    possibly_eligible_count: 6,
+    not_eligible_count: 0,
+    products: fallbackProducts,
+  };
+}
+
+export async function fetchMyLoansApi(
+  farmerId: string = 'FV12345',
+  status?: string
+): Promise<MyLoansResponse> {
+  try {
+    const params = new URLSearchParams();
+    params.set('farmer_id', farmerId);
+    if (status && status !== 'all') params.set('status', status);
+    return await apiClient.get<MyLoansResponse>(`/loans/me?${params.toString()}`);
+  } catch (err) {
+    console.warn('Backend offline, returning fallback farmer loans', err);
+  }
+
+  const fallbackLoans: MyLoanItem[] = [
+    {
+      id: 1,
+      loan_ref: 'LN-2024-8812',
+      bank_name: 'State Bank of India',
+      loan_type: 'Crop Loan (KCC)',
+      approved_amount: 80000,
+      disbursed_amount: 70000,
+      interest_rate: 7.5,
+      deductions: 5000,
+      repayments: 0,
+      difference: 10000,
+      status: 'Needs Review',
+      verification_status: 'Needs Review',
+      reason_codes: ['DISBURSEMENT_MISMATCH', 'PROCESSING_FEE_FLAG'],
+      reasons: [
+        'Approved amount (₹80,000) exceeds disbursed amount (₹70,000) by ₹10,000 difference.',
+        'Deductions include ₹5,000 unitemized processing or administrative fee (RBI mandates ₹0 fee up to ₹3 Lakh).',
+        'Crop insurance (PMFBY) premium auto-deduction requires verification against policy certificate.',
+      ],
+      loan_date: '12-03-2024',
+      last_verified_at: '12 Apr 2025',
+      sanction_doc_name: 'Loan_Sanction_Letter_SBI.pdf',
+      basis_of_check: [
+        {
+          rule_code: 'RBI-FIDD-KCC-2019',
+          scheme_name: 'Kisan Credit Card (KCC) Scheme',
+          rule_type: 'loan_disbursement',
+          formula_or_value: 'Scale of Finance + 10% post-harvest + 20% maintenance',
+          source_name: 'Reserve Bank of India (RBI)',
+          source_document: 'Master Circular – Kisan Credit Card (KCC) Scheme (FIDD.CO.FSD.BC.No.12/05.05.010/2018-19)',
+          source_url: 'https://www.rbi.org.in',
+          status: 'verified',
+        },
+        {
+          rule_code: 'MOA-MISS-PRI-2024',
+          scheme_name: 'Modified Interest Subvention Scheme (MISS)',
+          rule_type: 'interest_subvention',
+          formula_or_value: 'Standard 7.0% p.a. - 3.0% PRI = Effective 4.0% p.a. up to ₹3,00,000',
+          source_name: 'Ministry of Agriculture & Farmers Welfare, GoI / RBI',
+          source_document: 'Operational Guidelines for Modified Interest Subvention Scheme (MISS)',
+          source_url: 'https://agriwelfare.gov.in',
+          status: 'verified',
+        },
+        {
+          rule_code: 'RBI-FEE-WAIVER-2019',
+          scheme_name: 'Agricultural Loan Service Charges Waiver',
+          rule_type: 'processing_fee',
+          formula_or_value: '₹0 charges on crop loans up to ₹3,00,000',
+          source_name: 'Reserve Bank of India (RBI)',
+          source_document: 'Waiver of Processing, Documentation, Inspection Charges (FIDD.CO.FSD.BC.No.13/05.05.010/2018-19)',
+          source_url: 'https://www.rbi.org.in',
+          status: 'verified',
+        },
+      ],
+    },
+    {
+      id: 2,
+      loan_ref: 'LN-2023-4102',
+      bank_name: 'State Bank of India',
+      loan_type: 'KCC Short-term',
+      approved_amount: 50000,
+      disbursed_amount: 50000,
+      interest_rate: 7.0,
+      deductions: 0,
+      repayments: 50000,
+      difference: 0,
+      status: 'Verified',
+      verification_status: 'Verified',
+      reason_codes: [],
+      reasons: ['All figures match the approved sanction letter and statutory guidelines.'],
+      loan_date: '10-06-2023',
+      last_verified_at: '15 Jan 2024',
+      sanction_doc_name: 'KCC_Sanction_Letter_2023.pdf',
+      basis_of_check: [],
+    },
+    {
+      id: 3,
+      loan_ref: 'LN-2024-9943',
+      bank_name: 'Chhattisgarh Rajya Gramin Bank',
+      loan_type: 'Agri Term Loan',
+      approved_amount: 120000,
+      disbursed_amount: 0,
+      interest_rate: 9.5,
+      deductions: 0,
+      repayments: 0,
+      difference: 120000,
+      status: 'Not Verified',
+      verification_status: 'Not Verified',
+      reason_codes: ['MISSING_SANCTION_DOC', 'CHECK_NOT_RUN'],
+      reasons: [
+        'Missing sanction letter or document. Please upload your sanction letter to verify.',
+        'Verification check has not been executed yet.',
+      ],
+      loan_date: '20-03-2024',
+      last_verified_at: undefined,
+      sanction_doc_name: undefined,
+      basis_of_check: [],
+    },
+  ];
+
+  return {
+    farmer_id: farmerId,
+    farmer_name: 'Ramesh Kumar',
+    total_count: 3,
+    verified_count: 1,
+    needs_review_count: 1,
+    not_verified_count: 1,
+    loans: fallbackLoans,
+  };
+}
+
+export async function reverifyLoanApi(loanRef: string): Promise<MyLoanItem> {
+  try {
+    return await apiClient.post<MyLoanItem>(`/loans/${loanRef}/verify`, {});
+  } catch (err) {
+    console.warn('Backend offline for reverify loan', err);
+    throw err;
+  }
+}
+
+
 export async function verifyMspApi(payload: {
   crop: string;
   quantity_quintals: number;
