@@ -217,3 +217,17 @@ def telephony_missed_call(payload: MissedCallPayload) -> Dict[str, Any]:
     adapter = get_telephony_adapter()
     return adapter.handle_missed_call(payload.caller_phone, language=payload.language or "hi")
 
+
+from app.core.database import get_db
+from sqlalchemy.orm import Session
+from app.api.admin import get_voice_support_admin_metrics
+
+
+@router.get("/admin/metrics")
+def get_voice_metrics_alias(db: Session = Depends(get_db)):
+    """
+    Alias for /admin/voice-metrics.
+    """
+    return get_voice_support_admin_metrics(db)
+
+

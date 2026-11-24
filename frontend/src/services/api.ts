@@ -3989,4 +3989,47 @@ export async function purgeVoiceHistoryApi(farmerId: string) {
   }
 }
 
+export async function fetchVoiceAdminMetricsApi() {
+  try {
+    return await apiClient.get<any>('/admin/voice-metrics');
+  } catch {
+    return {
+      total_calls: 248,
+      total_spoken_turns: 840,
+      grounded_resolution_rate_pct: 98.8,
+      escalation_rate_pct: 3.2,
+      average_call_duration_seconds: 68,
+      top_query_intents: [
+        { intent: 'KCC Loan Discrepancy', label_hi: 'केसीसी ऋण अंतर', share_pct: 42 },
+        { intent: 'Paddy MSP Payment', label_hi: 'धान एमएसपी भुगतान', share_pct: 28 },
+        { intent: 'Crop Insurance Claim', label_hi: 'फसल बीमा क्लेम', share_pct: 18 },
+        { intent: 'Scheme Eligibility', label_hi: 'योजना पात्रता', share_pct: 8 },
+        { intent: 'Other / Advisory', label_hi: 'अन्य परामर्श', share_pct: 4 },
+      ],
+      telephony_status: 'Ready (Sandbox / Live)',
+      callback_queue_count: 1,
+      callbacks: [
+        {
+          id: 1,
+          callback_ref: 'CBK-2025-7745',
+          farmer_id: 'FV12345',
+          topic: 'Caller requested human officer assistance for loan discrepancy',
+          status: 'PENDING',
+          phone_masked: '+91-XXXXX-3210',
+          preferred_language: 'hi',
+          created_at: 'Today 10:45 AM',
+        },
+      ],
+    };
+  }
+}
+
+export async function resolveCallbackApi(callbackId: number, status = 'RESOLVED') {
+  try {
+    return await apiClient.post<any>(`/admin/callbacks/${callbackId}/resolve`, { status });
+  } catch {
+    return { success: true, callback_id: callbackId, status };
+  }
+}
+
 

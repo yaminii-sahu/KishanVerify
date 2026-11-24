@@ -306,6 +306,36 @@ All 29 test cases validate:
 
 ---
 
+## 🎙️ AI Voice Call Support & Rural Telephony Engine
+
+KisanVerify features an intelligent, multi-turn AI Voice Call Support system specifically designed for Indian farmers with varying literacy levels. It can be accessed directly in the web/mobile app or via standard telephony/IVR phone calls.
+
+### Architecture Overview
+```
++----------------------------------------------------------------------------------------------------+
+|                                KISANVERIFY VOICE CALL SUPPORT STACK                                |
++------------------------------------+----------------------------------+----------------------------+
+|  Frontend Voice Interface          |  Deterministic Tool Layer        |  Speech & Safety Guardrail |
++------------------------------------+----------------------------------+----------------------------+
+| - VoiceCallModal with live audio   | - `get_records_summary`          | - Mandatory AI disclosure  |
+| - Sage/Olive animated states:      | - `get_loan_status` (KCC)        | - Phonetic currency TTS    |
+|   (Listening, Thinking, Speaking)  | - `get_msp_status` (Mandi)       |   (₹10,000 -> "दस हज़ार")  |
+| - Synchronized live action cards   | - `get_claim_status` (PMFBY)     | - Caller PIN auth (1234)   |
+| - Suggested quick-tap phrases      | - `get_eligible_schemes`         | - Privacy masked numbers   |
+| - Local human office directory     | - `get_mandi_prices` / `weather` | - Verbal confirmation flow |
+| - Web Speech API (hi-IN & en-IN)   | - `raise_grievance` / `callback` | - Turn rate limits (20 max)|
++------------------------------------+----------------------------------+----------------------------+
+```
+
+### Key Technical Pillars:
+1. **Zero Hallucination Guarantee**: All numbers, deductions, rates, dates, and official URLs are queried deterministically in Python from the farmer's verified database records. The LLM only rephrases verified facts; it never invents or computes numbers.
+2. **Verbal Confirmation Before Write Actions**: When a farmer verbally requests to file a grievance or schedule an officer callback, the assistant asks for explicit spoken confirmation (*"Do you want me to record this officially? Say yes or no."*) before executing the write.
+3. **Phonetic Spoken Currency**: Standard TTS models mispronounce `₹10,000` or read raw symbols. The voice orchestrator automatically maps rupee amounts to *"दस हज़ार रुपये"* in Hindi and *"ten thousand rupees"* in English.
+4. **Provider-Agnostic Telephony Adapter**: Feature-flagged (`VOICE_TELEPHONY_ENABLED=false` by default). Includes `MockTelephonyAdapter` producing valid TwiML XML (`<Say>`, `<Gather>`, `<Hangup>`) and a missed-call-to-callback automation pipeline.
+5. **Privacy by Design**: Masked account numbers (`SBIN*******1234`), right-to-be-forgotten endpoint (`DELETE /api/v1/voice/history/{farmer_id}`), and in-memory rate limiting (max 20 turns per session, max 5 calls per hour).
+
+---
+
 ## 🎬 End-to-End Demo Walkthrough
 
 1. **Login & Role Selection**:

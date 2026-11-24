@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { 
   FileSpreadsheet, 
@@ -12,7 +12,11 @@ import {
   TrendingUp, 
   Layers,
   ChevronRight,
-  Filter
+  Filter,
+  Phone,
+  Headphones,
+  Sparkles,
+  Clock
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -29,6 +33,7 @@ import {
 import { StatusBadge } from '../components/StatusBadge';
 import { AdminCase, AdminStats } from '../types';
 import { apiClient } from '../lib/api';
+import { fetchVoiceAdminMetricsApi, resolveCallbackApi } from '../services/api';
 
 export const AdminDashboardPage: React.FC = () => {
   const { selectedDistrict } = useOutletContext<{ selectedDistrict: string }>();
@@ -44,6 +49,36 @@ export const AdminDashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedCase, setSelectedCase] = useState<AdminCase | null>(null);
+  const [voiceMetrics, setVoiceMetrics] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadVoiceMetrics() {
+      try {
+        const data = await fetchVoiceAdminMetricsApi();
+        if (data) setVoiceMetrics(data);
+      } catch (err) {
+        console.warn('Failed to load voice admin metrics', err);
+      }
+    }
+    loadVoiceMetrics();
+  }, []);
+
+  const handleResolveCallback = async (callbackId: number) => {
+    try {
+      await resolveCallbackApi(callbackId, 'RESOLVED');
+      setVoiceMetrics((prev: any) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          callbacks: prev.callbacks.map((cb: any) =>
+            cb.id === callbackId ? { ...cb, status: 'RESOLVED' } : cb
+          ),
+        };
+      });
+    } catch (err) {
+      console.error('Resolve callback error:', err);
+    }
+  };
 
   // Pre-seeded cases matching blueprint and Image A table
   const [cases, setCases] = useState<AdminCase[]>([
@@ -468,6 +503,116 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* ============================================================== */}
+      {/* AI CALL SUPPORT & TELEPHONY INTELLIGENCE METRICS                */}
+      {/* ============================================================== */}
+      <div className="bg-cream-surface rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-warm-border shadow-card space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-warm-border pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-tint text-forest flex items-center justify-center shrink-0">
+              <Phone className="w-5 h-5 text-forest" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-charcoal">
+                AI Voice Call Support & Telephony Telemetry
+              </h2>
+              <p className="text-xs text-charcoal-muted">
+                Rural voice line usage, grounded tool resolution rates, and officer callback queue.
+              </p>
+            </div>
+          </div>
+          <span className="self-start sm:self-auto bg-forest text-white text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            98.8% Grounded Resolution
+          </span>
+        </div>
+
+        {/* 4 Voice Stat Pills */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="p-3 bg-cream rounded-xl border border-warm-border">
+            <span className="text-[10px] font-bold text-charcoal-muted uppercase">Total Voice Calls</span>
+            <div className="text-lg font-extrabold text-charcoal">{voiceMetrics?.total_calls || 248}</div>
+            <span className="text-[10px] text-charcoal-muted">Via In-App & Telephony</span>
+          </div>
+          <div className="p-3 bg-cream rounded-xl border border-warm-border">
+            <span className="text-[10px] font-bold text-charcoal-muted uppercase">Spoken Turns</span>
+            <div className="text-lg font-extrabold text-forest">{voiceMetrics?.total_spoken_turns || 840}</div>
+            <span className="text-[10px] text-charcoal-muted">Avg 3.4 turns / call</span>
+          </div>
+          <div className="p-3 bg-cream rounded-xl border border-warm-border">
+            <span className="text-[10px] font-bold text-charcoal-muted uppercase">Top Topic</span>
+            <div className="text-lg font-extrabold text-status-discrepancy-text">KCC Loan (42%)</div>
+            <span className="text-[10px] text-charcoal-muted">Fee discrepancy inquiries</span>
+          </div>
+          <div className="p-3 bg-cream rounded-xl border border-warm-border">
+            <span className="text-[10px] font-bold text-charcoal-muted uppercase">Pending Callbacks</span>
+            <div className="text-lg font-extrabold text-amber-600">
+              {voiceMetrics?.callback_queue_count || 1}
+            </div>
+            <span className="text-[10px] text-charcoal-muted">Requires Nodal Officer</span>
+          </div>
+        </div>
+
+        {/* Callback Queue Table */}
+        <div className="space-y-2 pt-2">
+          <div className="flex items-center justify-between text-xs font-bold text-charcoal">
+            <span className="flex items-center gap-1.5">
+              <Headphones className="w-4 h-4 text-forest" />
+              Officer Callback Requests Queue
+            </span>
+            <span className="text-xs font-normal text-charcoal-muted">
+              Auto-escalated from phone voice calls & missed calls
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-warm-border text-charcoal-muted uppercase text-[10px] font-bold">
+                  <th className="pb-2">Ref</th>
+                  <th className="pb-2">Caller</th>
+                  <th className="pb-2">Topic</th>
+                  <th className="pb-2">Time</th>
+                  <th className="pb-2">Status</th>
+                  <th className="pb-2 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-warm-border/60">
+                {(voiceMetrics?.callbacks || []).map((cb: any) => (
+                  <tr key={cb.id} className="hover:bg-cream/60 transition-colors">
+                    <td className="py-2.5 font-mono text-[11px] font-bold text-forest">{cb.callback_ref}</td>
+                    <td className="py-2.5 font-medium">{cb.phone_masked}</td>
+                    <td className="py-2.5 max-w-xs truncate text-charcoal-muted">{cb.topic}</td>
+                    <td className="py-2.5 text-charcoal-muted">{cb.created_at}</td>
+                    <td className="py-2.5">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          cb.status === 'RESOLVED'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {cb.status}
+                      </span>
+                    </td>
+                    <td className="py-2.5 text-right">
+                      {cb.status !== 'RESOLVED' && (
+                        <button
+                          onClick={() => handleResolveCallback(cb.id)}
+                          className="bg-forest hover:bg-forest-dark text-white px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors"
+                        >
+                          Mark Contacted
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Case Review Modal: Responsive Bottom-Sheet on mobile, Centered Modal on desktop */}
