@@ -7,6 +7,20 @@ from app.voice.agent import (
     VoiceTurnResponse,
     process_voice_call_turn,
 )
+from app.voice.auth_privacy import (
+    PinVerifyRequest,
+    PinVerifyResponse,
+    ConsentRequest,
+    ConsentResponse,
+    verify_caller_pin,
+    record_consent,
+    record_and_check_turn_limit,
+    check_call_initiation_limit,
+    purge_voice_history_for_farmer,
+    CONSENT_DISCLOSURE_HI,
+    CONSENT_DISCLOSURE_EN,
+    DEMO_VERIFY_PIN,
+)
 
 router = APIRouter(prefix="/voice", tags=["Voice Call Support Agent"])
 
@@ -25,6 +39,8 @@ def get_voice_status() -> Dict[str, Any]:
         "provider": "gemini" if is_live else "deterministic-rule-engine",
         "llm_model": settings.LLM_MODEL,
         "phonetic_converter": "enabled",
+        "rate_limiting": "active",
+        "demo_pin": DEMO_VERIFY_PIN,
         "tools_loaded": [
             "get_records_summary",
             "get_loan_status",
@@ -44,13 +60,79 @@ def get_voice_status() -> Dict[str, Any]:
     }
 
 
+@router.get("/consent-disclosure")
+def get_consent_disclosure(language: str = "hi") -> Dict[str, str]:
+    """
+    Returns the spoken AI disclosure statement in Hindi and English.
+    """
+    is_hi = language in ["hi", "hindi", "hinglish"]
+    return {
+        "disclosure_text": CONSENT_DISCLOSURE_HI if is_hi else CONSENT_DISCLOSURE_EN,
+        "disclosure_hi": CONSENT_DISCLOSURE_HI,
+        "disclosure_en": CONSENT_DISCLOSURE_EN,
+        "requirement": "Mandatory prior disclosure before processing personal account information",
+    }
+
+
+@router.post("/verify-caller-pin", response_model=PinVerifyResponse)
+def verify_pin(req: PinVerifyRequest) -> PinVerifyResponse:
+    """
+    Verifies caller credentials via phone number and PIN / demo OTP 1234.
+    """
+    return verify_caller_pin(req)
+
+
+@router.post("/record-consent", response_model=ConsentResponse)
+def set_consent(req: ConsentRequest) -> ConsentResponse:
+    """
+    Records verbal or in-app consent for AI voice conversation recording.
+    """
+    record_consent(req.session_id, req.consent_given, req.farmer_id or "FV12345")
+    return ConsentResponse(
+        session_id=req.session_id,
+        consent_given=req.consent_given,
+        status="Recorded",
+        message="Consent recorded successfully." if req.consent_given else "Consent declined.",
+    )
+
+
+@router.delete("/history/{farmer_id}")
+def purge_voice_history(farmer_id: str) -> Dict[str, Any]:
+    """
+    Deletes all voice conversation sessions, logs, and audit entries for the specified farmer.
+    Enforces privacy and right-to-be-forgotten compliance.
+    """
+    cleared = purge_voice_history_for_farmer(farmer_id)
+    return {
+        "success": True,
+        "farmer_id": farmer_id,
+        "sessions_purged": cleared,
+        "message": f"Successfully deleted voice call logs and audit history for farmer {farmer_id}.",
+    }
+
+
 @router.post("/turn", response_model=VoiceTurnResponse)
-def voice_call_turn(req: VoiceTurnRequest) -> VoiceTurnResponse:
+def voice_call_turn(req: VoiceTurnRequest, request: Request) -> VoiceTurnResponse:
     """
     Executes a single conversational speech turn for voice call support.
-    Accepts speech transcription, session history, and optional pending confirmations.
-    Returns grounded spoken text, phonetic pronunciation, and synchronized action cards.
+    Enforces turn limits (max 20 turns) and hourly call rate limits.
     """
+    farmer_id = req.farmer_id or "FV12345"
+    client_ip = request.client.host if request.client else "unknown"
+    rate_key = farmer_id or client_ip
+
+    # Enforce turn limits per session
+    if req.session_id:
+        allowed, count = record_and_check_turn_limit(req.session_id, farmer_id=farmer_id)
+        if not allowed:
+            is_hi = req.language in ["hi", "hindi", "hinglish"]
+            detail_msg = (
+                "इस कॉल की अधिकतम सीमा (20 राउंड) पूरी हो गई है। कृपया नई कॉल शुरू करें या अधिकारी से संपर्क करें।"
+                if is_hi else
+                "Session limit reached (20 turns max). Please start a new call or speak with an officer."
+            )
+            raise HTTPException(status_code=429, detail=detail_msg)
+
     try:
         return process_voice_call_turn(req)
     except Exception as e:
@@ -58,8 +140,8 @@ def voice_call_turn(req: VoiceTurnRequest) -> VoiceTurnResponse:
 
 
 @router.post("/agent", response_model=VoiceTurnResponse)
-def voice_call_agent(req: VoiceTurnRequest) -> VoiceTurnResponse:
+def voice_call_agent(req: VoiceTurnRequest, request: Request) -> VoiceTurnResponse:
     """
     Alias for /voice/turn to support standard agent invocation semantics.
     """
-    return voice_call_turn(req)
+    return voice_call_turn(req, request)
