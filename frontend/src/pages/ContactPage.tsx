@@ -17,9 +17,11 @@ import {
   Building2,
   Info,
   HelpCircle,
+  Phone,
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { VoiceCallModal } from '../components/VoiceCallModal';
 import {
   fetchHelplinesApi,
   submitContactApi,
@@ -66,6 +68,7 @@ export const ContactPage: React.FC = () => {
   const [submittedTicket, setSubmittedTicket] = useState<ContactSubmitResponse | null>(null);
   const [copiedTicket, setCopiedTicket] = useState<boolean>(false);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+  const [isVoiceCallOpen, setIsVoiceCallOpen] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadData() {
@@ -194,6 +197,36 @@ export const ContactPage: React.FC = () => {
         /* 1. VERIFIED GOVERNMENT HELPLINES LIST                           */
         /* ============================================================== */
         <div className="space-y-4">
+          {/* AI Voice Call Support Card */}
+          <div className="bg-gradient-to-r from-[#FAF9F5] to-[#EAEFE4] dark:from-stone-800 dark:to-stone-900 border border-[#556B2F]/30 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-[#556B2F] text-white flex items-center justify-center shrink-0 shadow-md">
+                <Phone className="w-6 h-6 animate-pulse" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#6B8E23]/20 text-[#3E5224] dark:text-stone-200 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  {isHi ? 'तत्काल एआई वॉइस कॉल' : 'Instant AI Voice Call'}
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-[#2C3B1E] dark:text-stone-100">
+                  {isHi ? 'किसानवेरीफाई वॉइस सहायक से सीधे बात करें' : 'Talk Directly with KisanVerify Voice Assistant'}
+                </h3>
+                <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5 max-w-lg leading-relaxed">
+                  {isHi
+                    ? 'हिंदी या अंग्रेजी में बोलकर अपने केसीसी ऋण, धान एमएसपी भुगतान, फसल बीमा या योजनाओं की स्थिति जानें।'
+                    : 'Speak in Hindi or English to check your KCC loan, MSP payment, PMFBY claims, or eligible schemes.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsVoiceCallOpen(true)}
+              className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#556B2F] hover:bg-[#435424] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-soft hover:shadow-md transition-all active:scale-95 shrink-0"
+            >
+              <Phone className="w-4 h-4" />
+              <span>{isHi ? '📞 अभी कॉल करें' : '📞 Call Support Now'}</span>
+            </button>
+          </div>
+
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
               <Headphones className="w-4 h-4 text-[#5B6B4D]" />
@@ -212,9 +245,9 @@ export const ContactPage: React.FC = () => {
                 {isHi ? 'हेल्पलाइन लोड हो रही हैं...' : 'Loading verified helplines...'}
               </div>
             ) : (
-              helplines.map((hl) => (
+              helplines.map((hl, idx) => (
                 <div
-                  key={hl.code}
+                  key={hl.code || (hl as any).id || (hl as any).toll_free_number || idx}
                   className="bg-white border border-[#E6E0D4] hover:border-[#8B9A6E] rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
                 >
                   <div>
@@ -610,6 +643,12 @@ export const ContactPage: React.FC = () => {
           {isHi ? 'अंतिम सत्यापन: अप्रैल 2025' : 'Last verified: April 2025'}
         </div>
       </div>
+      {/* Voice Call Support Modal */}
+      <VoiceCallModal
+        isOpen={isVoiceCallOpen}
+        onClose={() => setIsVoiceCallOpen(false)}
+        language={language === 'hi' ? 'hi' : 'en'}
+      />
     </div>
   );
 };

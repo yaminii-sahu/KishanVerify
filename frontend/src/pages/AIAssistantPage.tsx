@@ -13,11 +13,13 @@ import {
   ExternalLink,
   ShieldCheck,
   Cpu,
-  ArrowRight
+  ArrowRight,
+  Phone
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { sendAiChatApi, fetchAiStatusApi, AiChatResponse } from '../services/api';
+import { VoiceCallModal } from '../components/VoiceCallModal';
 import farmerAvatarImg from '../assets/illustrations/farmer-avatar.svg';
 
 interface Message {
@@ -42,6 +44,7 @@ export const AIAssistantPage: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
   const [aiStatus, setAiStatus] = useState<{
     provider_configured: boolean;
     mode: 'live' | 'offline';
@@ -295,27 +298,38 @@ export const AIAssistantPage: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={() => {
-            setMessages([
-              {
-                id: 'm-reset',
-                sender: 'assistant',
-                text: language === 'hi'
-                  ? 'नमस्ते! किसानवेरीफाई सहायक में आपका स्वागत है। आप योजनाओं, ऋण अंतर, एमएसपी या फसल बीमा के बारे में पूछ सकते हैं।'
-                  : 'Namaste! Welcome back to KisanVerify assistant. Ask me anything about your schemes, loans, MSP, or insurance claims.',
-                time: 'Just now',
-                chips: ['Eligible schemes', 'Loan difference', 'Claim status', 'MSP status'],
-                mode: 'offline',
-              },
-            ]);
-          }}
-          className="text-xs text-muted hover:text-charcoal flex items-center gap-1 min-h-[36px]"
-          title="Reset chat"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsVoiceCallOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-forest hover:bg-forest-dark text-white text-xs font-bold shadow-soft transition-all active:scale-95"
+            title={language === 'hi' ? 'एआई कॉल सहायता शुरू करें' : 'Start AI Voice Call'}
+          >
+            <Phone className="w-3.5 h-3.5" />
+            <span>{language === 'hi' ? 'कॉल सहायता' : 'Call Support'}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setMessages([
+                {
+                  id: 'm-reset',
+                  sender: 'assistant',
+                  text: language === 'hi'
+                    ? 'नमस्ते! किसानवेरीफाई सहायक में आपका स्वागत है। आप योजनाओं, ऋण अंतर, एमएसपी या फसल बीमा के बारे में पूछ सकते हैं।'
+                    : 'Namaste! Welcome back to KisanVerify assistant. Ask me anything about your schemes, loans, MSP, or insurance claims.',
+                  time: 'Just now',
+                  chips: ['Eligible schemes', 'Loan difference', 'Claim status', 'MSP status'],
+                  mode: 'offline',
+                },
+              ]);
+            }}
+            className="text-xs text-muted hover:text-charcoal flex items-center gap-1 min-h-[36px]"
+            title="Reset chat"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Reset</span>
+          </button>
+        </div>
       </div>
 
       {/* Messages Stream */}
@@ -499,6 +513,13 @@ export const AIAssistantPage: React.FC = () => {
           )}
         </form>
       </div>
+
+      {/* Voice Call Support Modal */}
+      <VoiceCallModal
+        isOpen={isVoiceCallOpen}
+        onClose={() => setIsVoiceCallOpen(false)}
+        language={language === 'hi' ? 'hi' : 'en'}
+      />
 
     </div>
   );

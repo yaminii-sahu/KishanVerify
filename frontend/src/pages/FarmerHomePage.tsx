@@ -6,6 +6,7 @@ import {
   Coins, 
   ShieldCheck, 
   Mic, 
+  Phone,
   AlertCircle, 
   ChevronRight, 
   ArrowRight,
@@ -24,6 +25,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { fetchFarmerAttentionApi, fetchWeatherApi, WeatherResponse } from '../services/api';
+import { VoiceCallModal } from '../components/VoiceCallModal';
 
 export const FarmerHomePage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -51,6 +53,7 @@ export const FarmerHomePage: React.FC = () => {
   const [isLoadingAttention, setIsLoadingAttention] = useState(true);
   const [isAttentionExpanded, setIsAttentionExpanded] = useState(false);
   const [weatherAlert, setWeatherAlert] = useState<WeatherResponse | null>(null);
+  const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -157,24 +160,41 @@ export const FarmerHomePage: React.FC = () => {
             </p>
           </div>
 
-          {/* Compact round voice button */}
-          <button
-            onClick={() => navigate('/farmer/assistant')}
-            className="w-9 h-9 rounded-full bg-forest hover:bg-forest-dark text-white flex items-center justify-center shadow-soft hover:scale-105 active:scale-95 transition-all ml-1 shrink-0"
-            aria-label="Activate voice assistant"
-          >
-            <Mic className="w-4 h-4 text-white" />
-          </button>
+          {/* Compact round voice button & Call Support */}
+          <div className="flex items-center gap-1.5 ml-1 shrink-0">
+            <button
+              onClick={() => setIsVoiceCallOpen(true)}
+              className="px-2.5 py-1.5 rounded-full bg-forest hover:bg-forest-dark text-white flex items-center gap-1 shadow-soft hover:scale-105 active:scale-95 transition-all text-xs font-bold"
+              aria-label="Start AI Voice Call"
+            >
+              <Phone className="w-3.5 h-3.5 text-white" />
+              <span>{language === 'hi' ? 'कॉल सहायता' : 'Call Support'}</span>
+            </button>
+            <button
+              onClick={() => navigate('/farmer/assistant')}
+              className="w-8 h-8 rounded-full bg-[#EAEFE4] hover:bg-tint text-forest flex items-center justify-center shadow-2xs hover:scale-105 active:scale-95 transition-all"
+              aria-label="Activate chat assistant"
+            >
+              <Mic className="w-4 h-4 text-forest" />
+            </button>
+          </div>
         </div>
 
         {/* Mobile Voice Button (< md) */}
-        <div className="w-full md:hidden pt-0.5">
+        <div className="w-full md:hidden pt-0.5 flex gap-2">
+          <button
+            onClick={() => setIsVoiceCallOpen(true)}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-forest text-white text-xs font-bold shadow-soft hover:bg-forest-dark transition-all active:scale-98 min-h-[42px]"
+          >
+            <Phone className="w-4 h-4 text-white" />
+            <span>{language === 'hi' ? '📞 कॉल सहायता' : '📞 Call Support'}</span>
+          </button>
           <button
             onClick={() => navigate('/farmer/assistant')}
-            className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-forest text-white text-xs font-bold shadow-soft hover:bg-forest-dark transition-all active:scale-98 min-h-[42px]"
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#EAEFE4] text-forest border border-warm-border text-xs font-bold hover:bg-tint transition-all active:scale-98 min-h-[42px]"
           >
-            <Mic className="w-4 h-4 text-white" />
-            <span>{language === 'hi' ? 'अपनी भाषा में पूछें — माइक दबाकर बोलें' : 'Ask in your language — Tap the mic and speak'}</span>
+            <Mic className="w-4 h-4 text-forest" />
+            <span>{language === 'hi' ? 'चैट पूछें' : 'Ask Chat'}</span>
           </button>
         </div>
       </div>
@@ -455,6 +475,13 @@ export const FarmerHomePage: React.FC = () => {
           <strong className="text-charcoal font-semibold">Core Guarantee:</strong> All financial math is calculated deterministically. A discrepancy flag is an invitation for transparent bank review, not proof of wrongdoing.
         </p>
       </div>
+
+      {/* Voice Call Support Modal */}
+      <VoiceCallModal
+        isOpen={isVoiceCallOpen}
+        onClose={() => setIsVoiceCallOpen(false)}
+        language={language === 'hi' ? 'hi' : 'en'}
+      />
 
     </div>
   );
