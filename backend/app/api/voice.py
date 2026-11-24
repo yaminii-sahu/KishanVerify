@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import Dict, Any, Optional
+from pydantic import BaseModel
 
 from app.core.config import settings
 from app.voice.agent import (
@@ -145,3 +146,74 @@ def voice_call_agent(req: VoiceTurnRequest, request: Request) -> VoiceTurnRespon
     Alias for /voice/turn to support standard agent invocation semantics.
     """
     return voice_call_turn(req, request)
+
+
+# ---------------------------------------------------------------------------
+# Telephony Integration Endpoints (Feature-Flagged)
+# ---------------------------------------------------------------------------
+
+from app.voice.telephony import (
+    VOICE_TELEPHONY_ENABLED,
+    TELEPHONY_PROVIDER,
+    TelephonyCallContext,
+    TelephonyResponse,
+    get_telephony_adapter,
+)
+from fastapi.responses import Response
+
+
+class MissedCallPayload(BaseModel):
+    caller_phone: str
+    language: Optional[str] = "hi"
+
+
+@router.get("/telephony/status")
+def get_telephony_status() -> Dict[str, Any]:
+    """
+    Returns telephony adapter availability and feature flag configuration.
+    """
+    return {
+        "telephony_enabled": VOICE_TELEPHONY_ENABLED,
+        "provider": TELEPHONY_PROVIDER,
+        "supported_codecs": ["PCMU", "opus", "pcm"],
+        "missed_call_service": "active",
+        "demo_mode": not VOICE_TELEPHONY_ENABLED,
+    }
+
+
+@router.post("/telephony/incoming")
+def telephony_incoming_call(ctx: TelephonyCallContext, request: Request):
+    """
+    Webhook for incoming phone calls. Returns TwiML or structured JSON.
+    """
+    adapter = get_telephony_adapter()
+    res = adapter.handle_incoming_call(ctx)
+
+    accept_header = request.headers.get("accept", "")
+    if "application/json" in accept_header:
+        return res
+    return Response(content=res.twiml_xml, media_type="application/xml")
+
+
+@router.post("/telephony/gather")
+def telephony_gather_speech(ctx: TelephonyCallContext, request: Request):
+    """
+    Webhook for speech gathering result. Invokes voice agent and returns spoken response.
+    """
+    adapter = get_telephony_adapter()
+    res = adapter.handle_gather(ctx)
+
+    accept_header = request.headers.get("accept", "")
+    if "application/json" in accept_header:
+        return res
+    return Response(content=res.twiml_xml, media_type="application/xml")
+
+
+@router.post("/telephony/missed-call")
+def telephony_missed_call(payload: MissedCallPayload) -> Dict[str, Any]:
+    """
+    Webhook for missed-call alerts. Queues a priority officer callback.
+    """
+    adapter = get_telephony_adapter()
+    return adapter.handle_missed_call(payload.caller_phone, language=payload.language or "hi")
+
