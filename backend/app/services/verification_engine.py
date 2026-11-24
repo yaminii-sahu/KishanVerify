@@ -594,6 +594,32 @@ class MSPVerificationOutput(BaseModel):
     flagged_rule_reason_en: Optional[str] = None
     flagged_rule_reason_hi: Optional[str] = None
 
+class QuantitySourceItem(BaseModel):
+    source_name_en: str
+    source_name_hi: str
+    quantity_qtl: float
+    quantity_kg: float
+    reference_id: Optional[str] = None
+    data_origin: str
+
+class MSPQuantityCrossCheckOutput(BaseModel):
+    msp_rate: float
+    farmer_quantity_qtl: float
+    farmer_quantity_kg: float
+    weight_slip_quantity_qtl: Optional[float] = None
+    weight_slip_quantity_kg: Optional[float] = None
+    portal_quantity_qtl: Optional[float] = None
+    portal_quantity_kg: Optional[float] = None
+    sources: List[QuantitySourceItem] = Field(default_factory=list)
+    has_discrepancy: bool
+    max_difference_qtl: float
+    max_difference_kg: float
+    monetary_impact: float
+    explanation_en: str
+    explanation_hi: str
+    unit_conversion_note_en: str = "1 Quintal = 100 Kilograms (kg)"
+    unit_conversion_note_hi: str = "1 क्विंटल = 100 किलोग्राम (किग्रा)"
+
 class InsuranceVerificationOutput(BaseModel):
     status: str
     crop: str
@@ -1213,6 +1239,105 @@ def verify_msp(
         flagged_rule_threshold=flagged_rule_threshold,
         flagged_rule_reason_en=flagged_rule_reason_en,
         flagged_rule_reason_hi=flagged_rule_reason_hi,
+    )
+
+
+def cross_check_msp_quantities(
+    farmer_qty: float,
+    msp_rate: float,
+    weight_slip_qty: Optional[float] = None,
+    portal_qty: Optional[float] = None,
+    weight_slip_ref: Optional[str] = "REC-PTN-****441",
+    portal_ref: Optional[str] = "CG-KRY-****891",
+    unit_input: str = "quintal",
+) -> MSPQuantityCrossCheckOutput:
+    """
+    Deterministic cross-check across multiple quantity records
+    (Farmer entered vs Weighbridge Slip vs e-Uparjan Portal).
+    Computes exact discrepancy in Quintals and Kilograms,
+    and calculates the exact monetary impact (Difference * MSP Rate).
+    """
+    if unit_input.lower() in ["kg", "kilogram", "kilograms"]:
+        farmer_qtl = round(float(farmer_qty) / 100.0, 2)
+        weight_qtl = round(float(weight_slip_qty) / 100.0, 2) if weight_slip_qty is not None else None
+        portal_qtl = round(float(portal_qty) / 100.0, 2) if portal_qty is not None else None
+    else:
+        farmer_qtl = round(float(farmer_qty), 2)
+        weight_qtl = round(float(weight_slip_qty), 2) if weight_slip_qty is not None else None
+        portal_qtl = round(float(portal_qty), 2) if portal_qty is not None else None
+
+    rate = round(float(msp_rate), 2)
+    sources: List[QuantitySourceItem] = [
+        QuantitySourceItem(
+            source_name_en="Farmer Claimed Delivery",
+            source_name_hi="किसान द्वारा प्रविष्ट आवक",
+            quantity_qtl=farmer_qtl,
+            quantity_kg=round(farmer_qtl * 100.0, 1),
+            reference_id=None,
+            data_origin="user_entered",
+        ),
+    ]
+
+    quantities_to_compare = [farmer_qtl]
+    if weight_qtl is not None:
+        sources.append(
+            QuantitySourceItem(
+                source_name_en="Weighbridge Electronic Slip",
+                source_name_hi="इलेक्ट्रॉनिक धर्मकांटा तौल पर्ची",
+                quantity_qtl=weight_qtl,
+                quantity_kg=round(weight_qtl * 100.0, 1),
+                reference_id=weight_slip_ref,
+                data_origin="procurement_record",
+            )
+        )
+        quantities_to_compare.append(weight_qtl)
+
+    if portal_qtl is not None:
+        sources.append(
+            QuantitySourceItem(
+                source_name_en="e-Uparjan Civil Supplies Portal",
+                source_name_hi="ई-उपार्जन खाद्य पोर्टल प्रविष्टि",
+                quantity_qtl=portal_qtl,
+                quantity_kg=round(portal_qtl * 100.0, 1),
+                reference_id=portal_ref,
+                data_origin="official",
+            )
+        )
+        quantities_to_compare.append(portal_qtl)
+
+    max_diff_qtl = round(max(quantities_to_compare) - min(quantities_to_compare), 2)
+    max_diff_kg = round(max_diff_qtl * 100.0, 1)
+    has_discrepancy = max_diff_qtl > 0.05
+    money_impact = round(max_diff_qtl * rate, 2)
+
+    if has_discrepancy:
+        explanation_en = (
+            f"A difference of {max_diff_qtl} qtl ({max_diff_kg} kg), worth ₹{money_impact:,.2f} at ₹{rate:,.2f}/qtl, "
+            f"may need review between the weighbridge slip and state procurement portal records."
+        )
+        explanation_hi = (
+            f"तौल पर्ची और उपार्जन पोर्टल रिकॉर्ड में {max_diff_qtl} क्विंटल ({max_diff_kg} किग्रा) का अंतर पाया गया, "
+            f"जिसका आर्थिक प्रभाव ₹{rate:,.2f}/क्विंटल की दर से ₹{money_impact:,.2f} है। इसकी समीक्षा की जा सकती है।"
+        )
+    else:
+        explanation_en = "Quantities across farmer entry, weighbridge slip, and state portal match perfectly (zero weight discrepancy)."
+        explanation_hi = "किसान प्रविष्टि, तौल पर्ची और सरकारी पोर्टल पर दर्ज वजन पूर्णतः मेल खाता है (कोई वजन अंतर नहीं)।"
+
+    return MSPQuantityCrossCheckOutput(
+        msp_rate=rate,
+        farmer_quantity_qtl=farmer_qtl,
+        farmer_quantity_kg=round(farmer_qtl * 100.0, 1),
+        weight_slip_quantity_qtl=weight_qtl,
+        weight_slip_quantity_kg=round(weight_qtl * 100.0, 1) if weight_qtl is not None else None,
+        portal_quantity_qtl=portal_qtl,
+        portal_quantity_kg=round(portal_qtl * 100.0, 1) if portal_qtl is not None else None,
+        sources=sources,
+        has_discrepancy=has_discrepancy,
+        max_difference_qtl=max_diff_qtl,
+        max_difference_kg=max_diff_kg,
+        monetary_impact=money_impact,
+        explanation_en=explanation_en,
+        explanation_hi=explanation_hi,
     )
 
 

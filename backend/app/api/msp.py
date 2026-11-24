@@ -15,6 +15,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.models import MSPRecord, MSPEvent, AdjustmentRule, Farmer
+from app.services.verification_engine import (
+    cross_check_msp_quantities,
+    MSPQuantityCrossCheckOutput,
+)
 
 router = APIRouter(prefix="/msp", tags=["MSP Records & Procurement"])
 
@@ -76,6 +80,15 @@ class AdjustmentRuleResponse(BaseModel):
     last_verified_on: str
     status: str
     data_origin: str
+
+class QuantityCheckRequest(BaseModel):
+    farmer_quantity: float
+    msp_rate: float = 2300.0
+    weight_slip_quantity: Optional[float] = None
+    portal_quantity: Optional[float] = None
+    weight_slip_ref: Optional[str] = "REC-PTN-****441"
+    portal_ref: Optional[str] = "CG-KRY-****891"
+    unit_input: Optional[str] = "quintal"
 
 def compute_msp_timeline(msp: MSPRecord, db: Session, threshold_days: int = 14) -> MSPTimelineResponse:
     events = (
@@ -242,6 +255,22 @@ def get_adjustment_rules(
         )
         for r in rules
     ]
+
+@router.post("/quantity-check", response_model=MSPQuantityCrossCheckOutput)
+def check_quantities_endpoint(req: QuantityCheckRequest):
+    """
+    Cross-checks weight/quantity across Farmer entered, Weighbridge Slip,
+    and e-Uparjan Civil Supplies portal records, with exact monetary impact.
+    """
+    return cross_check_msp_quantities(
+        farmer_qty=req.farmer_quantity,
+        msp_rate=req.msp_rate,
+        weight_slip_qty=req.weight_slip_quantity,
+        portal_qty=req.portal_quantity,
+        weight_slip_ref=req.weight_slip_ref,
+        portal_ref=req.portal_ref,
+        unit_input=req.unit_input or "quintal",
+    )
 
 @router.get("/{record_id_or_ref}/timeline", response_model=MSPTimelineResponse)
 def get_msp_timeline(
