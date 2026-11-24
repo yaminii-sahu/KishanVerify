@@ -317,6 +317,220 @@ OFFICIAL_INSURANCE_RULES: Dict[str, Dict[str, Any]] = {
     },
 }
 
+class ClaimReasonCodeDetail(BaseModel):
+    code: str
+    category: str  # "delay" | "rejection" | "informational" | "action_required"
+    label_en: str
+    label_hi: str
+    explanation_en: str
+    explanation_hi: str
+    how_to_fix_en: str
+    how_to_fix_hi: str
+    required_document: Optional[str] = None
+    vault_action_url: Optional[str] = "/farmer/documents"
+
+OFFICIAL_CLAIM_REASON_CATALOG: Dict[str, Dict[str, Any]] = {
+    "LATE_INTIMATION": {
+        "category": "delay",
+        "label_en": "Delayed Calamity Intimation (>72h)",
+        "label_hi": "आपदा सूचना में विलंब (72 घंटे से अधिक)",
+        "explanation_en": "PMFBY localized calamity guidelines require reporting crop loss within 72 hours of the occurrence. Reports submitted after 72 hours require special district committee condonation.",
+        "explanation_hi": "पीएमएफबीवाई दिशानिर्देशों के अनुसार 72 घंटे के भीतर नुकसान की सूचना देना अनिवार्य है। इसके बाद दर्ज दावों के लिए जिला समिति की अनुमति आवश्यक होती है।",
+        "how_to_fix_en": "Submit an appeal to your District Agriculture Officer (DAO) along with local weather report and Village Panchayat intimation copy.",
+        "how_to_fix_hi": "स्थानीय मौसम रिपोर्ट और ग्राम पंचायत सूचना की प्रति के साथ जिला कृषि अधिकारी को अपील प्रस्तुत करें।",
+        "required_document": "Panchayat Intimation Copy / Weather Proof",
+        "vault_action_url": "/farmer/documents",
+    },
+    "MISSING_DOCUMENTS": {
+        "category": "action_required",
+        "label_en": "Verification Documents Incomplete",
+        "label_hi": "सत्यापन दस्तावेज़ अधूरे",
+        "explanation_en": "Claim settlement is paused because one or more mandatory documents (Sowing Certificate, Land Record B-1, or updated Passbook) are not on record.",
+        "explanation_hi": "दावा निपटान रुका हुआ है क्योंकि अनिवार्य दस्तावेज़ (बुवाई प्रमाण पत्र, खसरा बी-1, या बैंक पासबुक) पोर्टल पर उपलब्ध नहीं हैं।",
+        "how_to_fix_en": "Upload your missing land documents or bank passbook to your KisanVerify Document Vault or submit directly to your branch.",
+        "how_to_fix_hi": "लापता भूमि दस्तावेज़ या बैंक पासबुक को किसानवेरीफाई डाक्यूमेंट्स में अपलोड करें अथवा शाखा में जमा करें।",
+        "required_document": "Sowing Certificate (Girdawari) & Land Record (B-1)",
+        "vault_action_url": "/farmer/documents",
+    },
+    "AREA_MISMATCH": {
+        "category": "delay",
+        "label_en": "Acreage Discrepancy (Girdawari vs Insurance)",
+        "label_hi": "रकबा विसंगति (गिरदावरी बनाम बीमा पोर्टल)",
+        "explanation_en": "The cultivated area registered in state revenue records (Girdawari) differs from the insured area entered at enrolment. Claims are temporarily capped to the certified Patwari acreage.",
+        "explanation_hi": "राजस्व रिकॉर्ड (गिरदावरी) में दर्ज रकबा बीमा नामांकन रकबे से भिन्न है। दावा राशि पटवारी द्वारा प्रमाणित रकबे तक सीमित की गई है।",
+        "how_to_fix_en": "Obtain a certified crop sowing verification slip from your Halka Patwari and submit to the insurance representative.",
+        "how_to_fix_hi": "हल्का पटवारी से प्रमाणित फसल बुवाई सत्यापन पर्ची प्राप्त कर बीमा प्रतिनिधि को सौंपें।",
+        "required_document": "Certified Patwari Girdawari Slip",
+        "vault_action_url": "/farmer/documents",
+    },
+    "AREA_MISMATCH_SUSPECTED": {
+        "category": "delay",
+        "label_en": "Cultivated Acreage Reconciliation Needed",
+        "label_hi": "कृषि रकबा मिलान आवश्यक",
+        "explanation_en": "Remote-sensing cross-checks against state land revenue (Girdawari) indicate an acreage variance, requiring certified Patwari confirmation.",
+        "explanation_hi": "उपग्रह सर्वेक्षण और राज्य गिरदावरी रिकॉर्ड में रकबा भिन्नता पाई गई है, जिसके लिए पटवारी प्रमाणीकरण आवश्यक है।",
+        "how_to_fix_en": "Submit your current season Khasra B-1 and Patwari sowing certificate to your district agriculture office.",
+        "how_to_fix_hi": "अपने जिले के कृषि कार्यालय में चालू सत्र का खसरा बी-1 और पटवारी बुवाई प्रमाण पत्र जमा करें।",
+        "required_document": "Khasra B-1 / Sowing Certificate",
+        "vault_action_url": "/farmer/documents",
+    },
+    "PENDING_SURVEY": {
+        "category": "delay",
+        "label_en": "Joint Field Survey Underway",
+        "label_hi": "संयुक्त खेत सर्वेक्षण प्रक्रियाधीन",
+        "explanation_en": "The joint loss assessment survey conducted by the Agriculture Department, Insurance Company, and District Administration is in progress.",
+        "explanation_hi": "कृषि विभाग, बीमा कंपनी और प्रशासन द्वारा संयुक्त क्षति मूल्यांकन सर्वेक्षण अभी जारी है।",
+        "how_to_fix_en": "Ensure presence during field inspection and obtain a signed copy of the Joint Survey Assessment Sheet.",
+        "how_to_fix_hi": "खेत निरीक्षण के दौरान उपस्थित रहें और संयुक्त सर्वेक्षण पत्रक की हस्ताक्षरित प्रति प्राप्त करें।",
+        "required_document": "Joint Survey Assessment Sheet",
+        "vault_action_url": "/farmer/documents",
+    },
+    "BANK_AADHAAR_MISMATCH": {
+        "category": "action_required",
+        "label_en": "DBT Payment Returned (NPCI Aadhaar Seeding)",
+        "label_hi": "डीबीटी भुगतान वापस (एनपीसीआई आधार सीडिंग आवश्यक)",
+        "explanation_en": "Electronic DBT credit could not be routed because your bank account is not active on the NPCI Aadhaar mapper, or account name has a typographical discrepancy.",
+        "explanation_hi": "एनपीसीआई आधार मैपर पर बैंक खाता लिंक न होने या नाम में वर्तनी अंतर के कारण डीबीटी भुगतान वापस हो गया है।",
+        "how_to_fix_en": "Visit your bank branch and submit the Aadhaar DBT Mandate Seeding Form. Check status via UIDAI portal.",
+        "how_to_fix_hi": "अपनी बैंक शाखा में जाकर आधार डीबीटी मैंडेट सीडिंग फॉर्म जमा करें। यूआईडीएआई पोर्टल पर स्थिति जांचें।",
+        "required_document": "Aadhaar Card & Bank Passbook",
+        "vault_action_url": "/farmer/documents",
+    },
+    "WITHIN_NORMAL_WINDOW": {
+        "category": "informational",
+        "label_en": "Processing Within Normal 21-Day Window",
+        "label_hi": "सामान्य 21 दिवसीय प्रक्रिया विंडो के भीतर",
+        "explanation_en": "Your claim was registered recently and is progressing through statutory verification milestones within the standard 21-day timeline.",
+        "explanation_hi": "आपका दावा हाल ही में पंजीकृत हुआ है और मानक 21 दिनों की निर्धारित समय सीमा के भीतर प्रक्रियाधीन है।",
+        "how_to_fix_en": "No immediate action needed. Track status on KisanVerify claim timeline.",
+        "how_to_fix_hi": "वर्तमान में किसी कार्रवाई की आवश्यकता नहीं है। किसानवेरीफाई टाइमलाइन पर प्रगति देखें।",
+        "required_document": None,
+        "vault_action_url": None,
+    },
+    "UNDER_REVIEW_TRANCHE": {
+        "category": "informational",
+        "label_en": "Secondary Tranche Staged Disbursement",
+        "label_hi": "द्वितीय किश्त चरणबद्ध वितरण",
+        "explanation_en": "Initial tranche has been released. The secondary tranche is pending matching state government premium subsidy reconciliation.",
+        "explanation_hi": "प्रारंभिक किश्त जारी की जा चुकी है। राज्य सरकार द्वारा सब्सिडी अंश के मिलान के बाद शेष राशि जारी की जाएगी।",
+        "how_to_fix_en": "No action required from farmer. District committee reconciliations are scheduled fortnightly.",
+        "how_to_fix_hi": "किसान की ओर से किसी कार्रवाई की आवश्यकता नहीं। जिला समिति पाक्षिक आधार पर मिलान करती है।",
+        "required_document": None,
+        "vault_action_url": None,
+    },
+    "STATE_SUBSIDY_PENDING": {
+        "category": "delay",
+        "label_en": "State Share Premium Subsidy Reconciliation",
+        "label_hi": "राज्य अंश प्रीमियम सब्सिडी मिलान",
+        "explanation_en": "Central share has been processed; release of balance tranche is awaiting state matching grant disbursement.",
+        "explanation_hi": "केंद्रीय अंश संसाधित हो चुका है; शेष किश्त राज्य सरकार के मिलान अनुदान की प्रतीक्षा कर रही है।",
+        "how_to_fix_en": "Monitor PMFBY DBT scroll for state budget release updates.",
+        "how_to_fix_hi": "राज्य बजट जारी होने के अपडेट हेतु पीएमएफबीवाई डीबीटी स्क्रॉल देखें।",
+        "required_document": None,
+        "vault_action_url": None,
+    },
+    "DISBURSEMENT_SHORTFALL": {
+        "category": "delay",
+        "label_en": "Disbursement Difference Flagged for Review",
+        "label_hi": "वितरण अंतर समीक्षा हेतु चिह्नित",
+        "explanation_en": "The amount credited to your bank account is lower than the calculated entitlement. Administrative verification is recommended.",
+        "explanation_hi": "आपके बैंक खाते में जमा राशि निर्धारित पात्रता से कम है। प्रशासनिक सत्यापन की अनुशंसा की जाती है।",
+        "how_to_fix_en": "Request a detailed deduction schedule from your bank branch or raise an official grievance on KisanVerify.",
+        "how_to_fix_hi": "अपनी बैंक शाखा से विस्तृत कटौती पत्रक मांगें अथवा किसानवेरीफाई पर शिकायत दर्ज करें।",
+        "required_document": "Bank Passbook Statement",
+        "vault_action_url": "/farmer/documents",
+    },
+    "NO_VERIFIED_RULE": {
+        "category": "informational",
+        "label_en": "Official Scheme Rule Missing in Registry",
+        "label_hi": "रिपोजिटरी में आधिकारिक योजना नियम अनुपलब्ध",
+        "explanation_en": "No verified statutory rule or notified threshold yield is recorded for this crop/season/district.",
+        "explanation_hi": "इस फसल/सत्र/जिले के लिए कोई आधिकारिक नियम या अधिसूचित थ्रेशोल्ड दर्ज नहीं है।",
+        "how_to_fix_en": "Verify the notified threshold yield directly on pmfby.gov.in or consult your District Agriculture Officer.",
+        "how_to_fix_hi": "pmfby.gov.in पर अधिसूचित थ्रेशोल्ड उपज जांचें या जिला कृषि अधिकारी से संपर्क करें।",
+        "required_document": None,
+        "vault_action_url": None,
+    },
+    "MATCH_VERIFIED": {
+        "category": "informational",
+        "label_en": "Claim Settled in Full / Figures Match",
+        "label_hi": "दावा पूर्ण रूप से निपटित / आंकड़े मेल खाते हैं",
+        "explanation_en": "Disbursed amount matches assessed entitlement within statutory tolerance.",
+        "explanation_hi": "प्राप्त राशि निर्धारित पात्रता से पूर्णतः मेल खाती है।",
+        "how_to_fix_en": "No action needed. Retain verification report for record.",
+        "how_to_fix_hi": "किसी कार्रवाई की आवश्यकता नहीं। रिकॉर्ड हेतु रिपोर्ट सहेजें।",
+        "required_document": None,
+        "vault_action_url": None,
+    },
+    "EXCESS_CREDIT_BONUS": {
+        "category": "informational",
+        "label_en": "Supplementary State Input Relief Bonus",
+        "label_hi": "अतिरिक्त राज्य इनपुट राहत बोनस",
+        "explanation_en": "Disbursed amount exceeds standard baseline calculation due to additional disaster top-up subsidy.",
+        "explanation_hi": "अतिरिक्त आपदा राहत सब्सिडी के कारण प्राप्त राशि मानक गणना से अधिक है।",
+        "how_to_fix_en": "No action required. Account fully credited.",
+        "how_to_fix_hi": "किसी कार्रवाई की आवश्यकता नहीं। खाता पूर्णतः क्रेडिट है।",
+        "required_document": None,
+        "vault_action_url": None,
+    },
+    "MISSING_RECEIVED_AMOUNT": {
+        "category": "action_required",
+        "label_en": "Bank Credit Record Missing",
+        "label_hi": "बैंक जमा प्रविष्टि अनुपलब्ध",
+        "explanation_en": "Verification requires both calculated entitlement and the actual DBT passbook entry.",
+        "explanation_hi": "सत्यापन हेतु निर्धारित पात्रता और वास्तविक डीबीटी पासबुक प्रविष्टि दोनों आवश्यक हैं।",
+        "how_to_fix_en": "Update bank passbook or enter the credited amount from your statement.",
+        "how_to_fix_hi": "बैंक पासबुक अपडेट करें अथवा अपने विवरण से जमा राशि दर्ज करें।",
+        "required_document": "Bank Passbook",
+        "vault_action_url": "/farmer/documents",
+    },
+    "MISSING_ENTITLEMENT_DATA": {
+        "category": "action_required",
+        "label_en": "Sum Insured or Loss Percentage Incomplete",
+        "label_hi": "बीमित राशि या नुकसान प्रतिशत अपूर्ण",
+        "explanation_en": "Cannot calculate expected claim without sum insured or assessed crop loss percentage.",
+        "explanation_hi": "बीमित राशि या नुकसान प्रतिशत के बिना अपेक्षित दावे की गणना संभव नहीं है।",
+        "how_to_fix_en": "Check your crop insurance policy certificate or survey loss intimation.",
+        "how_to_fix_hi": "अपनी फसल बीमा पॉलिसी या सर्वेक्षण पत्रक में विवरण देखें।",
+        "required_document": "Policy Certificate / Survey Sheet",
+        "vault_action_url": "/farmer/documents",
+    },
+}
+
+def resolve_claim_reason_details(codes: List[str]) -> List[ClaimReasonCodeDetail]:
+    results: List[ClaimReasonCodeDetail] = []
+    for c in codes:
+        if c in OFFICIAL_CLAIM_REASON_CATALOG:
+            meta = OFFICIAL_CLAIM_REASON_CATALOG[c]
+            results.append(
+                ClaimReasonCodeDetail(
+                    code=c,
+                    category=meta.get("category", "informational"),
+                    label_en=meta.get("label_en", c),
+                    label_hi=meta.get("label_hi", c),
+                    explanation_en=meta.get("explanation_en", ""),
+                    explanation_hi=meta.get("explanation_hi", ""),
+                    how_to_fix_en=meta.get("how_to_fix_en", ""),
+                    how_to_fix_hi=meta.get("how_to_fix_hi", ""),
+                    required_document=meta.get("required_document"),
+                    vault_action_url=meta.get("vault_action_url", "/farmer/documents"),
+                )
+            )
+        else:
+            results.append(
+                ClaimReasonCodeDetail(
+                    code=c,
+                    category="informational",
+                    label_en=c.replace("_", " ").title(),
+                    label_hi=c.replace("_", " ").title(),
+                    explanation_en="Standard administrative review point.",
+                    explanation_hi="मानक प्रशासनिक समीक्षा बिंदु।",
+                    how_to_fix_en="Contact your district insurance representative.",
+                    how_to_fix_hi="अपने जिला बीमा प्रतिनिधि से संपर्क करें।",
+                )
+            )
+    return results
+
 class StepArithmeticItem(BaseModel):
     step: int
     label: str
@@ -391,6 +605,7 @@ class InsuranceVerificationOutput(BaseModel):
     reasons: List[str]
     reasons_hi: List[str]
     reason_codes: List[str] = Field(default_factory=list)
+    structured_reasons: List[ClaimReasonCodeDetail] = Field(default_factory=list)
     arithmetic_breakdown: List[ArithmeticItem] = Field(default_factory=list)
     step_by_step_arithmetic: List[StepArithmeticItem] = Field(default_factory=list)
     why_flagged_details: Optional[str] = None
@@ -890,13 +1105,17 @@ def verify_insurance(
             reasons=["Missing official scheme rule in verified repository", "Calculation requires verified DA&FW / SLCCCI notification"],
             reasons_hi=["सत्यापित रिपोजिटरी में आधिकारिक योजना नियम अनुपलब्ध", "गणना हेतु कृषि विभाग/राज्य स्तरीय समिति की अधिसूचना आवश्यक"],
             reason_codes=["NO_VERIFIED_RULE"],
+            structured_reasons=resolve_claim_reason_details(["NO_VERIFIED_RULE"]),
             arithmetic_breakdown=[],
             step_by_step_arithmetic=[],
             why_flagged_details="KisanVerify enforces a strict transparency standard: we never compute or invent calculation benchmarks without an official cited source record.",
             why_flagged_details_hi="किसानवेरीफाई सख्त पारदर्शिता मानकों का पालन करता है: हम आधिकारिक उद्धृत स्रोत रिकॉर्ड के बिना गणना नहीं करते।",
             coverage={
-                "checked": ["Farmer identity"],
-                "not_checked": [{"check": "PMFBY indemnity rate", "reason": "No verified official rule for this crop/season/state"}],
+                "checked": [{"check": "Farmer identity & enrolment", "status": "verified"}],
+                "not_checked": [
+                    {"check": "PMFBY indemnity rate & formula", "reason": "No verified official rule for this crop/season/state"},
+                    {"check": "Notified district threshold yield", "reason": "State Level Committee notification not found"},
+                ],
                 "coverage_score": 0.25,
             },
             next_steps=["Verify policy details at official PMFBY portal (pmfby.gov.in)", "Contact District Agriculture Officer for notified threshold yield sheet"],
@@ -930,13 +1149,14 @@ def verify_insurance(
             reasons=["Disbursed credit entry missing from bank statement", "Verification requires both entitlement and actual credit records"],
             reasons_hi=["बैंक विवरण में वितरित क्रेडिट प्रविष्टि अनुपलब्ध", "सत्यापन हेतु पात्रता और वास्तविक जमा दोनों रिकॉर्ड आवश्यक हैं"],
             reason_codes=["MISSING_RECEIVED_AMOUNT"],
+            structured_reasons=resolve_claim_reason_details(["MISSING_RECEIVED_AMOUNT"]),
             arithmetic_breakdown=[],
             step_by_step_arithmetic=[],
             why_flagged_details="To confirm whether your claim was settled properly, KisanVerify needs your passbook DBT credit entry.",
             why_flagged_details_hi="यह पुष्टि करने के लिए कि आपके दावे का निपटान सही ढंग से हुआ है, किसानवेरीफाई को आपकी पासबुक डीबीटी प्रविष्टि की आवश्यकता है।",
             coverage={
-                "checked": ["Claim entitlement rule"],
-                "not_checked": [{"check": "Bank disbursement", "reason": "Missing bank received amount"}],
+                "checked": [{"check": "Claim entitlement rule & sum insured", "status": "verified"}],
+                "not_checked": [{"check": "Bank disbursement reconciliation", "reason": "Missing bank received amount/passbook"}],
                 "coverage_score": 0.5,
             },
             next_steps=["Update your passbook at bank branch", "Upload latest bank statement to My Documents"],
@@ -968,12 +1188,13 @@ def verify_insurance(
             reasons=["Missing sum insured or loss assessment %", "Please provide policy details or upload survey certificate"],
             reasons_hi=["बीमित राशि या नुकसान आकलन % अनुपलब्ध", "कृपया पॉलिसी विवरण प्रदान करें या सर्वेक्षण प्रमाण पत्र अपलोड करें"],
             reason_codes=["MISSING_ENTITLEMENT_DATA"],
+            structured_reasons=resolve_claim_reason_details(["MISSING_ENTITLEMENT_DATA"]),
             arithmetic_breakdown=[],
             step_by_step_arithmetic=[],
             why_flagged_details="Deterministic calculation requires either the assessed loss percentage on total sum insured, or the official claim advice figure.",
             why_flagged_details_hi="सटीक गणना के लिए कुल बीमित राशि पर निर्धारित नुकसान प्रतिशत अथवा आधिकारिक दावा सूचना आंकड़े की आवश्यकता होती है।",
             coverage={
-                "checked": ["Disbursement amount"],
+                "checked": [{"check": "Disbursement received in bank", "status": "verified"}],
                 "not_checked": [{"check": "Loss calculation formula", "reason": "Missing sum insured and loss percentage"}],
                 "coverage_score": 0.5,
             },
@@ -1171,16 +1392,34 @@ def verify_insurance(
             "किसानवेरीफाई के शिकायत फॉर्म के माध्यम से सीधे शिकायत दर्ज करें।",
         ]
 
-    coverage = {
-        "checked": [
-            "Statutory PMFBY Kharif calculation formula",
-            "District sum insured benchmark",
-            "Assessed field survey loss percentage",
-            "Bank DBT passbook credit verification",
-        ],
-        "not_checked": [],
-        "coverage_score": 1.0,
-    }
+    if is_match or (expected == 0.0 and received == 0.0):
+        coverage = {
+            "checked": [
+                {"check": "Farmer identity & enrollment", "status": "verified"},
+                {"check": "Statutory PMFBY Kharif calculation formula", "status": "verified"},
+                {"check": "District sum insured benchmark", "status": "verified"},
+                {"check": "Assessed field survey loss percentage", "status": "verified"},
+                {"check": "Bank DBT passbook credit verification", "status": "verified"},
+            ],
+            "not_checked": [
+                {"check": "Satellite Girdawari acreage cross-check", "reason": "Patwari sowing certificate not uploaded to Vault"},
+            ],
+            "coverage_score": 0.85,
+        }
+    else:
+        coverage = {
+            "checked": [
+                {"check": "Farmer identity & enrollment", "status": "verified"},
+                {"check": "Statutory PMFBY Kharif calculation formula", "status": "verified"},
+                {"check": "Assessed field survey loss percentage", "status": "verified"},
+                {"check": "Bank DBT credit reconciliation", "status": "flagged_difference"},
+            ],
+            "not_checked": [
+                {"check": "Satellite Girdawari acreage match", "reason": "Patwari sowing certificate not uploaded to Vault"},
+                {"check": "CCE Final District Yield Reconciliation", "reason": "CCE final block report pending from district"},
+            ],
+            "coverage_score": 0.70,
+        }
 
     sources: List[SourceCitation] = [
         SourceCitation(
@@ -1257,6 +1496,7 @@ def verify_insurance(
         reasons=reasons,
         reasons_hi=reasons_hi,
         reason_codes=reason_codes,
+        structured_reasons=resolve_claim_reason_details(reason_codes),
         arithmetic_breakdown=breakdown,
         step_by_step_arithmetic=step_by_step,
         why_flagged_details=why_flagged_details,

@@ -1993,6 +1993,19 @@ export interface StepArithmeticItem {
   source_name: string;
 }
 
+export interface ClaimReasonCodeDetail {
+  code: string;
+  category: 'delay' | 'rejection' | 'informational' | 'action_required' | string;
+  label_en: string;
+  label_hi: string;
+  explanation_en: string;
+  explanation_hi: string;
+  how_to_fix_en: string;
+  how_to_fix_hi: string;
+  required_document?: string | null;
+  vault_action_url?: string | null;
+}
+
 export interface InsuranceVerificationOutput {
   status: string;
   crop: string;
@@ -2011,11 +2024,12 @@ export interface InsuranceVerificationOutput {
   reasons: string[];
   reasons_hi: string[];
   reason_codes: string[];
+  structured_reasons?: ClaimReasonCodeDetail[];
   arithmetic_breakdown: { label: string; label_hi: string; amount: number }[];
   step_by_step_arithmetic: StepArithmeticItem[];
   why_flagged_details?: string | null;
   why_flagged_details_hi?: string | null;
-  coverage?: { checked: string[]; not_checked: any[]; coverage_score: number };
+  coverage?: { checked: any[]; not_checked: any[]; coverage_score: number };
   next_steps: string[];
   next_steps_hi: string[];
   sources: SourceCitation[];

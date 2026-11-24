@@ -18,6 +18,7 @@ import { verifyInsuranceApi } from '../services/api';
 import { ClaimTimelineView } from '../components/ClaimTimelineView';
 import { ClaimCalculationCard } from '../components/ClaimCalculationCard';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
+import { ClaimReasonsAndCoverageCard } from '../components/ClaimReasonsAndCoverageCard';
 
 export const InsuranceVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -280,6 +281,8 @@ export const InsuranceVerificationPage: React.FC = () => {
                   difference: result.difference ?? 0,
                 }}
               />
+
+              <ClaimReasonsAndCoverageCard result={result} />
 
               {/* Action buttons */}
               <div className="space-y-2.5 pt-2">
