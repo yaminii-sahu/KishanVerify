@@ -118,7 +118,7 @@ export interface SpokenScriptResult {
 }
 
 export function generateClientAudioScript(params: {
-  checkType: 'loan' | 'msp';
+  checkType: 'loan' | 'msp' | 'insurance';
   language: 'hi' | 'en';
   approvedAmount?: number;
   disbursedAmount?: number;
@@ -130,8 +130,54 @@ export function generateClientAudioScript(params: {
   expectedPayment?: number;
   actualPayment?: number;
   procurementCenter?: string;
+  claimStatus?: string;
 }): SpokenScriptResult {
   const isHi = params.language === 'hi';
+
+  if (params.checkType === 'insurance') {
+    const crop = params.crop || 'Paddy (Kharif)';
+    const exp = params.expectedPayment !== undefined ? params.expectedPayment : 30000;
+    const act = params.actualPayment !== undefined ? params.actualPayment : 20000;
+    const diff = params.difference !== undefined ? params.difference : (exp - act);
+    const isFlagged = diff > 0 && Math.abs(diff) > 100;
+    const isMatch = Math.abs(diff) <= 100;
+
+    const expText = isHi ? numberToHindiWords(exp) : numberToEnglishWords(exp);
+    const actText = isHi ? numberToHindiWords(act) : numberToEnglishWords(act);
+    const diffText = isHi ? numberToHindiWords(Math.abs(diff)) : numberToEnglishWords(Math.abs(diff));
+
+    if (isHi) {
+      const sentences = isMatch ? [
+        `नमस्कार। आपके ${crop} के प्रधानमंत्री फसल बीमा दावे की जांच पूरी हो गई है।`,
+        `बैंक में प्राप्त राशि ${actText} निर्धारित दावा पात्रता ${expText} से पूर्णतः मेल खाती है।`,
+        `आपका फसल बीमा दावा वैधानिक नियमों के अनुरूप पूर्णतः निपटित और सत्यापित है।`,
+        `भविष्य के संदर्भ के लिए आप अपनी आधिकारिक फसल बीमा सत्यापन रिपोर्ट डाउनलोड कर सकते हैं।`,
+      ] : [
+        `नमस्कार। आपके ${crop} के प्रधानमंत्री फसल बीमा दावे की जांच पूरी हो गई है।`,
+        `संयुक्त खेत सर्वेक्षण के अनुसार आपकी निर्धारित दावा पात्रता ${expText} थी, जबकि बैंक खाते में अब तक ${actText} प्राप्त हुए हैं।`,
+        `इस प्रकार ${diffText} का अंतर प्रक्रियाधीन दर्ज किया गया है।`,
+        `यह जांच कृषि एवं किसान कल्याण मंत्रालय के पीएमएफबीवाई संशोधित परिचालन दिशानिर्देशों के अनुसार की गई है।`,
+        `कृपया ध्यान दें कि यह अंतर राज्य सरकार के सब्सिडी अंश के मिलान के कारण द्वितीय किश्त में जारी होने की संभावना है।`,
+        `यदि 21 दिनों के भीतर भुगतान न हो, तो आप टोल-फ्री हेल्पलाइन 14447 या जिला कृषि अधिकारी से संपर्क कर सकते हैं।`,
+      ];
+      return { fullText: sentences.join(' '), sentences, isFlagged, difference: diff };
+    } else {
+      const sentences = isMatch ? [
+        `Hello. The Pradhan Mantri Fasal Bima Yojana claim verification for your ${crop} is complete.`,
+        `The disbursed amount of ${actText} exactly matches your assessed entitlement of ${expText}.`,
+        `Your crop insurance claim is fully settled and verified under statutory guidelines.`,
+        `You can download your official KisanVerify crop insurance report for your records.`,
+      ] : [
+        `Hello. The Pradhan Mantri Fasal Bima Yojana claim verification for your ${crop} is complete.`,
+        `Based on the joint field survey, your assessed claim entitlement was ${expText}, while recorded disbursement is ${actText}.`,
+        `A balance difference of ${diffText} is currently recorded under administrative review.`,
+        `This check follows official guidelines from the Ministry of Agriculture and Farmers Welfare.`,
+        `Under standard procedures, this variance often reflects a secondary tranche pending state premium subsidy release.`,
+        `For assistance, you can call the PMFBY toll-free helpline at 14447 or contact your District Agriculture Officer.`,
+      ];
+      return { fullText: sentences.join(' '), sentences, isFlagged, difference: diff };
+    }
+  }
 
   if (params.checkType === 'loan') {
     const app = params.approvedAmount || 80000;

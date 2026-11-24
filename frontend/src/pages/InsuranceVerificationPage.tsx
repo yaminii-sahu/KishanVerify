@@ -19,6 +19,7 @@ import { ClaimTimelineView } from '../components/ClaimTimelineView';
 import { ClaimCalculationCard } from '../components/ClaimCalculationCard';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 import { ClaimReasonsAndCoverageCard } from '../components/ClaimReasonsAndCoverageCard';
+import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
 
 export const InsuranceVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -284,14 +285,27 @@ export const InsuranceVerificationPage: React.FC = () => {
 
               <ClaimReasonsAndCoverageCard result={result} />
 
+              {/* Audio Spoken Summary */}
+              <AudioSummaryPlayer
+                checkType="insurance"
+                crop={result.crop}
+                expectedPayment={result.claim_amount_calculated ?? result.claim_amount_expected ?? 30000}
+                actualPayment={result.amount_received ?? 20000}
+                difference={result.difference ?? 10000}
+              />
+
               {/* Action buttons */}
               <div className="space-y-2.5 pt-2">
                 <button
-                  onClick={() => navigate('/farmer/reports')}
-                  className="w-full py-3.5 px-6 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all"
+                  type="button"
+                  onClick={() => {
+                    const ref = insuranceRef || 'REP-INS-2024-7711';
+                    window.open(`/api/v1/reports/download/${ref}`, '_blank');
+                  }}
+                  className="w-full py-3.5 px-6 rounded-2xl bg-forest hover:bg-forest-dark text-white font-semibold text-sm shadow-card flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <FileText className="w-4 h-4" />
-                  <span>Download Insurance Report</span>
+                  <span>Download Insurance Audit Report (PDF)</span>
                 </button>
 
                 <button

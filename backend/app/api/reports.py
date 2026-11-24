@@ -223,6 +223,22 @@ def download_report_pdf(report_ref: str, db: Session = Depends(get_db)):
             "msp_rate": 2300.0,
             "procurement_center": "Patan Krishi Upaj Mandi",
         }
+    elif "Insurance" in report_type or "Claim" in report_type or "INS" in report_ref:
+        report_type = "PMFBY Crop Insurance Claim Verification Audit"
+        ins_record = db.query(InsuranceRecord).filter_by(farmer_id=farmer.farmer_id if farmer else "FV12345").first()
+        approved_val = ins_record.claim_amount_calculated if (ins_record and ins_record.claim_amount_calculated) else 30000.0
+        disbursed_val = ins_record.amount_received if (ins_record and ins_record.amount_received is not None) else 20000.0
+        diff_val = approved_val - disbursed_val
+        status = ins_record.status if ins_record else "Under Review"
+        extra_details = {
+            "crop": ins_record.crop if ins_record else "Paddy (Kharif)",
+            "season": ins_record.season if ins_record else "Kharif 2024",
+            "sum_insured": ins_record.sum_insured if (ins_record and ins_record.sum_insured) else 80000.0,
+            "insured_area_hectares": ins_record.insured_area_hectares if (ins_record and ins_record.insured_area_hectares) else 2.0,
+            "assessed_loss_percentage": ins_record.assessed_loss_percentage if (ins_record and ins_record.assessed_loss_percentage) else 37.5,
+            "insurance_ref": ins_record.insurance_ref if ins_record else "INS-2024-7711",
+            "claim_status": status,
+        }
     else:
         extra_details = {
             "deductions": 5000.0,

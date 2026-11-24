@@ -564,6 +564,193 @@ def generate_msp_report_pdf(
     return pdf_bytes
 
 
+def generate_insurance_report_pdf(
+    report_ref: str,
+    farmer_name: str,
+    farmer_id: str,
+    village: str,
+    district: str,
+    state: str,
+    crop: str,
+    season: str,
+    sum_insured: float,
+    insured_area_hectares: float,
+    assessed_loss_percentage: float,
+    expected_claim: float,
+    actual_payment: float,
+    difference: float,
+    status: str,
+    insurance_ref: str = "INS-2024-7711",
+    reasons: Optional[List[str]] = None,
+    reason_codes: Optional[List[str]] = None,
+    sources: Optional[List[Dict[str, Any]]] = None,
+    timeline_events: Optional[List[Dict[str, Any]]] = None,
+) -> bytes:
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=36, leftMargin=36, topMargin=36, bottomMargin=36)
+    styles = _get_styles()
+    story = []
+
+    _build_header(story, styles, report_ref)
+    _build_status_banner(
+        story, styles, status,
+        "PMFBY Crop Insurance Claim Verification & Audit Report",
+        f"Statutory entitlement audit for {crop} ({season}) - Ref: {insurance_ref}"
+    )
+
+    # 1. Beneficiary & Policy Particulars
+    story.append(Paragraph("1. Beneficiary & Insurance Policy Particulars", styles["section"]))
+    farmer_data = [
+        [Paragraph("<b>Farmer Name:</b>", styles["body"]), Paragraph(farmer_name, styles["body"]),
+         Paragraph("<b>Farmer ID:</b>", styles["body"]), Paragraph(farmer_id, styles["body"])],
+        [Paragraph("<b>Location:</b>", styles["body"]), Paragraph(f"{village}, {district}, {state}", styles["body"]),
+         Paragraph("<b>Crop & Season:</b>", styles["body"]), Paragraph(f"{crop} ({season})", styles["body"])],
+        [Paragraph("<b>Claim Reference:</b>", styles["body"]), Paragraph(insurance_ref, styles["body"]),
+         Paragraph("<b>Insured Acreage:</b>", styles["body"]), Paragraph(f"{insured_area_hectares:.2f} Hectares", styles["body"])],
+    ]
+    farmer_table = Table(farmer_data, colWidths=[1.7 * inch, 1.9 * inch, 1.7 * inch, 1.9 * inch])
+    farmer_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F9F8F5")),
+        ('GRID', (0, 0), (-1, -1), 0.5, styles["border"]),
+        ('PADDING', (0, 0), (-1, -1), 4.5),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    story.append(farmer_table)
+    story.append(Spacer(1, 10))
+
+    # 2. Step-by-Step PMFBY Formula & Claim Calculation
+    story.append(Paragraph("2. Deterministic PMFBY Formula & Financial Audit", styles["section"]))
+    diff_color = styles["alert"] if difference > 0 else styles["verified"]
+
+    fin_data = [
+        [Paragraph("<b>Audit Step</b>", styles["body_bold"]), Paragraph("<b>Calculation / Value</b>", ParagraphStyle('R', parent=styles["body_bold"], alignment=2))],
+        [Paragraph(f"Insured Land Parcel Area ({crop})", styles["body"]), Paragraph(f"{insured_area_hectares:.2f} Hectares", ParagraphStyle('R', parent=styles["body"], alignment=2))],
+        [Paragraph("Total Sum Insured for Parcel (SLCCCI Notification)", styles["body"]), Paragraph(f"₹ {sum_insured:,.2f}", ParagraphStyle('R', parent=styles["body"], alignment=2))],
+        [Paragraph("Joint Field Survey Assessed Crop Loss", styles["body"]), Paragraph(f"{assessed_loss_percentage:.1f}%", ParagraphStyle('R', parent=styles["body"], alignment=2))],
+        [Paragraph("<b>Statutory Claim Entitlement [Sum Insured × Loss %]</b>", styles["body_bold"]), Paragraph(f"<b>₹ {expected_claim:,.2f}</b>", ParagraphStyle('R', parent=styles["body_bold"], alignment=2))],
+        [Paragraph("Disbursement Credited to Bank Account (PFMS / DBT Scroll)", styles["body"]), Paragraph(f"₹ {actual_payment:,.2f}", ParagraphStyle('R', parent=styles["body"], alignment=2))],
+        [Paragraph("<b>Audit Balance / Discrepancy Amount</b>", styles["body_bold"]), Paragraph(f"<b><font color='{diff_color}'>₹ {difference:,.2f}</font></b>", ParagraphStyle('R', parent=styles["body_bold"], alignment=2))],
+    ]
+
+    fin_table = Table(fin_data, colWidths=[4.9 * inch, 2.3 * inch])
+    fin_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), styles["forest"]),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, styles["border"]),
+        ('PADDING', (0, 0), (-1, -1), 5),
+        ('BACKGROUND', (0, -1), (-1, -1), styles["cream"]),
+    ]))
+    story.append(fin_table)
+    story.append(Spacer(1, 10))
+
+    # 3. Claim Processing Milestones & Timeline
+    story.append(Paragraph("3. Claim Processing Milestones & Verification Timeline", styles["section"]))
+    timeline_data = [
+        [
+            Paragraph("<b>Milestone</b>", styles["body_bold"]),
+            Paragraph("<b>Date</b>", styles["body_bold"]),
+            Paragraph("<b>Stage Description</b>", styles["body_bold"]),
+            Paragraph("<b>Data Origin</b>", styles["body_bold"]),
+        ]
+    ]
+
+    default_events = [
+        {"title": "Policy Enrolled", "date": "2024-07-15", "desc": "PMFBY Kharif enrollment confirmed at PACS", "origin": "Official (NCIP)"},
+        {"title": "Loss Intimated", "date": "2024-09-02", "desc": "Inundation damage reported via Crop Insurance App", "origin": "User Entered"},
+        {"title": "Survey Completed", "date": "2024-09-12", "desc": "Joint survey confirmed 37.5% crop loss", "origin": "Joint Survey Sheet"},
+        {"title": "Claim Assessed", "date": "2024-09-25", "desc": "Assessed entitlement calculated at ₹30,000", "origin": "Statutory Formula"},
+        {"title": "Tranche 1 Credited", "date": "2024-10-18", "desc": "Initial tranche of ₹20,000 credited via DBT", "origin": "Bank Passbook"},
+    ]
+    events_to_show = timeline_events or default_events
+    for ev in events_to_show:
+        timeline_data.append([
+            Paragraph(f"<b>{ev.get('title', 'Milestone')}</b>", styles["body"]),
+            Paragraph(ev.get("date", "-"), styles["body"]),
+            Paragraph(f"<font size=8>{ev.get('desc', ev.get('description', ''))}</font>", styles["body"]),
+            Paragraph(f"<font size=8>{ev.get('origin', 'Official')}</font>", styles["body"]),
+        ])
+
+    timeline_table = Table(timeline_data, colWidths=[1.8 * inch, 1.2 * inch, 2.8 * inch, 1.4 * inch])
+    timeline_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#EFEFEA")),
+        ('GRID', (0, 0), (-1, -1), 0.5, styles["border"]),
+        ('PADDING', (0, 0), (-1, -1), 4.5),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    story.append(timeline_table)
+    story.append(Spacer(1, 10))
+
+    # 4. Basis of This Check (Cited Statutory Scheme Rules)
+    story.append(Paragraph("4. Statutory Scheme Authority & Cited PMFBY Guidelines", styles["section"]))
+    rule_data = [
+        [
+            Paragraph("<b>Rule Code</b>", styles["body_bold"]),
+            Paragraph("<b>Statutory Authority</b>", styles["body_bold"]),
+            Paragraph("<b>Operational Guideline Document</b>", styles["body_bold"]),
+            Paragraph("<b>Official Source</b>", styles["body_bold"]),
+        ],
+        [
+            Paragraph("<font size=8>PMFBY-REV-GUIDELINES-2020</font>", styles["body"]),
+            Paragraph("<b>Ministry of Agriculture & Farmers Welfare, GoI</b>", styles["body"]),
+            Paragraph("<font size=8>PMFBY Revised Operational Guidelines Section XII: Claim Assessment</font>", styles["body"]),
+            Paragraph("<font size=8 color='#1E5F74'>https://pmfby.gov.in</font>", styles["body"]),
+        ],
+        [
+            Paragraph("<font size=8>PMFBY-STATUTORY-PREMIUM-KHARIF</font>", styles["body"]),
+            Paragraph("<b>DA&FW / SLCCCI</b>", styles["body"]),
+            Paragraph("<font size=8>Clause 7.1: Farmer Premium capped at 2.0% for Kharif crops</font>", styles["body"]),
+            Paragraph("<font size=8 color='#1E5F74'>https://pmfby.gov.in</font>", styles["body"]),
+        ],
+        [
+            Paragraph("<font size=8>PMFBY-INTIMATION-72H</font>", styles["body"]),
+            Paragraph("<b>Ministry of Agriculture & Farmers Welfare, GoI</b>", styles["body"]),
+            Paragraph("<font size=8>Section 11.2: 72-hour reporting protocol for localized calamities</font>", styles["body"]),
+            Paragraph("<font size=8 color='#1E5F74'>https://pmfby.gov.in</font>", styles["body"]),
+        ],
+    ]
+    rule_table = Table(rule_data, colWidths=[1.8 * inch, 1.8 * inch, 2.2 * inch, 1.4 * inch])
+    rule_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#EFEFEA")),
+        ('GRID', (0, 0), (-1, -1), 0.5, styles["border"]),
+        ('PADDING', (0, 0), (-1, -1), 4.5),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    story.append(rule_table)
+    story.append(Spacer(1, 10))
+
+    # 5. Administrative Findings & Reason Codes
+    story.append(Paragraph("5. Administrative Findings & Operational Reason Codes", styles["section"]))
+    ins_reasons = reasons or [
+        "Secondary tranche release pending state matching premium subsidy reconciliation.",
+        "Joint survey assessed loss calculated at 37.5% under localized calamity inundation provisions.",
+        "All parameters verified against PMFBY operational guidelines; follow-up recommended after 21 days.",
+    ]
+    for r in ins_reasons:
+        story.append(Paragraph(f"• {r}", styles["body"]))
+        story.append(Spacer(1, 1.5))
+    story.append(Spacer(1, 8))
+
+    # 6. Official Escalation Channels
+    story.append(Paragraph("6. Official Escalation Channels & Dispute Resolution", styles["section"]))
+    contacts = [
+        "<b>PMFBY National Toll-Free Helpline:</b> Dial <b>14447</b> (available 24x7 in Hindi and English) for claim status tracking.",
+        f"<b>District Agriculture Office (DAO):</b> Visit Collectorate Campus, {district}, {state} for Joint Survey reconciliation.",
+        "<b>Kisan Call Centre (DA&FW):</b> Dial <b>1800-180-1551</b> for free government agricultural assistance.",
+        "<b>Insurance Ombudsman / IRDAI Bima Bharosa:</b> File dispute online at <b>https://bimabharosa.irdai.gov.in</b> or call 155255.",
+        f"<b>KisanVerify Grievance Redressal:</b> Submit a prefilled grievance quoting Audit Ref: <b>{report_ref}</b>.",
+    ]
+    for idx, c in enumerate(contacts, 1):
+        story.append(Paragraph(f"<b>{idx}.</b> {c}", styles["body"]))
+        story.append(Spacer(1, 2))
+
+    _build_disclaimer_and_footer(story, styles)
+
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+
 # ---------------------------------------------------------------------------
 # 3. UNIFIED DISPATCHER (Backwards & Dynamic Compatibility)
 # ---------------------------------------------------------------------------
@@ -612,6 +799,40 @@ def generate_verification_pdf(
             procurement_center=proc_center,
             reasons=reasons,
             sources=sources,
+        )
+
+    if "Insurance" in report_type or "Claim" in report_type or "INS" in report_ref:
+        crop = extra_details.get("crop", "Paddy (Kharif)") if extra_details else "Paddy (Kharif)"
+        season = extra_details.get("season", "Kharif 2024") if extra_details else "Kharif 2024"
+        sum_insured = extra_details.get("sum_insured", 80000.0) if extra_details else 80000.0
+        area = extra_details.get("insured_area_hectares", 2.0) if extra_details else 2.0
+        loss_pct = extra_details.get("assessed_loss_percentage", 37.5) if extra_details else 37.5
+        ins_ref = extra_details.get("insurance_ref", "INS-2024-7711") if extra_details else "INS-2024-7711"
+        timeline_events = extra_details.get("timeline_events") if extra_details else None
+        sources = extra_details.get("sources") if extra_details else None
+        reason_codes = extra_details.get("reason_codes") if extra_details else None
+
+        return generate_insurance_report_pdf(
+            report_ref=report_ref,
+            farmer_name=farmer_name,
+            farmer_id=farmer_id,
+            village=village,
+            district=district,
+            state=state,
+            crop=crop,
+            season=season,
+            sum_insured=sum_insured,
+            insured_area_hectares=area,
+            assessed_loss_percentage=loss_pct,
+            expected_claim=approved_or_expected,
+            actual_payment=disbursed_or_actual,
+            difference=difference,
+            status=status,
+            insurance_ref=ins_ref,
+            reasons=reasons,
+            reason_codes=reason_codes,
+            sources=sources,
+            timeline_events=timeline_events,
         )
 
     # Default to Loan template

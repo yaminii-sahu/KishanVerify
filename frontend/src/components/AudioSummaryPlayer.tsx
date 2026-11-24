@@ -16,7 +16,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { generateClientAudioScript, SpokenScriptResult } from '../utils/audioScriptGenerator';
 
 export interface AudioSummaryPlayerProps {
-  checkType: 'loan' | 'msp';
+  checkType: 'loan' | 'msp' | 'insurance';
   approvedAmount?: number;
   disbursedAmount?: number;
   difference?: number;
