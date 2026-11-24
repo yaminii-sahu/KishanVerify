@@ -22,6 +22,7 @@ from app.models.models import (
     Office,
     ContactMessage,
     RuleSource,
+    LoanProduct,
 )
 from app.services.storage import get_storage_backend
 
@@ -261,16 +262,366 @@ def seed_schemes_list(db):
 def ensure_sqlite_columns():
     try:
         from sqlalchemy import text
-        # If schemes table exists but lacks new columns like level or ministry, recreate it
         with engine.connect() as conn:
+            # 1. Check schemes table
             res = conn.execute(text("PRAGMA table_info(schemes)")).fetchall()
             col_names = [r[1] for r in res]
             if col_names and ("level" not in col_names or "ministry" not in col_names or "official_url" not in col_names):
                 conn.execute(text("DROP TABLE IF EXISTS schemes"))
                 conn.commit()
+            
+            # 2. Check loans table columns
+            l_res = conn.execute(text("PRAGMA table_info(loans)")).fetchall()
+            loan_cols = [r[1] for r in l_res]
+            if loan_cols:
+                if "verification_status" not in loan_cols:
+                    conn.execute(text("ALTER TABLE loans ADD COLUMN verification_status VARCHAR(50) DEFAULT 'Needs Review'"))
+                if "reason_codes" not in loan_cols:
+                    conn.execute(text("ALTER TABLE loans ADD COLUMN reason_codes JSON DEFAULT '[]'"))
+                if "last_verified_at" not in loan_cols:
+                    conn.execute(text("ALTER TABLE loans ADD COLUMN last_verified_at VARCHAR(50)"))
+                if "sanction_doc_name" not in loan_cols:
+                    conn.execute(text("ALTER TABLE loans ADD COLUMN sanction_doc_name VARCHAR(200)"))
+                conn.commit()
+
         Base.metadata.tables["schemes"].create(bind=engine, checkfirst=True)
+        if "loan_products" in Base.metadata.tables:
+            Base.metadata.tables["loan_products"].create(bind=engine, checkfirst=True)
     except Exception as e:
-        print(f"Schemes table check notice: {e}")
+        print(f"Table columns check notice: {e}")
+
+def get_all_seed_loan_products():
+    return [
+        LoanProduct(
+            product_code="KCC-CROP-LOAN",
+            name="Kisan Credit Card (KCC) Crop Loan",
+            name_hi="किसान क्रेडिट कार्ड (केसीसी) फसल ऋण",
+            level="Central",
+            state=None,
+            lender_type="Commercial Bank / RRB / Cooperative",
+            purpose="Crop Production",
+            purpose_hi="फसल उत्पादन एवं कार्यशील पूंजी",
+            description="Revolving short-term credit facility for cultivation expenses, harvesting, and farm asset maintenance at 4% effective interest with timely repayment.",
+            description_hi="समय पर पुनर्भुगतान करने पर 4% की प्रभावी ब्याज दर पर फसल बुआई, कटाई एवं कृषि परिसंपत्ति रखरखाव हेतु रियायती अल्पावधि साख सीमा।",
+            max_amount_rule="Up to ₹3,00,000 (collateral-free up to ₹1,60,000)",
+            interest_rate_rule="7.0% p.a. standard (Effective 4.0% with prompt repayment incentive)",
+            tenure="1 Year (Revolving for 5 Years)",
+            collateral_rule="No collateral / hypothecation up to ₹1.60 Lakh",
+            required_documents=[
+                "Aadhaar Card",
+                "Land Ownership Record (7/12 / Khasra / B-1)",
+                "Bank Passbook",
+                "Sowing Certificate (Girdawari)",
+            ],
+            eligibility_rules={
+                "min_land_acres": 0.5,
+                "max_land_acres": None,
+                "farmer_categories": ["Marginal Farmer", "Small Farmer", "Large Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://agricoop.nic.in",
+            source_name="Ministry of Agriculture & Farmers Welfare, GoI / RBI",
+            source_document="Master Circular – Kisan Credit Card (KCC) Scheme (FIDD.CO.FSD.BC.No.12/05.05.010/2018-19)",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+        LoanProduct(
+            product_code="AGRI-TERM-TRACTOR",
+            name="Agricultural Term Loan - Farm Mechanization (Tractor & Implements)",
+            name_hi="कृषि मियादी ऋण - फार्म मशीनीकरण (ट्रैक्टर एवं उपकरण)",
+            level="Central",
+            state=None,
+            lender_type="Commercial Bank",
+            purpose="Farm Mechanization",
+            purpose_hi="ट्रैक्टर एवं उन्नत कृषि यंत्र",
+            description="Term loan for purchasing new tractors, power tillers, rotavators, and harvesters under SMAM mechanization guidelines.",
+            description_hi="खेती की उत्पादकता बढ़ाने हेतु नए ट्रैक्टर, पावर टिलर एवं आधुनिक कृषि यंत्रों की खरीद के लिए दीर्घकालिक मियादी ऋण।",
+            max_amount_rule="Up to ₹10,00,000 or 85% of asset invoice",
+            interest_rate_rule="8.50% - 9.75% p.a. (Bank base rate linked)",
+            tenure="5 to 7 Years (Half-yearly EMIs after harvest)",
+            collateral_rule="Hypothecation of purchased tractor/implement + Land mortgage for > ₹5 Lakh",
+            required_documents=[
+                "Aadhaar Card",
+                "Land Record (Khasra / B-1)",
+                "Dealer Proforma Invoice / Quotation",
+                "Bank Passbook",
+            ],
+            eligibility_rules={
+                "min_land_acres": 2.0,
+                "max_land_acres": None,
+                "farmer_categories": ["Small Farmer", "Large Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://farmech.dac.gov.in",
+            source_name="Department of Agriculture & Farmers Welfare (DA&FW)",
+            source_document="Sub-Mission on Agricultural Mechanization (SMAM) Operational Guidelines",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+        LoanProduct(
+            product_code="AIF-POST-HARVEST",
+            name="Agriculture Infrastructure Fund (AIF) Term Loan",
+            name_hi="कृषि अवसंरचना कोष (एआईएफ) मियादी ऋण",
+            level="Central",
+            state=None,
+            lender_type="Commercial Bank / Cooperative",
+            purpose="Post-Harvest Infrastructure",
+            purpose_hi="गोदाम, कोल्ड स्टोरेज एवं प्राथमिक प्रसंस्करण",
+            description="Medium-to-long term debt financing for post-harvest management infrastructure and community farming assets with 3% interest subvention and CGTMSE guarantee.",
+            description_hi="कटाई उपरांत फसल प्रबंधन, भंडारण, गोदाम एवं प्राथमिक प्रसंस्करण इकाइयों के निर्माण हेतु 3% ब्याज अनुदान सहित दीर्घकालिक वित्तपोषण।",
+            max_amount_rule="Up to ₹2,00,00,000 eligible for 3% interest subvention",
+            interest_rate_rule="Effective rate capped at Bank Base Rate + 1% minus 3% subvention (~6.0% p.a.)",
+            tenure="Up to 7 Years (Including moratorium up to 2 years)",
+            collateral_rule="CGTMSE credit guarantee coverage up to ₹2 Crore",
+            required_documents=[
+                "Aadhaar Card",
+                "Land Record (Khasra / B-1)",
+                "Detailed Project Report (DPR)",
+                "Bank Passbook",
+            ],
+            eligibility_rules={
+                "min_land_acres": 1.0,
+                "max_land_acres": None,
+                "farmer_categories": ["Small Farmer", "Large Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://agriinfra.dac.gov.in",
+            source_name="Ministry of Agriculture & Farmers Welfare, GoI",
+            source_document="Central Sector Scheme of Financing Facility under Agriculture Infrastructure Fund",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+        LoanProduct(
+            product_code="KCC-DAIRY-ANIMAL",
+            name="KCC for Animal Husbandry & Dairy Farming",
+            name_hi="पशुपालन एवं डेयरी किसान क्रेडिट कार्ड",
+            level="Central",
+            state=None,
+            lender_type="Commercial Bank / Cooperative",
+            purpose="Dairy & Animal Husbandry",
+            purpose_hi="दुधारू पशु आहार, स्वास्थ्य एवं रख-रखाव",
+            description="Working capital cash credit for dairy farmers, buffalo/cow rearers to meet feeding, veterinary, and operating expenses.",
+            description_hi="दुग्ध उत्पादकों व पशुपालकों को पशु आहार, चिकित्सा एवं दैनिक कार्यशील पूंजी की पूर्ति हेतु रियायती केसीसी सुविधा।",
+            max_amount_rule="Up to ₹2,00,000 (collateral-free limit)",
+            interest_rate_rule="7.0% p.a. standard (Effective 4.0% with prompt repayment incentive)",
+            tenure="1 Year (Revolving facility)",
+            collateral_rule="Collateral-free up to ₹1.60 Lakh (or ₹2.0 Lakh with tie-up)",
+            required_documents=[
+                "Aadhaar Card",
+                "Animal Health Certificate / Ear Tagging Record",
+                "Bank Passbook",
+            ],
+            eligibility_rules={
+                "min_land_acres": 0.0,
+                "max_land_acres": None,
+                "farmer_categories": ["Marginal Farmer", "Small Farmer", "Large Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://dahd.nic.in",
+            source_name="Department of Animal Husbandry & Dairying (DAHD), GoI / RBI",
+            source_document="RBI Circular FIDD.CO.FSD.BC.12/05.05.010/2018-19: Extension of KCC facility to Animal Husbandry Farmers and Fisheries",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+        LoanProduct(
+            product_code="KCC-FISHERIES",
+            name="KCC for Fisheries and Aquaculture",
+            name_hi="मत्स्य पालन किसान क्रेडिट कार्ड",
+            level="Central",
+            state=None,
+            lender_type="Commercial Bank / Cooperative",
+            purpose="Fisheries",
+            purpose_hi="मत्स्य बीज, दाना एवं तालाब रख-रखाव",
+            description="Short-term credit for inland fisheries, fish seed purchase, feed, maintenance, and harvesting expenses.",
+            description_hi="मत्स्य पालकों को बीज, चारा, जल शोधन एवं तालाब संचालन के दैनिक खर्चों हेतु रियायती कार्यशील पूंजी साख।",
+            max_amount_rule="Up to ₹2,00,000 (collateral-free)",
+            interest_rate_rule="7.0% p.a. standard (Effective 4.0% with prompt repayment incentive)",
+            tenure="1 Year (Revolving facility)",
+            collateral_rule="Collateral-free up to ₹1.60 Lakh",
+            required_documents=[
+                "Aadhaar Card",
+                "Water Body Title / Lease Agreement",
+                "Bank Passbook",
+            ],
+            eligibility_rules={
+                "min_land_acres": 0.0,
+                "max_land_acres": None,
+                "farmer_categories": ["Marginal Farmer", "Small Farmer", "Large Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://dof.gov.in",
+            source_name="Department of Fisheries, Ministry of Fisheries, Animal Husbandry & Dairying, GoI",
+            source_document="KCC Guidelines for Fisheries and Aquaculture Beneficiaries",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+        LoanProduct(
+            product_code="PM-KUSUM-SOLAR",
+            name="PM-KUSUM Component-B Standalone Solar Agri Pump Loan",
+            name_hi="पीएम-कुसुम कंपोनेंट-बी सोलर कृषि पंप ऋण",
+            level="Central",
+            state=None,
+            lender_type="Commercial Bank / Regional Rural Bank",
+            purpose="Irrigation & Solar",
+            purpose_hi="सौर ऊर्जा संचालित सिंचाई पंप",
+            description="Subsidized term loan financing for the remaining farmer contribution (up to 30%) towards standalone 3HP to 7.5HP solar agricultural pumps.",
+            description_hi="सौर सिंचाई पंप स्थापना हेतु कृषक अंशदान (30% तक) के लिए बैंक ऋण सुविधा, शेष 60% केंद्र व राज्य सरकार द्वारा अनुदानित।",
+            max_amount_rule="Up to ₹2,50,000 (covering up to 30% farmer share)",
+            interest_rate_rule="8.00% - 9.00% p.a.",
+            tenure="5 to 7 Years",
+            collateral_rule="Hypothecation of solar pump system",
+            required_documents=[
+                "Aadhaar Card",
+                "Land Record (Khasra / B-1)",
+                "Bank Passbook",
+            ],
+            eligibility_rules={
+                "min_land_acres": 1.0,
+                "max_land_acres": None,
+                "farmer_categories": ["Marginal Farmer", "Small Farmer", "Large Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://pmkusum.mnre.gov.in",
+            source_name="Ministry of New and Renewable Energy (MNRE), GoI",
+            source_document="PM-KUSUM Scheme Guidelines for Component-B",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+        LoanProduct(
+            product_code="CG-SHAKAMBHARI-IRRIGATION",
+            name="Shakambhari Yojana Well & Pump Set Subsidy & Loan (Chhattisgarh)",
+            name_hi="शाकंभरी योजना कूप एवं पंप अनुदान व ऋण (छत्तीसगढ़)",
+            level="State",
+            state="Chhattisgarh",
+            lender_type="Cooperative / Commercial Bank",
+            purpose="Irrigation & Solar",
+            purpose_hi="कूप निर्माण एवं सिंचाई पंप",
+            description="Specialized irrigation support for small and marginal farmers in Chhattisgarh with up to 75% subsidy on pump sets and 50% on open wells with bank co-financing.",
+            description_hi="छत्तीसगढ़ के लघु एवं सीमांत किसानों के लिए कूप निर्माण (50% अनुदान) एवं पंप स्थापना (75% अनुदान) हेतु विशेष सहायता व बैंक सह-ऋण।",
+            max_amount_rule="Up to ₹1,50,000 (Project unit cost)",
+            interest_rate_rule="7.50% - 8.50% p.a. (Post state subsidy)",
+            tenure="5 Years",
+            collateral_rule="Hypothecation of pump machinery",
+            required_documents=[
+                "Aadhaar Card",
+                "Land Record (Khasra / B-1)",
+                "Small/Marginal Farmer Certificate",
+                "Bank Passbook",
+            ],
+            eligibility_rules={
+                "min_land_acres": 0.5,
+                "max_land_acres": 5.0,
+                "farmer_categories": ["Marginal Farmer", "Small Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://agriportal.cg.nic.in",
+            source_name="Department of Agriculture, Govt of Chhattisgarh",
+            source_document="Directorate of Agriculture Shakambhari Scheme Guidelines",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+        LoanProduct(
+            product_code="CG-KISAN-SAMRIDHI",
+            name="Kisan Samridhi Nalkoop Tube-Well Loan & Subsidy (Chhattisgarh)",
+            name_hi="किसान समृद्धि नलकूप योजना ऋण एवं अनुदान (छत्तीसगढ़)",
+            level="State",
+            state="Chhattisgarh",
+            lender_type="Cooperative / Commercial Bank",
+            purpose="Irrigation & Solar",
+            purpose_hi="नलकूप खनन एवं विद्युतीकरण",
+            description="Tube well boring and pump energization loan with state capital subsidies for non-command agricultural lands in Chhattisgarh.",
+            description_hi="असिंचित कृषि क्षेत्रों में नलकूप खनन एवं पंप स्थापना हेतु शासकीय अनुदान एवं रियायती ऋण सहायता।",
+            max_amount_rule="Up to ₹1,80,000",
+            interest_rate_rule="8.00% p.a.",
+            tenure="5 to 7 Years",
+            collateral_rule="Hypothecation of equipment + Land mortgage",
+            required_documents=[
+                "Aadhaar Card",
+                "Land Record (Khasra / B-1)",
+                "Gram Panchayat NOC",
+                "Bank Passbook",
+            ],
+            eligibility_rules={
+                "min_land_acres": 1.5,
+                "max_land_acres": 15.0,
+                "farmer_categories": ["Small Farmer", "Large Farmer"],
+                "allowed_crops": [],
+            },
+            official_url="https://agriportal.cg.nic.in",
+            source_name="Department of Agriculture, Govt of Chhattisgarh",
+            source_document="Kisan Samridhi Yojana Implementation Circular",
+            last_verified_on="2025-04-10",
+            status="verified",
+        ),
+    ]
+
+def enrich_farmer_loans(db, ramesh):
+    l1 = db.query(Loan).filter_by(loan_ref="LN-2024-8812").first()
+    if l1:
+        l1.verification_status = "Needs Review"
+        l1.reason_codes = ["DISBURSEMENT_MISMATCH", "PROCESSING_FEE_FLAG"]
+        l1.last_verified_at = "12 Apr 2025"
+        l1.sanction_doc_name = "Loan_Sanction_Letter_SBI.pdf"
+        l1.reasons = [
+            "Approved amount (₹80,000) exceeds disbursed amount (₹70,000) by ₹10,000 difference.",
+            "Deductions include ₹5,000 unitemized processing or administrative fee (RBI mandates ₹0 fee up to ₹3 Lakh).",
+            "Crop insurance (PMFBY) premium auto-deduction requires verification against policy certificate.",
+        ]
+
+    l_sunita = db.query(Loan).filter_by(loan_ref="LN-2024-9104").first()
+    if l_sunita:
+        l_sunita.verification_status = "Verified"
+        l_sunita.difference = 0.0
+        l_sunita.last_verified_at = "18 May 2024"
+
+    if not db.query(Loan).filter_by(loan_ref="LN-2023-4102").first():
+        l_ver = Loan(
+            loan_ref="LN-2023-4102",
+            farmer_id=ramesh.id,
+            bank_name="State Bank of India",
+            loan_type="KCC Short-term",
+            approved_amount=50000.0,
+            disbursed_amount=50000.0,
+            interest_rate=7.0,
+            deductions=0.0,
+            repayments=50000.0,
+            difference=0.0,
+            status="Verified",
+            verification_status="Verified",
+            reason_codes=[],
+            reasons=["All figures match the approved sanction letter and statutory guidelines."],
+            loan_date="10-06-2023",
+            last_verified_at="15 Jan 2024",
+            sanction_doc_name="KCC_Sanction_Letter_2023.pdf",
+        )
+        db.add(l_ver)
+
+    if not db.query(Loan).filter_by(loan_ref="LN-2024-9943").first():
+        l_not_ver = Loan(
+            loan_ref="LN-2024-9943",
+            farmer_id=ramesh.id,
+            bank_name="Chhattisgarh Rajya Gramin Bank",
+            loan_type="Agri Term Loan",
+            approved_amount=120000.0,
+            disbursed_amount=0.0,
+            interest_rate=9.5,
+            deductions=0.0,
+            repayments=0.0,
+            difference=120000.0,
+            status="Not Verified",
+            verification_status="Not Verified",
+            reason_codes=["MISSING_SANCTION_DOC", "CHECK_NOT_RUN"],
+            reasons=[
+                "Missing sanction letter or document. Please upload your sanction letter to verify.",
+                "Verification check has not been executed yet.",
+            ],
+            loan_date="20-03-2024",
+            last_verified_at=None,
+            sanction_doc_name=None,
+        )
+        db.add(l_not_ver)
+
+    db.commit()
 
 def get_all_seed_offices():
     return [
@@ -636,6 +987,11 @@ def seed_database():
                 print("Seeding reference rules...")
                 db.add_all(get_all_seed_rules())
                 db.commit()
+            if db.query(LoanProduct).count() == 0:
+                print("Seeding loan products...")
+                db.add_all(get_all_seed_loan_products())
+                db.commit()
+            enrich_farmer_loans(db, farmer_exists)
             print("Database already seeded with demo data.")
             return
 
@@ -739,12 +1095,57 @@ def seed_database():
             repayments=0.0,
             difference=10000.0,
             status="Needs Review",
+            verification_status="Needs Review",
+            reason_codes=["DISBURSEMENT_MISMATCH", "PROCESSING_FEE_FLAG"],
             reasons=[
-                "Deductions for processing fees and documentation charges",
-                "Crop insurance premium auto-deduction (PMFBY)",
-                "Bank policy variation on sanction limits",
+                "Approved amount (₹80,000) exceeds disbursed amount (₹70,000) by ₹10,000 difference.",
+                "Deductions include ₹5,000 unitemized processing or administrative fee (RBI mandates ₹0 fee up to ₹3 Lakh).",
+                "Crop insurance (PMFBY) premium auto-deduction requires verification against policy certificate.",
             ],
             loan_date="12-03-2024",
+            last_verified_at="12 Apr 2025",
+            sanction_doc_name="Loan_Sanction_Letter_SBI.pdf",
+        )
+        loan_ver = Loan(
+            loan_ref="LN-2023-4102",
+            farmer_id=ramesh.id,
+            bank_name="State Bank of India",
+            loan_type="KCC Short-term",
+            approved_amount=50000.0,
+            disbursed_amount=50000.0,
+            interest_rate=7.0,
+            deductions=0.0,
+            repayments=50000.0,
+            difference=0.0,
+            status="Verified",
+            verification_status="Verified",
+            reason_codes=[],
+            reasons=["All figures match the approved sanction letter and statutory guidelines."],
+            loan_date="10-06-2023",
+            last_verified_at="15 Jan 2024",
+            sanction_doc_name="KCC_Sanction_Letter_2023.pdf",
+        )
+        loan_not_ver = Loan(
+            loan_ref="LN-2024-9943",
+            farmer_id=ramesh.id,
+            bank_name="Chhattisgarh Rajya Gramin Bank",
+            loan_type="Agri Term Loan",
+            approved_amount=120000.0,
+            disbursed_amount=0.0,
+            interest_rate=9.5,
+            deductions=0.0,
+            repayments=0.0,
+            difference=120000.0,
+            status="Not Verified",
+            verification_status="Not Verified",
+            reason_codes=["MISSING_SANCTION_DOC", "CHECK_NOT_RUN"],
+            reasons=[
+                "Missing sanction letter or document. Please upload your sanction letter to verify.",
+                "Verification check has not been executed yet.",
+            ],
+            loan_date="20-03-2024",
+            last_verified_at=None,
+            sanction_doc_name=None,
         )
         loan2 = Loan(
             loan_ref="LN-2024-9104",
@@ -758,10 +1159,13 @@ def seed_database():
             repayments=15000.0,
             difference=0.0,
             status="Verified",
+            verification_status="Verified",
+            reason_codes=[],
             reasons=["All figures match the approved sanction letter."],
             loan_date="18-05-2024",
+            last_verified_at="18 May 2024",
         )
-        db.add_all([loan1, loan2])
+        db.add_all([loan1, loan_ver, loan_not_ver, loan2])
 
         # 4. MSP Records (Blueprint: 50 quintals * 2300 = 115000 expected, 105000 actual, diff 10000)
         msp1 = MSPRecord(
@@ -986,6 +1390,9 @@ def seed_database():
 
         # 11. Cited Reference Rules and Statutory Benchmarks
         db.add_all(get_all_seed_rules())
+
+        # 12. Loan Products Catalog
+        db.add_all(get_all_seed_loan_products())
 
         db.commit()
         print("Demo database seeded successfully with all synthetic records!")

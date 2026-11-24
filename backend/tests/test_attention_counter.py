@@ -11,15 +11,16 @@ def test_ramesh_kumar_seed_attention_count():
     """
     Ramesh Kumar (FV12345) has:
     - 1 Loan with 'Needs Review' (₹10,000 diff)
+    - 1 Loan with 'Not Verified' (missing sanction doc)
     - 1 MSP with 'Needs Review' (₹10,000 diff)
-    Total count must be 2.
+    Total count is 3.
     """
     response = client.get("/api/v1/farmers/me/attention?farmer_id=FV12345")
     assert response.status_code == 200
     data = response.json()
 
     assert data["farmer_id"] == "FV12345"
-    assert data["count"] == 2
+    assert data["count"] == 3
     assert data["has_discrepancies"] is True
 
     record_types = [item["record_type"] for item in data["items"]]

@@ -66,9 +66,40 @@ class Loan(Base):
     status = Column(String(50), default="Verified") # "Verified", "Needs Review", "Possible Discrepancy"
     reasons = Column(JSON, default=list) # List of potential reasons
     loan_date = Column(String(50), nullable=False)
+    verification_status = Column(String(50), default="Verified") # "Verified", "Needs Review", "Not Verified"
+    reason_codes = Column(JSON, default=list) # e.g. ["DISBURSEMENT_MISMATCH"]
+    last_verified_at = Column(String(50), nullable=True)
+    sanction_doc_name = Column(String(200), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     farmer = relationship("Farmer", back_populates="loans")
+
+class LoanProduct(Base):
+    __tablename__ = "loan_products"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_code = Column(String(50), unique=True, index=True, nullable=False)
+    name = Column(String(200), nullable=False)
+    name_hi = Column(String(200), nullable=True)
+    level = Column(String(50), default="Central") # "Central" or "State"
+    state = Column(String(100), nullable=True) # None for Central, "Chhattisgarh" etc. for State
+    lender_type = Column(String(100), nullable=False) # "Commercial Bank", "Cooperative / RRB", "NBFC", "Government Scheme"
+    purpose = Column(String(100), nullable=False) # "Crop Production", "Farm Mechanization", "Irrigation & Solar", "Post-Harvest Infrastructure", "Dairy & Animal Husbandry", "Fisheries"
+    purpose_hi = Column(String(100), nullable=True)
+    description = Column(Text, nullable=False)
+    description_hi = Column(Text, nullable=True)
+    max_amount_rule = Column(String(200), nullable=False)
+    interest_rate_rule = Column(String(200), nullable=False)
+    tenure = Column(String(100), nullable=False)
+    collateral_rule = Column(String(200), nullable=False)
+    required_documents = Column(JSON, default=list)
+    eligibility_rules = Column(JSON, default=dict)
+    official_url = Column(String(255), nullable=True)
+    source_name = Column(String(200), default="Ministry of Agriculture & Farmers Welfare, GoI")
+    source_document = Column(String(255), default="RBI Operational Guidelines")
+    last_verified_on = Column(String(50), default="2025-04-10")
+    status = Column(String(50), default="verified") # "verified" or "demo"
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 class MSPRecord(Base):
     __tablename__ = "msp_records"
