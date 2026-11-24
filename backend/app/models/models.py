@@ -369,4 +369,29 @@ class RuleSource(Base):
     data_origin = Column(String(30), default="official") # official, bank_document, user_entered, demo
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+class CallbackRequest(Base):
+    __tablename__ = "callback_requests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    callback_ref = Column(String(50), unique=True, index=True, nullable=True)
+    farmer_id = Column(String(50), nullable=False, index=True)
+    raw_phone = Column(String(30), nullable=True, default="+91 98765 43210")
+    phone_masked = Column(String(50), nullable=False)
+    topic = Column(String(100), nullable=False)
+    preferred_language = Column(String(20), default="hi")
+    status = Column(String(50), default="Pending") # "Pending", "Called", "Closed"
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+class ToolAuditLog(Base):
+    __tablename__ = "tool_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    tool_name = Column(String(100), nullable=False, index=True)
+    farmer_id = Column(String(50), nullable=False, index=True)
+    outcome = Column(String(50), nullable=False) # "success", "not_found", "unauthorized", "confirmation_required", "error"
+    details = Column(String(255), nullable=True) # no personal sensitive data
+
+
 

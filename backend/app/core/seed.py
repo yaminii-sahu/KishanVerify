@@ -338,6 +338,16 @@ def ensure_sqlite_columns():
                     conn.execute(text("ALTER TABLE msp_records ADD COLUMN adjustments JSON DEFAULT '[]'"))
                 conn.commit()
 
+            # 5. Check callback_requests table columns
+            cb_res = conn.execute(text("PRAGMA table_info(callback_requests)")).fetchall()
+            cb_cols = [r[1] for r in cb_res]
+            if cb_cols:
+                if "callback_ref" not in cb_cols:
+                    conn.execute(text("ALTER TABLE callback_requests ADD COLUMN callback_ref VARCHAR(50)"))
+                if "preferred_language" not in cb_cols:
+                    conn.execute(text("ALTER TABLE callback_requests ADD COLUMN preferred_language VARCHAR(20) DEFAULT 'hi'"))
+                conn.commit()
+
         Base.metadata.tables["schemes"].create(bind=engine, checkfirst=True)
         if "loan_products" in Base.metadata.tables:
             Base.metadata.tables["loan_products"].create(bind=engine, checkfirst=True)
@@ -349,6 +359,10 @@ def ensure_sqlite_columns():
             Base.metadata.tables["msp_events"].create(bind=engine, checkfirst=True)
         if "adjustment_rules" in Base.metadata.tables:
             Base.metadata.tables["adjustment_rules"].create(bind=engine, checkfirst=True)
+        if "callback_requests" in Base.metadata.tables:
+            Base.metadata.tables["callback_requests"].create(bind=engine, checkfirst=True)
+        if "tool_audit_logs" in Base.metadata.tables:
+            Base.metadata.tables["tool_audit_logs"].create(bind=engine, checkfirst=True)
     except Exception as e:
         print(f"Table columns check notice: {e}")
 
