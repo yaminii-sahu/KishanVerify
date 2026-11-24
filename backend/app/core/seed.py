@@ -1252,8 +1252,62 @@ def get_all_seed_rules():
             description_en="PMFBY statutory threshold yield assessment, localized calamity claim settlement, and post-harvest loss indemnity rules.",
             description_hi="पीएमएफबीवाई वैधानिक थ्रेशोल्ड उपज आकलन, स्थानीयकृत आपदा दावा निपटान एवं कटाई उपरांत क्षतिपूर्ति नियम।",
             formula_or_value="Indemnity = [(Threshold Yield - Actual Yield) / Threshold Yield] * Sum Insured",
-            source_name="Ministry of Agriculture & Farmers Welfare, GoI",
-            source_document="PMFBY Revised Operational Guidelines",
+            source_name="Ministry of Agriculture & Farmers Welfare, Government of India",
+            source_document="PMFBY Revised Operational Guidelines 2020",
+            source_url="https://pmfby.gov.in",
+            effective_from="2020-04-01",
+            effective_to=None,
+            last_verified_on="2025-04-10",
+            status="verified",
+            data_origin="official",
+        ),
+        RuleSource(
+            rule_code="PMFBY-STATUTORY-PREMIUM-KHARIF",
+            scheme_name="Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+            rule_type="insurance_claim",
+            crop=None,
+            season="Kharif",
+            description_en="Statutory farmer share of premium capped at 2.0% of Sum Insured for all Kharif food and oilseed crops.",
+            description_hi="सभी खरीफ खाद्यान्न व तिलहन फसलों हेतु किसान प्रीमियम शेयर बीमित राशि के अधिकतम 2.0% तक सीमित।",
+            formula_or_value="Farmer Premium Share = min(Actuarial Premium, 2.0% of Sum Insured)",
+            source_name="Ministry of Agriculture & Farmers Welfare, Government of India",
+            source_document="PMFBY Revised Operational Guidelines 2020 (Section 7.1)",
+            source_url="https://pmfby.gov.in",
+            effective_from="2020-04-01",
+            effective_to=None,
+            last_verified_on="2025-04-10",
+            status="verified",
+            data_origin="official",
+        ),
+        RuleSource(
+            rule_code="PMFBY-INTIMATION-72H",
+            scheme_name="Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+            rule_type="insurance_claim",
+            crop=None,
+            season=None,
+            description_en="Mandatory 72-hour reporting window for localized calamities (hailstorm, inundation, landslide) via Crop Insurance App or Kisan Call Centre 14447.",
+            description_hi="स्थानीयकृत आपदाओं की सूचना 72 घंटे के भीतर किसान ऐप या 14447 पर देना अनिवार्य।",
+            formula_or_value="Loss intimation <= 72 hours from calamity onset",
+            source_name="Ministry of Agriculture & Farmers Welfare, Government of India",
+            source_document="PMFBY Revised Operational Guidelines 2020 (Section 11.2)",
+            source_url="https://pmfby.gov.in",
+            effective_from="2020-04-01",
+            effective_to=None,
+            last_verified_on="2025-04-10",
+            status="verified",
+            data_origin="official",
+        ),
+        RuleSource(
+            rule_code="PMFBY-DISTRICT-INDEMNITY-LEVEL",
+            scheme_name="Pradhan Mantri Fasal Bima Yojana (PMFBY)",
+            rule_type="insurance_claim",
+            crop=None,
+            season=None,
+            description_en="Statutory minimum district indemnity level set at 70%, 80%, or 90% depending on notified crop risk classification.",
+            description_hi="फसल जोखिम वर्गीकरण के आधार पर वैधानिक जिला क्षतिपूर्ति स्तर 70%, 80% या 90% निर्धारित।",
+            formula_or_value="Indemnity Level = 80% (Notified Moderate Risk Classification)",
+            source_name="Ministry of Agriculture & Farmers Welfare, Government of India",
+            source_document="PMFBY Revised Operational Guidelines 2020 (Section 5)",
             source_url="https://pmfby.gov.in",
             effective_from="2020-04-01",
             effective_to=None,
@@ -1281,10 +1335,12 @@ def seed_database():
                 print("Seeding offices...")
                 db.add_all(get_all_seed_offices())
                 db.commit()
-            if db.query(RuleSource).count() == 0:
-                print("Seeding reference rules...")
-                db.add_all(get_all_seed_rules())
-                db.commit()
+            # Upsert all reference rules
+            for r in get_all_seed_rules():
+                existing = db.query(RuleSource).filter_by(rule_code=r.rule_code).first()
+                if not existing:
+                    db.add(r)
+            db.commit()
             if db.query(LoanProduct).count() == 0:
                 print("Seeding loan products...")
                 db.add_all(get_all_seed_loan_products())

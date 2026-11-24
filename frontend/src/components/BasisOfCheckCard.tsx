@@ -146,7 +146,7 @@ export const BasisOfCheckCard: React.FC<BasisOfCheckCardProps> = ({
       )}
 
       {/* Primary Scheme / Rule Being Followed */}
-      {primarySource && (
+      {primarySource ? (
         <div className="bg-cream/60 rounded-xl p-3.5 border border-warm-border/60 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -196,6 +196,35 @@ export const BasisOfCheckCard: React.FC<BasisOfCheckCardProps> = ({
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-amber-50/70 rounded-xl p-3.5 border border-amber-200/80 space-y-2 text-xs">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
+            <span className="font-bold text-amber-900">
+              {isHi ? 'सत्यापित आधिकारिक नियम अनुपलब्ध (सत्यापित नहीं)' : 'Official Rule Not Verified in Registry'}
+            </span>
+          </div>
+          <p className="text-charcoal leading-relaxed text-[11px]">
+            {isHi
+              ? 'इस फसल या क्षेत्र के लिए किसानवेरीफाई की रिपोजिटरी में कोई सत्यापित सरकारी अधिसूचना नहीं मिली। किसानवेरीफाई मनमाने आंकड़े नहीं बनाता। कृपया आधिकारिक पोर्टल पर विवरण देखें।'
+              : 'No verified official government notification or statutory formula was found in the repository for this crop/district. KisanVerify never invents calculation benchmarks. Please verify directly on the official scheme portal.'}
+          </p>
+          <div className="pt-1">
+            <a
+              href={checkType === 'insurance' ? 'https://pmfby.gov.in' : checkType === 'msp' ? 'https://cacp.dacnet.nic.in' : 'https://www.rbi.org.in'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-forest hover:text-forest-dark underline cursor-pointer"
+            >
+              <span>
+                {checkType === 'insurance'
+                  ? (isHi ? 'पीएमएफबीवाई आधिकारिक पोर्टल देखें (pmfby.gov.in)' : 'View Official PMFBY Portal (pmfby.gov.in)')
+                  : (isHi ? 'आधिकारिक पोर्टल देखें' : 'View Official Portal')}
+              </span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
       )}
@@ -278,6 +307,40 @@ export const BasisOfCheckCard: React.FC<BasisOfCheckCardProps> = ({
             <div className="pt-1.5 border-t border-warm-border flex items-center justify-between font-bold">
               <span className={arithmetic.difference && arithmetic.difference > 0 ? 'text-status-discrepancy-text' : 'text-forest'}>
                 {isHi ? 'भुगतान अंतर' : 'Payment Difference'}
+              </span>
+              <span className={arithmetic.difference && arithmetic.difference > 0 ? 'text-status-discrepancy-text text-sm' : 'text-forest text-sm'}>
+                = {formatCurrency(arithmetic.difference)}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {checkType === 'insurance' && (
+          <div className="p-3 rounded-xl bg-warm-bg/70 border border-warm-border text-xs space-y-1.5">
+            <div className="flex items-center justify-between text-muted">
+              <span className="flex items-center gap-1.5">
+                {isHi ? `बीमित फसल (${arithmetic.crop || 'फसल'})` : `Insured Crop (${arithmetic.crop || 'Crop'})`}
+                {renderOriginBadge('bank_document')}
+              </span>
+              <span className="font-semibold text-charcoal">{arithmetic.crop || 'Paddy'}</span>
+            </div>
+            <div className="flex items-center justify-between text-muted">
+              <span className="flex items-center gap-1.5">
+                {isHi ? 'निर्धारित वैधानिक दावा पात्रता' : 'Assessed Claim Entitlement'}
+                {renderOriginBadge('official')}
+              </span>
+              <span className="font-semibold text-charcoal">{formatCurrency(arithmetic.expected)}</span>
+            </div>
+            <div className="flex items-center justify-between text-muted">
+              <span className="flex items-center gap-1.5">
+                {isHi ? 'बैंक खाते में प्राप्त वितरण' : 'Disbursement Received in Bank'}
+                {renderOriginBadge('bank_document')}
+              </span>
+              <span className="font-semibold text-charcoal">− {formatCurrency(arithmetic.actual)}</span>
+            </div>
+            <div className="pt-1.5 border-t border-warm-border flex items-center justify-between font-bold">
+              <span className={arithmetic.difference && arithmetic.difference > 0 ? 'text-status-discrepancy-text' : 'text-forest'}>
+                {isHi ? 'लंबित / असमायोजित अंतर' : 'Pending / Discrepancy Balance'}
               </span>
               <span className={arithmetic.difference && arithmetic.difference > 0 ? 'text-status-discrepancy-text text-sm' : 'text-forest text-sm'}>
                 = {formatCurrency(arithmetic.difference)}

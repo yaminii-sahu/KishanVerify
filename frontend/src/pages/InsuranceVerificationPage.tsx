@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import { verifyInsuranceApi } from '../services/api';
 import { ClaimTimelineView } from '../components/ClaimTimelineView';
 import { ClaimCalculationCard } from '../components/ClaimCalculationCard';
+import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 
 export const InsuranceVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -263,6 +264,22 @@ export const InsuranceVerificationPage: React.FC = () => {
           {result ? (
             <div className="space-y-4 animate-in fade-in duration-300">
               <ClaimCalculationCard result={result} />
+
+              <BasisOfCheckCard
+                checkType="insurance"
+                sources={result.sources}
+                flaggedRuleCode={result.reason_codes?.[0] || 'PMFBY-REV-GUIDELINES-2020'}
+                flaggedRuleThreshold={`±₹${result.tolerance?.toFixed(0) || 100}`}
+                flaggedRuleReasonEn={result.explanation}
+                flaggedRuleReasonHi={result.explanation_hi}
+                isFlagged={result.is_flagged}
+                arithmetic={{
+                  crop: result.crop,
+                  expected: result.claim_amount_calculated ?? result.claim_amount_expected ?? 0,
+                  actual: result.amount_received ?? 0,
+                  difference: result.difference ?? 0,
+                }}
+              />
 
               {/* Action buttons */}
               <div className="space-y-2.5 pt-2">
