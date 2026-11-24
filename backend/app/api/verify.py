@@ -91,7 +91,12 @@ def verify_insurance_endpoint(req: InsuranceVerifyRequest, db: Session = Depends
         crop=req.crop,
         claim_amount_expected=req.claim_amount_expected,
         amount_received=req.amount_received,
-        claim_status=req.claim_status or "Under Review"
+        claim_status=req.claim_status or "Under Review",
+        sum_insured=req.sum_insured,
+        insured_area_hectares=req.insured_area_hectares,
+        assessed_loss_percentage=req.assessed_loss_percentage,
+        tolerance=req.tolerance or 100.0,
+        rule_missing=req.rule_missing or False,
     )
 
     if req.farmer_id:
@@ -99,9 +104,12 @@ def verify_insurance_endpoint(req: InsuranceVerifyRequest, db: Session = Depends
         if farmer:
             ins = db.query(InsuranceRecord).filter_by(farmer_id=farmer.id).first()
             if ins:
-                ins.claim_amount_expected = result.claim_amount_expected
-                ins.amount_received = result.amount_received
-                ins.difference = result.difference
+                if result.claim_amount_expected is not None:
+                    ins.claim_amount_expected = result.claim_amount_expected
+                if result.amount_received is not None:
+                    ins.amount_received = result.amount_received
+                if result.difference is not None:
+                    ins.difference = result.difference
                 ins.claim_status = result.claim_status
                 ins.reasons = result.reasons
                 db.commit()

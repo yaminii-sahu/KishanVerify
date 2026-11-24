@@ -16,6 +16,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { verifyInsuranceApi } from '../services/api';
 import { ClaimTimelineView } from '../components/ClaimTimelineView';
+import { ClaimCalculationCard } from '../components/ClaimCalculationCard';
 
 export const InsuranceVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -260,93 +261,8 @@ export const InsuranceVerificationPage: React.FC = () => {
         {/* Right Result */}
         <div className="lg:col-span-5 space-y-4">
           {result ? (
-            <div className="bg-white rounded-3xl p-6 sm:p-7 border border-warm-border shadow-card space-y-5 animate-in fade-in duration-300">
-              
-              {/* Status Header */}
-              {result.status === 'Under Review' ? (
-                <div className="p-4 rounded-2xl bg-[#EFF6FF] border border-[#BFDBFE] flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-100 border border-blue-300 text-[#1D4ED8] flex items-center justify-center shrink-0 mt-0.5">
-                    <Clock className="w-5 h-5 text-[#1D4ED8]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#1D4ED8]">
-                      {result.status_label}
-                    </h3>
-                    <p className="text-xs text-blue-900 mt-0.5 leading-relaxed">
-                      {result.explanation}
-                    </p>
-                  </div>
-                </div>
-              ) : result.is_flagged ? (
-                <div className="p-4 rounded-2xl bg-kisan-lightred border border-kisan-red/25 flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-red-100 border border-red-300 text-kisan-red flex items-center justify-center shrink-0 mt-0.5">
-                    <AlertCircle className="w-5 h-5 text-kisan-red" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-kisan-red">
-                      {result.status_label}
-                    </h3>
-                    <p className="text-xs text-red-900 mt-0.5 leading-relaxed">
-                      {result.explanation}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 rounded-2xl bg-[#EDF7ED] border border-[#C8E6C9] flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-green-100 border border-green-300 text-[#2E7D32] flex items-center justify-center shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-5 h-5 text-[#2E7D32]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#2E7D32]">
-                      {result.status_label}
-                    </h3>
-                    <p className="text-xs text-green-900 mt-0.5 leading-relaxed">
-                      {result.explanation}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Breakdown Table */}
-              <div className="divide-y divide-warm-border border-y border-warm-border py-1">
-                <div className="flex items-center justify-between py-2.5 text-xs">
-                  <span className="text-gray-500">Assessed Claim Entitlement</span>
-                  <span className="font-bold text-gray-900 text-sm">
-                    ₹ {result.claim_amount_expected.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2.5 text-xs">
-                  <span className="text-gray-500">Disbursed Claim Amount</span>
-                  <span className="font-bold text-gray-900 text-sm">
-                    ₹ {result.amount_received.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-3 text-xs">
-                  <span className="font-bold text-gray-900">Pending Balance</span>
-                  <span
-                    className={`font-extrabold text-base ${
-                      result.difference > 0 ? 'text-[#1D4ED8]' : 'text-[#2E7D32]'
-                    }`}
-                  >
-                    ₹ {result.difference.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Reasons */}
-              <div>
-                <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">
-                  Procedural Assessment
-                </h4>
-                <ul className="space-y-1.5 text-xs text-gray-600">
-                  {(result.reasons || result.possible_reasons || []).map((r: string, idx: number) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-sage-600 mt-1.5 shrink-0" />
-                      <span>{r}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <ClaimCalculationCard result={result} />
 
               {/* Action buttons */}
               <div className="space-y-2.5 pt-2">
@@ -366,7 +282,6 @@ export const InsuranceVerificationPage: React.FC = () => {
                   <span>Inquire with District Officer</span>
                 </button>
               </div>
-
             </div>
           ) : (
             <div className="bg-white rounded-3xl p-8 border border-dashed border-warm-border text-center flex flex-col items-center justify-center min-h-[360px] text-gray-400">

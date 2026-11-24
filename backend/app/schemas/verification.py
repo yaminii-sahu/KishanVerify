@@ -26,7 +26,12 @@ class InsuranceVerifyRequest(BaseModel):
     insurance_ref: Optional[str] = "INS-2024-7711"
     crop: str = "Paddy"
     season: Optional[str] = "Kharif 2024"
-    claim_amount_expected: float = Field(..., gt=0, description="Expected assessed claim")
-    amount_received: float = Field(..., ge=0, description="Amount received")
+    claim_amount_expected: Optional[float] = Field(None, ge=0, description="Expected assessed claim")
+    amount_received: Optional[float] = Field(None, ge=0, description="Amount received")
     claim_status: Optional[str] = "Under Review"
     farmer_id: Optional[str] = "FV12345"
+    sum_insured: Optional[float] = Field(None, ge=0, description="Total sum insured for parcel")
+    insured_area_hectares: Optional[float] = Field(None, ge=0, description="Insured land area in hectares")
+    assessed_loss_percentage: Optional[float] = Field(None, ge=0, le=100, description="Assessed crop loss percentage (0-100)")
+    tolerance: Optional[float] = Field(100.0, ge=0, description="Matching tolerance in Rupees")
+    rule_missing: Optional[bool] = Field(False, description="Flag indicating rule missing in registry")
