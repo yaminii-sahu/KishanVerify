@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
   HelpCircle, 
@@ -12,7 +12,8 @@ import {
   ArrowRight,
   FileCheck,
   Loader2,
-  FolderLock
+  FolderLock,
+  ShieldCheck
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
@@ -24,6 +25,7 @@ export const GrievancePage: React.FC = () => {
   const { t, language } = useLanguage();
   const { farmer } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [issueType, setIssueType] = useState('Loan Discrepancy');
   const [description, setDescription] = useState('My disbursed loan amount is less than the approved amount.');
@@ -32,6 +34,43 @@ export const GrievancePage: React.FC = () => {
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedGrievance, setSubmittedGrievance] = useState<any | null>(null);
+
+  useEffect(() => {
+    const issueParam = searchParams.get('issue_type');
+    const schemeParam = searchParams.get('scheme');
+    const claimId = searchParams.get('claim_id') || searchParams.get('ref');
+    const crop = searchParams.get('crop');
+    const expected = searchParams.get('expected');
+    const received = searchParams.get('received');
+    const diff = searchParams.get('difference');
+    const reasonCode = searchParams.get('reason_code');
+
+    if (
+      issueParam === 'insurance' ||
+      issueParam === 'Insurance Claim' ||
+      issueParam === 'Insurance' ||
+      schemeParam === 'PMFBY' ||
+      claimId?.startsWith('INS')
+    ) {
+      setIssueType('Insurance Claim Issue');
+      const diffStr = diff ? `₹${Number(diff).toLocaleString('en-IN')}` : '₹10,000';
+      const expStr = expected ? `₹${Number(expected).toLocaleString('en-IN')}` : '₹30,000';
+      const recStr = received ? `₹${Number(received).toLocaleString('en-IN')}` : '₹20,000';
+      const cropStr = crop || 'Paddy (Kharif)';
+      const claimRefStr = claimId || 'INS-2024-7711';
+      const codeStr = reasonCode ? ` [Code: ${reasonCode}]` : '';
+
+      const prefilledText = language === 'hi'
+        ? `मेरी फसल बीमा दावा गणना (${cropStr}, दावा संदर्भ: ${claimRefStr}) में पीएमएफबीवाई दिशानिर्देशों के तहत ${diffStr} का अंतर परिलक्षित हो रहा है (अपेक्षित: ${expStr}, प्राप्त: ${recStr})${codeStr}। कृपया इस निर्धारण और द्वितीय किश्त की स्थिति की समीक्षा करने की कृपा करें।`
+        : `My crop insurance claim calculation (${cropStr}, Claim Ref: ${claimRefStr}) shows a difference of ${diffStr} under PMFBY guidelines (Expected: ${expStr}, Received: ${recStr})${codeStr}. Please review this assessment and provide an update on tranche status.`;
+
+      setDescription(prefilledText.slice(0, 300));
+      setFiles([
+        { name: 'PMFBY_Policy_Certificate.pdf', size: '1.1 MB' },
+        { name: 'Joint_Survey_Loss_Sheet.pdf', size: '820 KB' },
+      ]);
+    }
+  }, [searchParams, language]);
 
   // Vault picker state
   const [isVaultModalOpen, setIsVaultModalOpen] = useState(false);
@@ -192,6 +231,39 @@ export const GrievancePage: React.FC = () => {
             <p className="text-xs text-muted max-w-md mx-auto">
               Your grievance has been submitted to the lead bank and agricultural officer for formal reconciliation.
             </p>
+          </div>
+
+          {/* Statutory Escalation & PMFBY Helpline Card */}
+          <div className="p-4 rounded-xl bg-forest/5 border border-forest/15 text-left text-xs space-y-2 max-w-lg mx-auto">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-forest flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-forest" />
+                {language === 'hi' ? 'आधिकारिक पीएमएफबीवाई शिकायत एवं सहायता केंद्र' : 'Official PMFBY Escalation Channels'}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-forest/10 text-forest text-[10px] font-bold">24x7</span>
+            </div>
+            <p className="text-charcoal/90 text-[11px] leading-relaxed">
+              {language === 'hi'
+                ? 'यदि आपको त्वरित सहायता की आवश्यकता है, तो आप राष्ट्रीय फसल बीमा हेल्पलाइन 14447 पर कॉल कर सकते हैं अथवा सीधे आधिकारिक पोर्टल पर अपील दर्ज कर सकते हैं।'
+                : 'For immediate assistance, call the National PMFBY Kisan Helpline at 14447 or track your claim directly on the official portal.'}
+            </p>
+            <div className="flex items-center gap-3 pt-1 flex-wrap">
+              <a
+                href="https://pmfby.gov.in"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-forest hover:text-forest-dark underline"
+              >
+                <span>{language === 'hi' ? 'pmfby.gov.in पोर्टल पर जाएं' : 'National PMFBY Portal (pmfby.gov.in)'}</span>
+                <ArrowRight className="w-3 h-3" />
+              </a>
+              <a
+                href="tel:14447"
+                className="inline-flex items-center gap-1 text-xs font-bold text-charcoal bg-white border border-warm-border px-2.5 py-1 rounded-lg hover:bg-cream"
+              >
+                <span>📞 14447 (Toll-Free)</span>
+              </a>
+            </div>
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">

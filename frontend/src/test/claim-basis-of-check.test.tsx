@@ -10,6 +10,9 @@ const mockSources: SourceCitation[] = [
     rule_code: 'PMFBY-REV-GUIDELINES-2020',
     scheme_name: 'Pradhan Mantri Fasal Bima Yojana (PMFBY)',
     scheme_name_hi: 'प्रधानमंत्री फसल बीमा योजना (पीएमएफबीवाई)',
+    rule_type: 'insurance_claim',
+    source_name: 'Ministry of Agriculture & Farmers Welfare, GoI',
+    source_document: 'PMFBY Revised Operational Guidelines 2020',
     authority: 'Ministry of Agriculture & Farmers Welfare, GoI',
     authority_hi: 'कृषि एवं किसान कल्याण मंत्रालय, भारत सरकार',
     document: 'PMFBY Revised Operational Guidelines 2020',
@@ -27,6 +30,9 @@ const mockSources: SourceCitation[] = [
   {
     rule_code: 'INS-POLICY-CERTIFICATE',
     scheme_name: 'Crop Insurance Policy Certificate',
+    rule_type: 'insurance_claim',
+    source_name: 'Empanelled Insurer',
+    source_document: 'Policy Schedule',
     authority: 'Empanelled Insurer',
     document: 'Policy Schedule',
     url: null,
@@ -37,6 +43,7 @@ const mockSources: SourceCitation[] = [
     data_origin: 'bank_document',
     field_associated: 'claim_amount_expected',
     details: 'Assessed claim indemnity: ₹30,000.00.',
+    details_hi: 'निर्धारित दावा राशि: ₹30,000.00।',
   },
 ];
 

@@ -309,11 +309,25 @@ export const InsuranceVerificationPage: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate('/farmer/grievance')}
-                  className="w-full py-3 px-6 rounded-2xl bg-white border border-warm-border hover:bg-warm-bg text-gray-800 font-semibold text-sm shadow-soft flex items-center justify-center gap-2 transition-all"
+                  type="button"
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      issue_type: 'insurance',
+                      scheme: 'PMFBY',
+                      claim_id: insuranceRef || 'INS-2024-7711',
+                      crop: result.crop || 'Paddy (Kharif)',
+                      expected: String(result.claim_amount_calculated ?? result.claim_amount_expected ?? 30000),
+                      received: String(result.amount_received ?? 20000),
+                      difference: String(result.difference ?? 10000),
+                      reason_code: result.reason_codes?.[0] || 'UNDER_REVIEW_TRANCHE',
+                      rule: result.sources?.[0]?.rule_code || 'PMFBY-REV-GUIDELINES-2020',
+                    });
+                    navigate(`/farmer/grievance?${params.toString()}`);
+                  }}
+                  className="w-full py-3 px-6 rounded-2xl bg-white border border-warm-border hover:bg-warm-bg text-gray-800 font-semibold text-sm shadow-soft flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
-                  <HelpCircle className="w-4 h-4 text-blue-600" />
-                  <span>Inquire with District Officer</span>
+                  <HelpCircle className="w-4 h-4 text-forest" />
+                  <span>Raise a Grievance / Formal Review</span>
                 </button>
               </div>
             </div>
