@@ -23,6 +23,8 @@ from app.models.models import (
     ContactMessage,
     RuleSource,
     LoanProduct,
+    LoanEvent,
+    ClaimEvent,
 )
 from app.services.storage import get_storage_backend
 
@@ -284,9 +286,37 @@ def ensure_sqlite_columns():
                     conn.execute(text("ALTER TABLE loans ADD COLUMN sanction_doc_name VARCHAR(200)"))
                 conn.commit()
 
+            # 3. Check insurance_records table columns
+            ins_res = conn.execute(text("PRAGMA table_info(insurance_records)")).fetchall()
+            ins_cols = [r[1] for r in ins_res]
+            if ins_cols:
+                if "state" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN state VARCHAR(100) DEFAULT 'Chhattisgarh'"))
+                if "district" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN district VARCHAR(100) DEFAULT 'Durg'"))
+                if "insured_area_hectares" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN insured_area_hectares FLOAT DEFAULT 2.0"))
+                if "sum_insured" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN sum_insured FLOAT DEFAULT 80000.0"))
+                if "loss_intimated_date" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN loss_intimated_date VARCHAR(50) DEFAULT '2024-09-12'"))
+                if "survey_date" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN survey_date VARCHAR(50) DEFAULT '2024-09-16'"))
+                if "assessed_loss_percentage" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN assessed_loss_percentage FLOAT DEFAULT 37.5"))
+                if "claim_amount_calculated" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN claim_amount_calculated FLOAT DEFAULT 30000.0"))
+                if "last_status_date" not in ins_cols:
+                    conn.execute(text("ALTER TABLE insurance_records ADD COLUMN last_status_date VARCHAR(50) DEFAULT '2024-11-05'"))
+                conn.commit()
+
         Base.metadata.tables["schemes"].create(bind=engine, checkfirst=True)
         if "loan_products" in Base.metadata.tables:
             Base.metadata.tables["loan_products"].create(bind=engine, checkfirst=True)
+        if "loan_events" in Base.metadata.tables:
+            Base.metadata.tables["loan_events"].create(bind=engine, checkfirst=True)
+        if "claim_events" in Base.metadata.tables:
+            Base.metadata.tables["claim_events"].create(bind=engine, checkfirst=True)
     except Exception as e:
         print(f"Table columns check notice: {e}")
 
@@ -622,6 +652,274 @@ def enrich_farmer_loans(db, ramesh):
         db.add(l_not_ver)
 
     db.commit()
+    seed_demo_loan_events(db)
+
+def seed_demo_loan_events(db):
+    l1 = db.query(Loan).filter_by(loan_ref="LN-2024-8812").first()
+    if l1 and db.query(LoanEvent).filter_by(loan_id=l1.id).count() == 0:
+        events_l1 = [
+            LoanEvent(
+                loan_id=l1.id,
+                event_type="application",
+                fee_type=None,
+                date="2024-02-15",
+                amount=80000.0,
+                direction="neutral",
+                description_en="KCC loan application submitted with 3.0-acre Patan land records.",
+                description_hi="3.0 एकड़ पाटन भूमि अभिलेखों के साथ केसीसी अल्पावधि फसल ऋण आवेदन प्रस्तुत किया गया।",
+                source="Branch Application Form",
+                data_origin="user_entered",
+            ),
+            LoanEvent(
+                loan_id=l1.id,
+                event_type="sanction",
+                fee_type=None,
+                date="2024-03-01",
+                amount=80000.0,
+                direction="credit",
+                description_en="KCC credit limit approved for ₹80,000 @ 7.0% p.a. standard lending rate.",
+                description_hi="7.0% वार्षिक मानक ब्याज दर पर ₹80,000 की केसीसी साख सीमा स्वीकृत।",
+                source="SBI Sanction Letter (Ref: LN-2024-8812)",
+                data_origin="sanction_letter",
+            ),
+            LoanEvent(
+                loan_id=l1.id,
+                event_type="deduction",
+                fee_type="processing_fee",
+                date="2024-03-10",
+                amount=500.0,
+                direction="debit",
+                description_en="Bank documentation & administrative processing fee deduction.",
+                description_hi="बैंक दस्तावेज़ीकरण एवं प्रशासनिक प्रोसेसिंग शुल्क कटौती।",
+                source="Bank Debit Advice",
+                data_origin="bank_statement",
+            ),
+            LoanEvent(
+                loan_id=l1.id,
+                event_type="deduction",
+                fee_type="crop_insurance",
+                date="2024-03-11",
+                amount=1200.0,
+                direction="debit",
+                description_en="PMFBY Kharif Paddy crop insurance premium auto-debit (2% farmer share).",
+                description_hi="पीएमएफबीवाई खरीफ धान फसल बीमा प्रीमियम स्वतः कटौती (2% कृषक अंश)।",
+                source="PMFBY Insurance Policy Certificate",
+                data_origin="bank_statement",
+            ),
+            LoanEvent(
+                loan_id=l1.id,
+                event_type="disbursement",
+                fee_type=None,
+                date="2024-03-12",
+                amount=70000.0,
+                direction="credit",
+                description_en="Loan proceeds credited to Farmer Savings Account (SBIN*******1234).",
+                description_hi="ऋण राशि किसान बचत खाते (SBIN*******1234) में जमा की गई।",
+                source="SBI Account Statement",
+                data_origin="bank_statement",
+            ),
+            LoanEvent(
+                loan_id=l1.id,
+                event_type="interest_accrual",
+                fee_type=None,
+                date="2024-06-30",
+                amount=1225.0,
+                direction="debit",
+                description_en="Quarterly interest accrued on disbursed balance @ 7.0% p.a.",
+                description_hi="वितरित ऋण राशि पर 7.0% वार्षिक दर से त्रैमासिक ब्याज गणना।",
+                source="Bank Interest Subvention Ledger",
+                data_origin="bank_statement",
+            ),
+            LoanEvent(
+                loan_id=l1.id,
+                event_type="note",
+                fee_type=None,
+                date="2024-07-05",
+                amount=0.0,
+                direction="neutral",
+                description_en="Farmer initiated KisanVerify check; flagged ₹10,000 difference between sanction and disbursement.",
+                description_hi="किसान द्वारा किसानवेरीफाई जांच प्रारंभ; संस्वीकृति और वितरण में ₹10,000 का अंतर दर्ज।",
+                source="KisanVerify Audit Log",
+                data_origin="user_entered",
+            ),
+        ]
+        db.add_all(events_l1)
+
+    l_ver = db.query(Loan).filter_by(loan_ref="LN-2023-4102").first()
+    if l_ver and db.query(LoanEvent).filter_by(loan_id=l_ver.id).count() == 0:
+        events_ver = [
+            LoanEvent(
+                loan_id=l_ver.id,
+                event_type="application",
+                fee_type=None,
+                date="2023-05-20",
+                amount=50000.0,
+                direction="neutral",
+                description_en="KCC crop loan renewal application submitted.",
+                description_hi="केसीसी फसल ऋण नवीनीकरण आवेदन प्रस्तुत।",
+                source="SBI Application Form",
+                data_origin="user_entered",
+            ),
+            LoanEvent(
+                loan_id=l_ver.id,
+                event_type="sanction",
+                fee_type=None,
+                date="2023-06-05",
+                amount=50000.0,
+                direction="credit",
+                description_en="Sanction letter issued for ₹50,000 @ 7.0% p.a.",
+                description_hi="₹50,000 का संस्वीकृति पत्र 7.0% वार्षिक ब्याज पर जारी।",
+                source="SBI Sanction Letter",
+                data_origin="sanction_letter",
+            ),
+            LoanEvent(
+                loan_id=l_ver.id,
+                event_type="disbursement",
+                fee_type=None,
+                date="2023-06-10",
+                amount=50000.0,
+                direction="credit",
+                description_en="Full approved amount of ₹50,000 credited to account with zero unauthorized deductions.",
+                description_hi="बिना किसी कटौती के पूरी स्वीकृत राशि ₹50,000 खाते में अंतरित।",
+                source="SBI Account Statement",
+                data_origin="bank_statement",
+            ),
+            LoanEvent(
+                loan_id=l_ver.id,
+                event_type="repayment",
+                fee_type=None,
+                date="2024-01-15",
+                amount=50000.0,
+                direction="debit",
+                description_en="Full loan repayment completed within prompt repayment period; 3% PRI applied.",
+                description_hi="समय पर पूर्ण ऋण चुकता; 3% शीघ्र पुनर्भुगतान प्रोत्साहन का लाभ प्राप्त।",
+                source="SBI Repayment Receipt",
+                data_origin="bank_statement",
+            ),
+            LoanEvent(
+                loan_id=l_ver.id,
+                event_type="closure",
+                fee_type=None,
+                date="2024-01-15",
+                amount=0.0,
+                direction="neutral",
+                description_en="No-dues certificate issued; loan account closed successfully.",
+                description_hi="अदेय प्रमाण पत्र (No-dues) जारी; ऋण खाता सफलतापूर्वक बंद।",
+                source="SBI No-Dues Certificate",
+                data_origin="bank_statement",
+            ),
+        ]
+        db.add_all(events_ver)
+
+    l_not_ver = db.query(Loan).filter_by(loan_ref="LN-2024-9943").first()
+    if l_not_ver and db.query(LoanEvent).filter_by(loan_id=l_not_ver.id).count() == 0:
+        events_not_ver = [
+            LoanEvent(
+                loan_id=l_not_ver.id,
+                event_type="application",
+                fee_type=None,
+                date="2024-03-05",
+                amount=120000.0,
+                direction="neutral",
+                description_en="Agri term loan application recorded.",
+                description_hi="कृषि मियादी ऋण आवेदन दर्ज।",
+                source="CRGB Application Portal",
+                data_origin="user_entered",
+            ),
+            LoanEvent(
+                loan_id=l_not_ver.id,
+                event_type="sanction",
+                fee_type=None,
+                date="2024-03-20",
+                amount=120000.0,
+                direction="credit",
+                description_en="Sanction recorded for ₹1,20,000. Physical sanction letter not yet uploaded to vault.",
+                description_hi="₹1,20,000 की संस्वीकृति दर्ज। संस्वीकृति पत्र अभी वॉल्ट में अपलोड नहीं किया गया।",
+                source="Bank Notification SMS",
+                data_origin="demo",
+            ),
+        ]
+        db.add_all(events_not_ver)
+
+    db.commit()
+
+def seed_demo_claim_events(db):
+    ins = db.query(InsuranceRecord).filter_by(insurance_ref="INS-2024-7711").first()
+    if ins and db.query(ClaimEvent).filter_by(claim_id=ins.id).count() == 0:
+        events = [
+            ClaimEvent(
+                claim_id=ins.id,
+                event_type="policy_enrolled",
+                date="2024-07-15",
+                amount=1600.0,
+                description_en="Policy enrolled under PMFBY Kharif 2024 via SBI Patan branch with 2% statutory farmer premium of ₹1,600.",
+                description_hi="पीएमएफबीवाई खरीफ 2024 के तहत 2% वैधानिक कृषक अंशदान ₹1,600 के साथ पॉलिसी नामांकित।",
+                source="PMFBY National Crop Insurance Portal",
+                data_origin="official",
+            ),
+            ClaimEvent(
+                claim_id=ins.id,
+                event_type="loss_intimated",
+                date="2024-09-12",
+                amount=None,
+                description_en="Crop inundation and localized flooding loss intimated within statutory 72-hour window.",
+                description_hi="लगातार वर्षा से जलभराव की सूचना वैधानिक 72 घंटे की समय सीमा के भीतर दर्ज कराई गई।",
+                source="Crop Insurance App / Toll-Free 14447",
+                data_origin="user_entered",
+            ),
+            ClaimEvent(
+                claim_id=ins.id,
+                event_type="survey_done",
+                date="2024-09-16",
+                amount=None,
+                description_en="Joint loss survey conducted by Patwari and AIC Surveyor; 37.5% damage assessed.",
+                description_hi="पटवारी एवं बीमा कंपनी सर्वेक्षक द्वारा संयुक्त सर्वेक्षण; 37.5% फसल क्षति निर्धारित।",
+                source="Joint Field Survey Loss Intimation Sheet",
+                data_origin="official",
+            ),
+            ClaimEvent(
+                claim_id=ins.id,
+                event_type="claim_calculated",
+                date="2024-09-28",
+                amount=30000.0,
+                description_en="Deterministic claim assessed: 37.5% on ₹80,000 total sum insured = ₹30,000.",
+                description_hi="दावा पात्रता का निर्धारण: ₹80,000 कुल बीमित राशि पर 37.5% क्षति = ₹30,000।",
+                source="PMFBY State Technical Advisory Committee Formula",
+                data_origin="official",
+            ),
+            ClaimEvent(
+                claim_id=ins.id,
+                event_type="claim_approved",
+                date="2024-10-15",
+                amount=20000.0,
+                description_en="Initial payment tranche of ₹20,000 approved by State Level Coordination Committee.",
+                description_hi="राज्य स्तरीय समन्वय समिति द्वारा ₹20,000 की प्रथम अंतरिम किश्त स्वीकृत।",
+                source="State Level Coordination Committee on Crop Insurance (SLCCCI)",
+                data_origin="official",
+            ),
+            ClaimEvent(
+                claim_id=ins.id,
+                event_type="amount_credited",
+                date="2024-10-24",
+                amount=20000.0,
+                description_en="First tranche of ₹20,000 credited via Direct Benefit Transfer (DBT) to SBI A/C *1234.",
+                description_hi="डीबीटी के माध्यम से ₹20,000 की प्रथम किश्त किसान के एसबीआई खाते में जमा।",
+                source="PFMS / Bank DBT Credit Scroll",
+                data_origin="bank_document",
+            ),
+            ClaimEvent(
+                claim_id=ins.id,
+                event_type="note",
+                date="2024-11-05",
+                amount=10000.0,
+                description_en="Secondary tranche of ₹10,000 pending final state subsidy share release and CCE yield reconciliation.",
+                description_hi="राज्य सब्सिडी अंश जारी होने एवं अंतिम सीसीई उपज मिलान के कारण ₹10,000 की द्वितीय किश्त समीक्षाधीन।",
+                source="District Level Monitoring Committee (DLMC)",
+                data_origin="official",
+            ),
+        ]
+        db.add_all(events)
+        db.commit()
 
 def get_all_seed_offices():
     return [
@@ -1395,6 +1693,8 @@ def seed_database():
         db.add_all(get_all_seed_loan_products())
 
         db.commit()
+        seed_demo_loan_events(db)
+        seed_demo_claim_events(db)
         print("Demo database seeded successfully with all synthetic records!")
     except Exception as e:
         db.rollback()

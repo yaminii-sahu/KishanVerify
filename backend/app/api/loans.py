@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import datetime
 
 from app.core.database import get_db
-from app.models.models import Farmer, Loan, LoanProduct, Document, RuleSource
+from app.models.models import Farmer, Loan, LoanProduct, Document, RuleSource, LoanEvent
 from app.services.loan_eligibility import (
     evaluate_loan_eligibility,
     LoanEligibilityResult,
@@ -75,6 +75,30 @@ class MyLoansResponse(BaseModel):
     needs_review_count: int
     not_verified_count: int
     loans: List[LoanItemResponse]
+
+class TimelineEventItem(BaseModel):
+    id: Optional[int] = None
+    event_type: str # "application", "sanction", "disbursement", "deduction", "repayment", "interest_accrual", "closure", "note"
+    fee_type: Optional[str] = None
+    date: str
+    amount: float
+    direction: str # "credit", "debit", "neutral"
+    description_en: str
+    description_hi: Optional[str] = None
+    source: str
+    data_origin: str # "sanction_letter", "bank_statement", "user_entered", "demo"
+    running_balance: float
+    is_missing_placeholder: bool = False
+
+class LoanTimelineResponse(BaseModel):
+    loan_ref: str
+    bank_name: str
+    approved_amount: float
+    disbursed_amount: float
+    current_balance: float
+    events_count: int
+    missing_events_count: int
+    events: List[TimelineEventItem]
 
 def get_default_basis_rules(db: Session) -> List[Dict[str, Any]]:
     rules = db.query(RuleSource).filter(
@@ -386,3 +410,102 @@ def run_loan_verification(
         sanction_doc_name=loan.sanction_doc_name,
         basis_of_check=basis_rules,
     )
+
+def compute_loan_timeline(loan: Loan, db: Session) -> LoanTimelineResponse:
+    events = (
+        db.query(LoanEvent)
+        .filter_by(loan_id=loan.id)
+        .order_by(LoanEvent.date.asc(), LoanEvent.id.asc())
+        .all()
+    )
+
+    timeline_items: List[TimelineEventItem] = []
+    running_balance = 0.0
+    has_sanction = False
+    has_disbursement = False
+
+    for ev in events:
+        if ev.event_type == "application":
+            running_balance = 0.0
+        elif ev.event_type == "sanction":
+            has_sanction = True
+            running_balance = float(ev.amount or 0.0)
+        elif ev.event_type == "deduction":
+            running_balance = round(running_balance - float(ev.amount or 0.0), 2)
+        elif ev.event_type == "disbursement":
+            has_disbursement = True
+            running_balance = float(ev.amount or 0.0)
+        elif ev.event_type == "interest_accrual":
+            running_balance = round(running_balance + float(ev.amount or 0.0), 2)
+        elif ev.event_type == "repayment":
+            running_balance = round(max(0.0, running_balance - float(ev.amount or 0.0)), 2)
+        elif ev.event_type in ["closure", "note"]:
+            pass
+
+        timeline_items.append(
+            TimelineEventItem(
+                id=ev.id,
+                event_type=ev.event_type,
+                fee_type=ev.fee_type,
+                date=ev.date,
+                amount=float(ev.amount or 0.0),
+                direction=ev.direction,
+                description_en=ev.description_en,
+                description_hi=ev.description_hi,
+                source=ev.source,
+                data_origin=ev.data_origin,
+                running_balance=running_balance,
+                is_missing_placeholder=False,
+            )
+        )
+
+    # Check for missing milestone events
+    missing_count = 0
+    if has_sanction and not has_disbursement:
+        missing_count += 1
+        timeline_items.append(
+            TimelineEventItem(
+                id=None,
+                event_type="disbursement",
+                fee_type=None,
+                date="Date Pending",
+                amount=0.0,
+                direction="neutral",
+                description_en="Expected loan disbursement record is missing. No credit confirmation received from bank.",
+                description_hi="अपेक्षित ऋण वितरण रिकॉर्ड अनुपलब्ध है। बैंक से कोई वितरण पुष्टि प्राप्त नहीं हुई है।",
+                source="Missing Record Alert",
+                data_origin="demo",
+                running_balance=running_balance,
+                is_missing_placeholder=True,
+            )
+        )
+
+    return LoanTimelineResponse(
+        loan_ref=loan.loan_ref,
+        bank_name=loan.bank_name,
+        approved_amount=float(loan.approved_amount or 0.0),
+        disbursed_amount=float(loan.disbursed_amount or 0.0),
+        current_balance=running_balance,
+        events_count=len(timeline_items),
+        missing_events_count=missing_count,
+        events=timeline_items,
+    )
+
+@router.get("/{loan_identifier}/timeline", response_model=LoanTimelineResponse)
+def get_loan_timeline(
+    loan_identifier: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Returns chronological timeline events with running balance and missing milestone indicators.
+    """
+    loan = None
+    if loan_identifier.isdigit():
+        loan = db.query(Loan).filter_by(id=int(loan_identifier)).first()
+    if not loan:
+        loan = db.query(Loan).filter_by(loan_ref=loan_identifier).first()
+    if not loan:
+        raise HTTPException(status_code=404, detail=f"Loan '{loan_identifier}' not found.")
+
+    return compute_loan_timeline(loan, db)
+

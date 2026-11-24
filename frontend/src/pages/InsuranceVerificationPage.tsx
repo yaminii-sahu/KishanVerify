@@ -15,6 +15,7 @@ import confetti from 'canvas-confetti';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { verifyInsuranceApi } from '../services/api';
+import { ClaimTimelineView } from '../components/ClaimTimelineView';
 
 export const InsuranceVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -27,6 +28,7 @@ export const InsuranceVerificationPage: React.FC = () => {
   const [claimExpected, setClaimExpected] = useState<number>(30000);
   const [amountReceived, setAmountReceived] = useState<number>(20000);
   const [claimStatus, setClaimStatus] = useState('Under Review');
+  const [activeTab, setActiveTab] = useState<'verify' | 'timeline'>('verify');
 
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any | null>(null);
@@ -111,7 +113,37 @@ export const InsuranceVerificationPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* Segmented Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-warm-border pb-1">
+        <button
+          onClick={() => setActiveTab('verify')}
+          className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'verify'
+              ? 'bg-forest text-white shadow-soft'
+              : 'bg-white text-charcoal/70 hover:bg-tint/40 border border-warm-border/70'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>{language === 'hi' ? 'दावा सत्यापन एवं पात्रता' : 'Verify Claim & Entitlement'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('timeline')}
+          className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'timeline'
+              ? 'bg-forest text-white shadow-soft'
+              : 'bg-white text-charcoal/70 hover:bg-tint/40 border border-warm-border/70'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          <span>{language === 'hi' ? 'दावा प्रगति समयरेखा एवं विलंब' : 'Claim Timeline & Status'}</span>
+        </button>
+      </div>
+
+      {activeTab === 'timeline' ? (
+        <ClaimTimelineView claimRef={insuranceRef} />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Form */}
         <div className="lg:col-span-7 bg-cream-surface rounded-2xl p-5 sm:p-7 border border-warm-border shadow-soft space-y-4">
@@ -352,6 +384,7 @@ export const InsuranceVerificationPage: React.FC = () => {
         </div>
 
       </div>
+      )}
 
     </div>
   );

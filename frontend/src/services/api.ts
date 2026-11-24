@@ -2702,4 +2702,208 @@ export async function submitContactApi(payload: ContactSubmitPayload): Promise<C
   return await apiClient.post<ContactSubmitResponse>('/contact/submit', payload);
 }
 
+// ---------------------------------------------------------------------------
+// Crop Insurance Claims & Status Timeline
+// ---------------------------------------------------------------------------
+
+export interface ClaimTimelineEvent {
+  id?: number | null;
+  event_type: string;
+  date: string;
+  amount?: number | null;
+  description_en: string;
+  description_hi: string;
+  source: string;
+  data_origin: string;
+  is_missing_placeholder: boolean;
+  is_current_stage: boolean;
+}
+
+export interface ClaimTimelineResponse {
+  claim_id: number;
+  insurance_ref: string;
+  crop: string;
+  season: string;
+  state: string;
+  district: string;
+  insured_area_hectares: number;
+  sum_insured: number;
+  assessed_loss_percentage: number;
+  claim_amount_calculated: number;
+  amount_received: number;
+  difference: number;
+  claim_status: string;
+  last_status_date: string;
+  days_in_current_stage: number;
+  threshold_days: number;
+  is_delayed: boolean;
+  delay_notice_en?: string | null;
+  delay_notice_hi?: string | null;
+  current_stage: string;
+  current_stage_hi: string;
+  events: ClaimTimelineEvent[];
+  missing_events_count: number;
+}
+
+export async function fetchClaimTimelineApi(
+  claimRef: string = 'INS-2024-7711',
+  thresholdDays: number = 21
+): Promise<ClaimTimelineResponse> {
+  try {
+    const res = await apiClient.get<ClaimTimelineResponse>(
+      `/claims/${claimRef}/timeline?threshold_days=${thresholdDays}`
+    );
+    if (res && Array.isArray(res.events)) {
+      return res;
+    }
+  } catch (err) {
+    console.warn('[API] /claims/timeline failed, falling back to offline timeline data:', err);
+  }
+
+  return getFallbackClaimTimeline(claimRef);
+}
+
+export function getFallbackClaimTimeline(claimRef: string = 'INS-2024-7711'): ClaimTimelineResponse {
+  return {
+    claim_id: 1,
+    insurance_ref: claimRef || 'INS-2024-7711',
+    crop: 'Paddy (Kharif)',
+    season: 'Kharif 2024',
+    state: 'Chhattisgarh',
+    district: 'Durg',
+    insured_area_hectares: 2.0,
+    sum_insured: 80000,
+    assessed_loss_percentage: 37.5,
+    claim_amount_calculated: 30000,
+    amount_received: 20000,
+    difference: 10000,
+    claim_status: 'Under Review',
+    last_status_date: '2024-11-05',
+    days_in_current_stage: 28,
+    threshold_days: 21,
+    is_delayed: true,
+    delay_notice_en:
+      'Review period (28 days elapsed) exceeds standard 21-day PMFBY window. This claim may need administrative review with your district agriculture office or insurer representative.',
+    delay_notice_hi:
+      'समीक्षा अवधि (28 दिन बीत चुके हैं) पीएमएफबीवाई की मानक 21 दिनों की समय सीमा से अधिक है। इस दावे की अपने जिला कृषि कार्यालय या बीमा प्रतिनिधि के साथ समीक्षा की जानी चाहिए।',
+    current_stage: 'Secondary Tranche / State Subsidy Reconciliation Under Review',
+    current_stage_hi: 'द्वितीय किश्त एवं राज्य सब्सिडी समायोजन समीक्षाधीन',
+    missing_events_count: 1,
+    events: [
+      {
+        id: 1,
+        event_type: 'policy_enrolled',
+        date: '2024-07-15',
+        amount: 1600,
+        description_en:
+          'Policy enrolled under PMFBY Kharif 2024 via SBI Patan branch with 2% statutory farmer premium of ₹1,600.',
+        description_hi:
+          'पीएमएफबीवाई खरीफ 2024 के तहत 2% वैधानिक कृषक अंशदान ₹1,600 के साथ पॉलिसी नामांकित।',
+        source: 'PMFBY National Crop Insurance Portal',
+        data_origin: 'official',
+        is_missing_placeholder: false,
+        is_current_stage: false,
+      },
+      {
+        id: 2,
+        event_type: 'loss_intimated',
+        date: '2024-09-12',
+        amount: null,
+        description_en:
+          'Crop inundation and localized flooding loss intimated within statutory 72-hour window.',
+        description_hi:
+          'लगातार वर्षा से जलभराव की सूचना वैधानिक 72 घंटे की समय सीमा के भीतर दर्ज कराई गई।',
+        source: 'Crop Insurance App / Toll-Free 14447',
+        data_origin: 'user_entered',
+        is_missing_placeholder: false,
+        is_current_stage: false,
+      },
+      {
+        id: 3,
+        event_type: 'survey_done',
+        date: '2024-09-16',
+        amount: null,
+        description_en:
+          'Joint loss survey conducted by Patwari and AIC Surveyor; 37.5% damage assessed.',
+        description_hi:
+          'पटवारी एवं बीमा कंपनी सर्वेक्षक द्वारा संयुक्त सर्वेक्षण; 37.5% फसल क्षति निर्धारित।',
+        source: 'Joint Field Survey Loss Intimation Sheet',
+        data_origin: 'official',
+        is_missing_placeholder: false,
+        is_current_stage: false,
+      },
+      {
+        id: 4,
+        event_type: 'claim_calculated',
+        date: '2024-09-28',
+        amount: 30000,
+        description_en:
+          'Deterministic claim assessed: 37.5% on ₹80,000 total sum insured = ₹30,000.',
+        description_hi:
+          'दावा पात्रता का निर्धारण: ₹80,000 कुल बीमित राशि पर 37.5% क्षति = ₹30,000।',
+        source: 'PMFBY State Technical Advisory Committee Formula',
+        data_origin: 'official',
+        is_missing_placeholder: false,
+        is_current_stage: false,
+      },
+      {
+        id: 5,
+        event_type: 'claim_approved',
+        date: '2024-10-15',
+        amount: 20000,
+        description_en:
+          'Initial payment tranche of ₹20,000 approved by State Level Coordination Committee.',
+        description_hi:
+          'राज्य स्तरीय समन्वय समिति द्वारा ₹20,000 की प्रथम अंतरिम किश्त स्वीकृत।',
+        source: 'State Level Coordination Committee on Crop Insurance (SLCCCI)',
+        data_origin: 'official',
+        is_missing_placeholder: false,
+        is_current_stage: false,
+      },
+      {
+        id: 6,
+        event_type: 'amount_credited',
+        date: '2024-10-24',
+        amount: 20000,
+        description_en:
+          'First tranche of ₹20,000 credited via Direct Benefit Transfer (DBT) to SBI A/C *1234.',
+        description_hi:
+          'डीबीटी के माध्यम से ₹20,000 की प्रथम किश्त किसान के एसबीआई खाते में जमा।',
+        source: 'PFMS / Bank DBT Credit Scroll',
+        data_origin: 'bank_document',
+        is_missing_placeholder: false,
+        is_current_stage: false,
+      },
+      {
+        id: 7,
+        event_type: 'note',
+        date: '2024-11-05',
+        amount: 10000,
+        description_en:
+          'Secondary tranche of ₹10,000 pending final state subsidy share release and CCE yield reconciliation.',
+        description_hi:
+          'राज्य सब्सिडी अंश जारी होने एवं अंतिम सीसीई उपज मिलान के कारण ₹10,000 की द्वितीय किश्त समीक्षाधीन।',
+        source: 'District Level Monitoring Committee (DLMC)',
+        data_origin: 'official',
+        is_missing_placeholder: false,
+        is_current_stage: false,
+      },
+      {
+        id: null,
+        event_type: 'amount_credited',
+        date: 'Date Pending',
+        amount: 10000,
+        description_en:
+          'Secondary tranche credit advice for remaining ₹10,000 pending administrative release.',
+        description_hi:
+          'शेष ₹10,000 के लिए द्वितीय किश्त डीबीटी सूचना लंबित।',
+        source: 'PMFBY State Clearing Portal',
+        data_origin: 'official',
+        is_missing_placeholder: true,
+        is_current_stage: true,
+      },
+    ],
+  };
+}
+
 

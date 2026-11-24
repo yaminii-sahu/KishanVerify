@@ -73,6 +73,25 @@ class Loan(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     farmer = relationship("Farmer", back_populates="loans")
+    events = relationship("LoanEvent", back_populates="loan", cascade="all, delete-orphan", order_by="LoanEvent.id.asc()")
+
+class LoanEvent(Base):
+    __tablename__ = "loan_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    loan_id = Column(Integer, ForeignKey("loans.id"), nullable=False)
+    event_type = Column(String(50), nullable=False) # application, sanction, disbursement, deduction, repayment, interest_accrual, closure, note
+    fee_type = Column(String(50), nullable=True) # e.g. processing_fee, crop_insurance, documentation_charges
+    date = Column(String(50), nullable=False) # e.g. "2024-03-01" or "01-03-2024"
+    amount = Column(Float, default=0.0)
+    direction = Column(String(20), default="neutral") # "credit", "debit", "neutral"
+    description_en = Column(Text, nullable=False)
+    description_hi = Column(Text, nullable=True)
+    source = Column(String(200), default="Bank Record")
+    data_origin = Column(String(50), default="bank_statement") # "sanction_letter", "bank_statement", "user_entered", "demo"
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    loan = relationship("Loan", back_populates="events")
 
 class LoanProduct(Base):
     __tablename__ = "loan_products"
@@ -129,16 +148,42 @@ class InsuranceRecord(Base):
     farmer_id = Column(Integer, ForeignKey("farmers.id"), nullable=False)
     crop = Column(String(50), nullable=False)
     season = Column(String(50), default="Kharif 2024")
+    state = Column(String(100), default="Chhattisgarh")
+    district = Column(String(100), default="Durg")
+    insured_area_hectares = Column(Float, default=2.0)
+    sum_insured = Column(Float, default=80000.0) # Total sum insured for insured acreage
     premium_paid = Column(Float, default=0.0)
+    loss_intimated_date = Column(String(50), default="2024-09-12")
+    survey_date = Column(String(50), default="2024-09-16")
+    assessed_loss_percentage = Column(Float, default=37.5) # e.g. 37.5%
+    claim_amount_calculated = Column(Float, default=30000.0)
     claim_amount_expected = Column(Float, nullable=False)
     amount_received = Column(Float, nullable=False)
     difference = Column(Float, default=0.0)
     claim_status = Column(String(50), default="Under Review") # "Under Review", "Needs Review", "Verified"
     filing_date = Column(String(50), nullable=False)
+    last_status_date = Column(String(50), default="2024-11-05")
     reasons = Column(JSON, default=list)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     farmer = relationship("Farmer", back_populates="insurance_records")
+    events = relationship("ClaimEvent", back_populates="claim", cascade="all, delete-orphan", order_by="ClaimEvent.id.asc()")
+
+class ClaimEvent(Base):
+    __tablename__ = "claim_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    claim_id = Column(Integer, ForeignKey("insurance_records.id"), nullable=False)
+    event_type = Column(String(50), nullable=False) # policy_enrolled, loss_intimated, survey_done, claim_calculated, claim_approved, amount_credited, rejected, query_raised, note
+    date = Column(String(50), nullable=False)
+    amount = Column(Float, nullable=True)
+    description_en = Column(Text, nullable=False)
+    description_hi = Column(Text, nullable=False)
+    source = Column(String(200), default="PMFBY National Portal")
+    data_origin = Column(String(50), default="official") # "official", "bank_document", "user_entered", "demo"
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    claim = relationship("InsuranceRecord", back_populates="events")
 
 class Scheme(Base):
     __tablename__ = "schemes"
