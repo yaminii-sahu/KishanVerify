@@ -64,7 +64,9 @@ def verify_msp_endpoint(req: MSPVerifyRequest, db: Session = Depends(get_db)):
         quantity_quintals=req.quantity_quintals,
         msp_rate=req.msp_rate,
         actual_payment=req.actual_payment,
-        procurement_center=req.procurement_center or "Procurement Mandi"
+        procurement_center=req.procurement_center or "Procurement Mandi",
+        state_bonus_per_quintal=req.state_bonus_per_quintal or 0.0,
+        adjustments=req.adjustments,
     )
 
     if req.farmer_id:

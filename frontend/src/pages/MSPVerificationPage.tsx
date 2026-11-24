@@ -20,6 +20,7 @@ import { verifyMspApi, fetchVerificationRecordByRefApi } from '../services/api';
 import { BasisOfCheckCard } from '../components/BasisOfCheckCard';
 import { AudioSummaryPlayer } from '../components/AudioSummaryPlayer';
 import { MSPTimelineView } from '../components/MSPTimelineView';
+import { MSPAdjustmentsBreakdownCard } from '../components/MSPAdjustmentsBreakdownCard';
 
 export const MSPVerificationPage: React.FC = () => {
   const { t, language } = useLanguage();
@@ -167,6 +168,107 @@ export const MSPVerificationPage: React.FC = () => {
       'Mandi cess, handling charges, or gunny bag security withheld',
       'Bank transaction delay or IFSC settlement pending',
     ],
+    gross_expected: 115000,
+    total_explained_adjustments: 6525,
+    unexplained_difference: 3475,
+    adjustments: [
+      {
+        id: 'adj-hamali',
+        category: 'hamali',
+        label_en: 'Handling / Loading Charges (Hamali)',
+        label_hi: 'हम्माली / उतराई शुल्क',
+        amount: 625,
+        rate_rule: '₹12.50 / quintal statutory APMC ceiling',
+        is_statutory: true,
+        is_flagged: false,
+        authority: 'APMC Mandi By-Laws',
+        data_origin: 'official',
+      },
+      {
+        id: 'adj-moisture',
+        category: 'quality_cut',
+        label_en: 'Moisture & FAQ Quality Cut',
+        label_hi: 'नमी व गुणवत्ता कटौती (FAQ)',
+        amount: 1150,
+        rate_rule: '₹23.00 / quintal standard refraction cut',
+        is_statutory: true,
+        is_flagged: false,
+        authority: 'Food Corporation of India (FCI) / CACP',
+        data_origin: 'official',
+      },
+      {
+        id: 'adj-bardana',
+        category: 'bardana',
+        label_en: 'Gunny Bag Retention / Bardana',
+        label_hi: 'बारदाना कटौती',
+        amount: 750,
+        rate_rule: '₹15.00 / bag security deduction',
+        is_statutory: true,
+        is_flagged: false,
+        authority: 'State Civil Supplies Corporation',
+        data_origin: 'official',
+      },
+      {
+        id: 'adj-pacs',
+        category: 'loan_recovery',
+        label_en: 'PACS Cooperative Society Crop Loan Recovery',
+        label_hi: 'पैक्स सहकारी समिति अल्पावधि फसल ऋण समायोजन',
+        amount: 4000,
+        rate_rule: 'Direct cooperative ledger credit against outstanding KCC',
+        is_statutory: true,
+        is_flagged: false,
+        authority: 'District Central Cooperative Bank (DCCB)',
+        data_origin: 'bank_document',
+      },
+      {
+        id: 'adj-unexplained',
+        category: 'unexplained',
+        label_en: 'Unexplained Difference',
+        label_hi: 'अस्पष्ट अंतर (समीक्षा आवश्यक)',
+        amount: 3475,
+        rate_rule: 'No corresponding statutory rule or receipt line item found',
+        is_statutory: false,
+        is_flagged: true,
+        flag_reason_en: 'This variance is not covered by notified APMC fee schedules or recorded deductions and may need review.',
+        flag_reason_hi: 'यह राशि अधिसूचित मंडी शुल्क नियमों या दर्ज कटौतियों में शामिल नहीं है और समीक्षा योग्य है।',
+        authority: 'Mandi Accounting Office',
+        data_origin: 'user_entered',
+      },
+    ],
+    questions_to_ask: [
+      {
+        id: 'q1',
+        category: 'mandi_cess',
+        target_authority: 'Mandi Secretary / APMC',
+        statutory_reference: 'Chhattisgarh Krishi Upaj Mandi Adhiniyam 1972 Section 19',
+        question_en: 'As per APMC Mandi Adhiniyam Section 19, mandi fees are statutory obligations of the buyer/procurement agency. Was any mandi fee withheld from my procurement payout?',
+        question_hi: 'मंडी अधिनियम की धारा 19 के अनुसार मंडी शुल्क क्रेता/उपार्जन एजेंसी द्वारा देय है। क्या मेरे भुगतान से कोई मंडी शुल्क काटा गया है?',
+      },
+      {
+        id: 'q2',
+        category: 'moisture_refraction',
+        target_authority: 'Procurement Center In-Charge',
+        statutory_reference: 'CACP Uniform Specifications for FAQ Kharif Foodgrains',
+        question_en: 'What certified moisture content was logged on my weighbridge slip, and what statutory refraction slab was applied for quality deduction?',
+        question_hi: 'मेरी तौल पर्ची पर प्रमाणित नमी कितनी दर्ज थी, और गुणवत्ता कटौती हेतु कौन सा वैधानिक स्लैब लागू किया गया?',
+      },
+      {
+        id: 'q3',
+        category: 'society_recovery',
+        target_authority: 'PACS Society Secretary / DCCB Branch',
+        statutory_reference: 'State Cooperative Societies Act & KCC Recovery Scroll',
+        question_en: 'If any deduction was withheld towards PACS crop loan recovery, could you provide the loan credit deposit scroll and updated KCC balance?',
+        question_hi: 'यदि समिति ऋण वसूली हेतु राशि रोकी गई है, तो क्या सहकारी बैंक की ऋण जमा रसीद और अद्यतन केसीसी खाता विवरण दिया जा सकता है?',
+      },
+      {
+        id: 'q4',
+        category: 'unexplained_difference',
+        target_authority: 'District Food & Civil Supplies Officer',
+        statutory_reference: 'e-Uparjan Procurement Settlement Rules',
+        question_en: 'There is an unexplained variance of ₹3,475.00 on my procurement settlement. Could you provide the itemized J-Form deduction scroll clarifying this variance?',
+        question_hi: 'उपार्जन भुगतान में ₹3,475.00 का कोई स्पष्ट विवरण नहीं है। क्या इस अंतर को स्पष्ट करने वाला विस्तृत जे-फॉर्म विवरण दिया जा सकता है?',
+      },
+    ],
   });
 
   const handleVerify = async (e: React.FormEvent) => {
@@ -282,6 +384,7 @@ export const MSPVerificationPage: React.FC = () => {
       {activeTab === 'timeline' ? (
         <MSPTimelineView recordRef={recordId || 'MSP-2024-4411'} />
       ) : (
+        <>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Form */}
@@ -549,6 +652,21 @@ export const MSPVerificationPage: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Itemized Deductions & Unexplained Difference Card */}
+      {result && result.adjustments && result.adjustments.length > 0 && (
+        <MSPAdjustmentsBreakdownCard
+          grossExpected={result.gross_expected || result.expected_payment}
+          actualPayment={result.actual_payment}
+          totalDifference={result.difference}
+          totalExplained={result.total_explained_adjustments || 0}
+          unexplainedDifference={result.unexplained_difference || 0}
+          adjustments={result.adjustments}
+          questionsToAsk={result.questions_to_ask || []}
+          crop={result.crop}
+        />
+      )}
+      </>
       )}
 
     </div>

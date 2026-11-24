@@ -19,6 +19,8 @@ class MSPVerifyRequest(BaseModel):
     msp_rate: float = Field(..., gt=0, description="MSP rate per quintal in Rupees")
     actual_payment: float = Field(..., ge=0, description="Actual payment received in Rupees")
     procurement_center: Optional[str] = "Patan Mandi"
+    state_bonus_per_quintal: Optional[float] = Field(0.0, ge=0, description="State bonus per quintal in Rupees")
+    adjustments: Optional[List[dict]] = Field(default=None, description="Optional list of itemized adjustments")
     payment_date: Optional[str] = "2024-04-05"
     farmer_id: Optional[str] = "FV12345"
 
